@@ -1,0 +1,6 @@
+appId: com.onerx.rxconnect
+productName: Rx-Connect
+directories:
+  output: dist-electron-builder
+publish: null
+# Signing & auto-update: configure when CI secrets are available.

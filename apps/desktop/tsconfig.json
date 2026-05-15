@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "types": ["node"],
+    "resolveJsonModule": true,
+    "paths": {
+      "@rx-connect/shared": ["../../packages/shared/src/index.ts"],
+      "@rx-connect/shared/*": ["../../packages/shared/src/*"]
+    }
+  },
+  "include": [
+    "forge.config.ts",
+    "vite.main.config.ts",
+    "vite.preload.config.ts",
+    "forge.env.d.ts",
+    "src/main.ts",
+    "src/preload.ts",
+    "src/main/**/*.ts",
+    "src/preload/**/*.ts",
+    "src/types/**/*.d.ts"
+  ],
+  "exclude": ["node_modules", "src/renderer", "vitest.config.ts", "playwright.config.ts"]
+}
