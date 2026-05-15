@@ -9,6 +9,7 @@ import { registerApiLogsHandlers } from './handlers/api-logs.js';
 import { registerSettingsHandlers } from './handlers/settings.js';
 import { registerStoreHandlers } from './handlers/store.js';
 import { registerSecretsHandlers } from './handlers/secrets.js';
+import { registerPrintJobHandlers } from './handlers/print-job.js';
 
 export function registerIpcHandlers(): void {
   registerAppHandlers();
@@ -17,6 +18,7 @@ export function registerIpcHandlers(): void {
   registerRxHandlers();
   registerTenantsHandlers();
   registerFaxHandlers();
+  registerPrintJobHandlers();
   registerBlacklistHandlers();
   registerApiLogsHandlers();
   registerSettingsHandlers();

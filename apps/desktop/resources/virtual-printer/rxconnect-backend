@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# CUPS backend for Rx-Connect — install as /usr/libexec/cups/backend/rxconnect (macOS)
+# or .../cups/backend/rxconnect (Linux). Device URI: rxconnect:/
+set -euo pipefail
+
+JOB_ID="${1:-0}"
+USER="${2:-unknown}"
+TITLE="${3:-print-job}"
+COPIES="${4:-1}"
+OPTIONS="${5:-}"
+FILE="${6:-}"
+
+UNAME="$(uname -s)"
+if [[ "$UNAME" == Linux ]]; then
+  SPOOL_DIR="${RX_CONNECT_CUPS_SPOOL:-/var/spool/rx-connect}"
+else
+  SPOOL_DIR="${RX_CONNECT_CUPS_SPOOL:-/Library/Application Support/Rx-Connect/print-spool}"
+fi
+
+mkdir -p "$SPOOL_DIR"
+
+TIMESTAMP="$(date +%s)"
+SAFE_TITLE="$(echo "${TITLE:-job}" | tr -cd '[:alnum:]._-' | head -c 80)"
+BIN="$SPOOL_DIR/job_${TIMESTAMP}_${JOB_ID}_${SAFE_TITLE:-job}.bin"
+PDF_OUT="$SPOOL_DIR/job_${TIMESTAMP}_${JOB_ID}_${SAFE_TITLE:-job}.pdf"
+
+if [[ -n "${FILE:-}" && -f "$FILE" ]]; then
+  cp "$FILE" "$BIN"
+else
+  cat >"$BIN"
+fi
+
+if file -b --mime-type "$BIN" 2>/dev/null | grep -q 'application/pdf'; then
+  mv -f "$BIN" "$PDF_OUT"
+  chmod a+r "$PDF_OUT" 2>/dev/null || true
+  exit 0
+fi
+
+if command -v gs >/dev/null 2>&1; then
+  if gs -dNOPAUSE -dBATCH -q -sDEVICE=pdfwrite -sOutputFile="$PDF_OUT" "$BIN" 2>/dev/null; then
+    rm -f "$BIN"
+    chmod a+r "$PDF_OUT" 2>/dev/null || true
+    exit 0
+  fi
+fi
+
+chmod a+r "$BIN" 2>/dev/null || true
+exit 0

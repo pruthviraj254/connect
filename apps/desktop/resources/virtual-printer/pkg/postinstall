@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# PKG postinstall — runs as root. Locates bundled virtual-printer assets inside the .app.
+set -euo pipefail
+
+APP_ROOT=""
+for candidate in "/Applications/Rx-Connect.app" "/Applications/Rx Connect.app"; do
+  if [[ -d "$candidate/Contents/Resources/virtual-printer" ]]; then
+    APP_ROOT="$candidate/Contents/Resources/virtual-printer"
+    break
+  fi
+done
+
+if [[ -z "$APP_ROOT" ]]; then
+  echo "pkg postinstall: Rx-Connect.app not found in /Applications" >&2
+  exit 0
+fi
+
+exec bash "$APP_ROOT/install-macos.sh"

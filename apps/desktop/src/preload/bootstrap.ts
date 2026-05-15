@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IpcChannel, type ElectronAPI } from '@rx-connect/shared';
+import { IpcChannel, type ElectronAPI, type PrintJobRecord } from '@rx-connect/shared';
 
 const allowed = new Set<string>(Object.values(IpcChannel));
 
@@ -28,6 +28,15 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.on('app:network-status', listener);
     return () => {
       ipcRenderer.removeListener('app:network-status', listener);
+    };
+  },
+  onPrintJob: (handler: (job: PrintJobRecord) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, job: PrintJobRecord) => {
+      handler(job);
+    };
+    ipcRenderer.on('print-job:incoming', listener);
+    return () => {
+      ipcRenderer.removeListener('print-job:incoming', listener);
     };
   },
 };

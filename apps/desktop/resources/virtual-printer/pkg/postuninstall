@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# PKG postuninstall — runs as root when the .pkg is removed via Installer / pkgutil.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+for candidate in "/Applications/Rx-Connect.app" "/Applications/Rx Connect.app"; do
+  vp="${candidate}/Contents/Resources/virtual-printer/uninstall-macos.sh"
+  if [[ -f "$vp" ]]; then
+    exec bash "$vp"
+  fi
+done
+
+if [[ -f "${SCRIPT_DIR}/uninstall-macos.sh" ]]; then
+  exec bash "${SCRIPT_DIR}/uninstall-macos.sh"
+fi
+
+PRINTER_NAME="${RX_CONNECT_PRINTER_NAME:-RxConnectFax}"
+lpadmin -x "$PRINTER_NAME" 2>/dev/null || true
+rm -f /usr/libexec/cups/backend/rxconnect
+rm -f "/Library/Application Support/Rx-Connect/rxconnect.ppd"

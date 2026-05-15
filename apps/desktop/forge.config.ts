@@ -9,14 +9,23 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs/promises';
+import MakerRxPKG from './forge-makers/maker-rx-pkg';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const virtualPrinterPkgScripts = path.join(
+  __dirname,
+  'resources',
+  'virtual-printer',
+  'pkg',
+);
 
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     executableName: 'rx-connect',
+    extraResource: [path.join(__dirname, 'resources', 'virtual-printer')],
     protocols: [
       {
         name: 'Rx Connect',
@@ -28,10 +37,16 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel({}),
     new MakerDMG({}),
+    new MakerRxPKG({
+      scripts: virtualPrinterPkgScripts,
+    }),
     new MakerDeb({
       options: {
         maintainer: 'OneRx Health',
         homepage: 'https://onerx.health',
+        scripts: {
+          postinst: path.join(__dirname, 'resources', 'virtual-printer', 'after-install-linux.sh'),
+        },
       },
     }),
   ],

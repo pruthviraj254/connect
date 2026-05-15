@@ -9,4 +9,5 @@ export type {
   AuthForgotPasswordPayload,
   AuthForgotPasswordData,
 } from './types/auth-ipc';
+export type { PrintJobRecord, FaxSendPayload, FaxSendResult } from './types/print-job-ipc';
 export { assertNever } from './utils/assert';

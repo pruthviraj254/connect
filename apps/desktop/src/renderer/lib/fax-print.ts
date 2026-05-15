@@ -1,0 +1,29 @@
+import {
+  IpcChannel,
+  type FaxSendPayload,
+  type FaxSendResult,
+  type IpcResult,
+  type PrintJobRecord,
+} from '@rx-connect/shared';
+import { ipcInvoke } from '@/lib/ipc';
+import { unwrapIpc } from '@/lib/ipc/unwrap';
+
+export async function listIncomingPrintJobs(): Promise<PrintJobRecord[]> {
+  const result = await ipcInvoke<IpcResult<PrintJobRecord[]>>(IpcChannel.PrintJobList);
+  return unwrapIpc(result);
+}
+
+export async function getPrintJobPdfBase64(pdfPath: string): Promise<string> {
+  const result = await ipcInvoke<IpcResult<string>>(IpcChannel.PrintJobGetPdfBase64, pdfPath);
+  return unwrapIpc(result);
+}
+
+export async function deletePrintJobFile(pdfPath: string): Promise<void> {
+  const result = await ipcInvoke<IpcResult<null>>(IpcChannel.PrintJobDelete, pdfPath);
+  unwrapIpc(result);
+}
+
+export async function sendFaxFromPdf(payload: FaxSendPayload): Promise<FaxSendResult> {
+  const result = await ipcInvoke<IpcResult<FaxSendResult>>(IpcChannel.FaxSend, payload);
+  return unwrapIpc(result);
+}

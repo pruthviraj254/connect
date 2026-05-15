@@ -27,6 +27,10 @@ export const IpcChannel = {
   FaxSend: 'fax:send',
   FaxList: 'fax:list',
 
+  PrintJobList: 'print-job:list',
+  PrintJobGetPdfBase64: 'print-job:get-pdf-base64',
+  PrintJobDelete: 'print-job:delete',
+
   BlacklistList: 'blacklist:list',
   BlacklistAdd: 'blacklist:add',
 

@@ -2,14 +2,19 @@ import { app, BrowserWindow, nativeTheme, net, protocol, shell } from 'electron'
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { stat } from 'node:fs/promises';
-import started from 'electron-squirrel-startup';
 import log from 'electron-log';
+import {
+  handleWindowsSquirrelStartup,
+  scheduleWindowsPrinterInstallIfMissing,
+} from './win-squirrel.js';
 import { registerIpcHandlers } from './ipc/index.js';
 import { buildAppMenu } from './menu.js';
 import { getStore } from './store.js';
 import { getMainWindow, setMainWindow } from './lifecycle.js';
+import { startPrintPipeline, stopPrintPipeline } from './virtual-printer/pipeline.js';
+import { registerPdfPreviewProtocol, wirePdfPreviewProtocol } from './pdf-preview-protocol.js';
 
-if (started) {
+if (handleWindowsSquirrelStartup()) {
   app.quit();
 }
 
@@ -24,6 +29,7 @@ protocol.registerSchemesAsPrivileged([
     },
   },
 ]);
+registerPdfPreviewProtocol();
 
 log.transports.file.level = 'info';
 log.errorHandler.startCatching();
@@ -143,6 +149,8 @@ async function createWindow(): Promise<void> {
     void shell.openExternal(linkUrl);
     return { action: 'deny' };
   });
+
+  await startPrintPipeline();
 }
 
 function registerDeepLinkProtocol(): void {
@@ -180,6 +188,9 @@ function wireCsp(): void {
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com data:",
             "img-src 'self' data: blob:",
+            "frame-src 'self' blob: data: rx-pdf:",
+            "object-src 'self' blob: data: rx-pdf:",
+            "worker-src 'self' blob:",
             "connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* https:",
           ].join('; ')
         : [
@@ -188,6 +199,9 @@ function wireCsp(): void {
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com app:",
             "font-src 'self' https://fonts.gstatic.com data: app:",
             "img-src 'self' data: blob: app:",
+            "frame-src 'self' app: blob: data: rx-pdf:",
+            "object-src 'self' app: blob: data: rx-pdf:",
+            "worker-src 'self' app: blob:",
             "connect-src 'self' app: https:",
           ].join('; ');
       callback({
@@ -219,12 +233,14 @@ if (!gotLock) {
   app.whenReady().then(async () => {
     registerDeepLinkProtocol();
     registerAppProtocol();
+    wirePdfPreviewProtocol();
     registerIpcHandlers();
     wireCsp();
     wireNetworkStatus();
     nativeTheme.themeSource = getStore().get('theme', 'system') as 'system' | 'light' | 'dark';
 
     await createWindow();
+    scheduleWindowsPrinterInstallIfMissing();
 
     app.on('activate', async () => {
       if (BrowserWindow.getAllWindows().length === 0) {
@@ -236,6 +252,10 @@ if (!gotLock) {
   app.on('open-url', (event, url) => {
     event.preventDefault();
     getMainWindow()?.webContents.send('app:deep-link', url);
+  });
+
+  app.on('before-quit', () => {
+    stopPrintPipeline();
   });
 
   app.on('window-all-closed', () => {

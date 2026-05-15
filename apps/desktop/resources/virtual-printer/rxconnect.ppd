@@ -1,0 +1,26 @@
+*PPD-Adobe: "4.3"
+*FormatVersion: "4.3"
+*FileVersion: "1.0"
+*LanguageVersion: English
+*LanguageEncoding: ISOLatin1
+*PCFileName: "RXCONNECT.PPD"
+*Manufacturer: "OneRx"
+*ModelName: "Rx-Connect Fax Printer"
+*ShortNickName: "RxConnectFax"
+*NickName: "Rx-Connect Fax Printer"
+*PSVersion: "(3010.000) 550"
+*LanguageLevel: "3"
+*ColorDevice: False
+*DefaultColorSpace: Gray
+*FileSystem: False
+*Throughput: "8"
+*LandscapeOrientation: Plus90
+*TTRasterizer: Type42
+*cupsVersion: 1.7
+*cupsModelNumber: 0
+*cupsManualCopies: True
+*cupsFilter: "application/vnd.cups-pdf 0 -"
+*DefaultResolution: 300dpi
+*DefaultPaperSize: Letter
+*PaperSize Letter/Letter: "<</PageSize[612 792]>>setpagedevice"
+*PaperSize A4/A4: "<</PageSize[595 842]>>setpagedevice"

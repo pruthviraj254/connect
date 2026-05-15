@@ -1,0 +1,218 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import type { PrintJobRecord } from '@rx-connect/shared';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { deletePrintJobFile, getPrintJobPdfBase64, listIncomingPrintJobs, sendFaxFromPdf } from '@/lib/fax-print';
+import { PdfPreviewPanel } from '@/components/features/fax/PdfPreviewPanel';
+import { isElectronApp } from '@/lib/auth/auth-actions';
+
+const faxSchema = z.object({
+  to: z.string().min(8, 'Enter a fax destination number'),
+  from: z.string().optional(),
+});
+
+type FaxForm = z.infer<typeof faxSchema>;
+
+export function FaxInboxView() {
+  const router = useRouter();
+  const [jobs, setJobs] = useState<PrintJobRecord[]>([]);
+  const [selected, setSelected] = useState<PrintJobRecord | null>(null);
+  const [previewBase64, setPreviewBase64] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!isElectronApp()) return;
+    try {
+      const list = await listIncomingPrintJobs();
+      setJobs(list);
+    } catch {
+      toast.error('Could not load print jobs.');
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!isElectronApp() || !window.electronAPI?.onPrintJob) return;
+    const unsub = window.electronAPI.onPrintJob((job) => {
+      toast.info('New print job received');
+      void router.push('/fax-inbox/');
+      setJobs((prev) => {
+        if (prev.some((p) => p.pdfPath === job.pdfPath)) return prev;
+        return [job, ...prev];
+      });
+      setSelected(job);
+    });
+    return unsub;
+  }, [router]);
+
+  useEffect(() => {
+    if (!selected || !isElectronApp()) {
+      setPreviewBase64(null);
+      setPreviewError(null);
+      setPreviewLoading(false);
+      return;
+    }
+    if (!selected.pdfPath.toLowerCase().endsWith('.pdf')) {
+      setPreviewBase64(null);
+      setPreviewError('not_pdf');
+      setPreviewLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setPreviewBase64(null);
+    setPreviewError(null);
+    setPreviewLoading(true);
+    void (async () => {
+      try {
+        const b64 = await getPrintJobPdfBase64(selected.pdfPath);
+        if (!cancelled) {
+          setPreviewBase64(b64);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setPreviewError(e instanceof Error ? e.message : 'preview_failed');
+        }
+      } finally {
+        if (!cancelled) setPreviewLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selected]);
+
+  const form = useForm<FaxForm>({
+    resolver: zodResolver(faxSchema),
+    defaultValues: { to: '', from: '' },
+  });
+
+  const onSend = form.handleSubmit(async (values) => {
+    if (!selected || !isElectronApp()) {
+      toast.error('Select a PDF job in the Electron app.');
+      return;
+    }
+    setBusy(true);
+    try {
+      await sendFaxFromPdf({
+        to: values.to,
+        from: values.from?.trim() ? values.from.trim() : undefined,
+        pdfPath: selected.pdfPath,
+      });
+      toast.success('Fax queued with provider');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'send_failed';
+      toast.error(msg);
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  const onDelete = async () => {
+    if (!selected || !isElectronApp()) return;
+    try {
+      await deletePrintJobFile(selected.pdfPath);
+      toast.success('Job removed');
+      setSelected(null);
+      await refresh();
+    } catch {
+      toast.error('Could not delete job.');
+    }
+  };
+
+  const aside = useMemo(
+    () => (
+      <div className="border-r border-border bg-card flex flex-col w-72 shrink-0">
+        <div className="p-4 border-b border-border">
+          <h2 className="text-sm font-semibold text-navy">Fax inbox</h2>
+          <p className="text-xs text-muted-foreground mt-1">Print jobs from the virtual printer</p>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {jobs.length === 0 ? (
+            <p className="p-4 text-sm text-muted-foreground">
+              Print to <span className="font-mono">RxConnectFax</span> (after install) or drop PDFs into the spool
+              folder.
+            </p>
+          ) : (
+            jobs.map((job) => (
+              <button
+                key={job.pdfPath}
+                type="button"
+                onClick={() => setSelected(job)}
+                className={`w-full text-left px-4 py-3 text-sm border-b border-border/60 hover:bg-muted/50 ${
+                  selected?.pdfPath === job.pdfPath ? 'bg-muted' : ''
+                }`}
+              >
+                <div className="font-medium truncate">{job.title}</div>
+                <div className="text-xs text-muted-foreground">{new Date(job.receivedAt).toLocaleString()}</div>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    ),
+    [jobs, selected?.pdfPath],
+  );
+
+  if (!isElectronApp()) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Fax inbox</CardTitle>
+          <CardDescription>Open this page from the Rx-Connect desktop app to manage print jobs.</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="flex flex-1 min-h-0 rounded-lg border border-border overflow-hidden bg-background">
+      {aside}
+      <div className="flex-1 flex flex-col min-w-0">
+        <PdfPreviewPanel
+          base64={previewBase64}
+          loading={previewLoading}
+          error={previewError}
+        />
+        <div className="border-t border-border p-4 space-y-3 bg-muted/30">
+          <form onSubmit={onSend} className="flex flex-wrap gap-3 items-end">
+            <div className="space-y-1">
+              <Label htmlFor="fax-to">Fax number</Label>
+              <Input id="fax-to" placeholder="+15551234567" {...form.register('to')} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="fax-from">From (optional)</Label>
+              <Input id="fax-from" placeholder="Caller ID" {...form.register('from')} />
+            </div>
+            <Button type="submit" disabled={!selected || busy} className="bg-teal text-teal-foreground">
+              {busy ? 'Sending…' : 'Send fax'}
+            </Button>
+            <Button type="button" variant="outline" disabled={!selected || busy} onClick={() => void onDelete()}>
+              Delete job
+            </Button>
+          </form>
+          {(form.formState.errors.to || form.formState.errors.from) && (
+            <p className="text-xs text-destructive">
+              {form.formState.errors.to?.message ?? form.formState.errors.from?.message}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default FaxInboxView;
