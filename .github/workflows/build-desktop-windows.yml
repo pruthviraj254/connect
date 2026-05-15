@@ -1,0 +1,65 @@
+# Builds the Windows Squirrel Setup.exe (cannot be produced on macOS).
+# Download artifacts: Actions → workflow run → Artifacts → rx-connect-windows-*
+name: Build desktop (Windows)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'apps/desktop/**'
+      - 'packages/shared/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/build-desktop-windows.yml'
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+      - 'packages/shared/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/build-desktop-windows.yml'
+
+concurrency:
+  group: desktop-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+
+      - name: Build Windows installer
+        run: pnpm --filter @rx-connect/desktop run make
+
+      - name: List build output
+        shell: pwsh
+        run: Get-ChildItem -Recurse apps/desktop/out/make | Select-Object FullName, Length
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rx-connect-windows-${{ github.run_number }}
+          path: |
+            apps/desktop/out/make/**/*.exe
+            apps/desktop/out/make/squirrel.windows/**
+          if-no-files-found: error
+          retention-days: 30
