@@ -35,7 +35,11 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
+    new MakerSquirrel({
+      // Squirrel/NuGet id must be alphanumeric (no @scope/name from package.json).
+      name: 'RxConnect',
+      setupExe: 'Rx-Connect-Setup.exe',
+    }),
     new MakerDMG({}),
     new MakerRxPKG({
       scripts: virtualPrinterPkgScripts,
