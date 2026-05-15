@@ -46,6 +46,37 @@ function Get-PrnportScript {
   return $null
 }
 
+function Set-RawPortConfiguration {
+  param(
+    [string]$PortName,
+    [int]$PortNumber
+  )
+
+  try {
+    $wmi = Get-WmiObject Win32_TCPIPPrinterPort -Filter "Name='$PortName'" -ErrorAction SilentlyContinue
+    if ($wmi) {
+      $wmi.Protocol = 1
+      $wmi.SNMPEnabled = $false
+      $wmi.PortNumber = $PortNumber
+      $wmi.Put() | Out-Null
+      Write-Log "WMI port $PortName set Protocol=RAW SNMP=off"
+    }
+  } catch {
+    Write-Log "WMI port config: $($_.Exception.Message)"
+  }
+}
+
+function Ensure-SpoolDirectory {
+  $spoolDir = Join-Path $env:ProgramData 'Rx-Connect\print-spool'
+  New-Item -ItemType Directory -Path $spoolDir -Force | Out-Null
+  try {
+    & icacls $spoolDir /grant 'Authenticated Users:(OI)(CI)M' /T 2>&1 | Out-Null
+    Write-Log "Spool directory ready: $spoolDir"
+  } catch {
+    Write-Log "Spool directory created (icacls skipped): $spoolDir"
+  }
+}
+
 function Ensure-TcpPrinterPort {
   param(
     [string]$PortName,
@@ -53,27 +84,17 @@ function Ensure-TcpPrinterPort {
     [int]$PortNumber
   )
 
-  if (Get-PrinterPort -Name $PortName -ErrorAction SilentlyContinue) {
-    Write-Log "Port $PortName already exists"
-    return
+  $existingPort = Get-PrinterPort -Name $PortName -ErrorAction SilentlyContinue
+  if ($existingPort) {
+    Write-Log "Removing existing port $PortName (recreate as RAW)"
+    Remove-PrinterPort -Name $PortName -Confirm:$false -ErrorAction SilentlyContinue
   }
 
   $lastError = $null
-
-  try {
-    Write-Log "Add-PrinterPort $PortName -> ${HostAddress}:$PortNumber"
-    Add-PrinterPort -Name $PortName -PrinterHostAddress $HostAddress -PortNumber $PortNumber
-    if (Get-PrinterPort -Name $PortName -ErrorAction SilentlyContinue) {
-      return
-    }
-  } catch {
-    $lastError = $_.Exception.Message
-    Write-Log "Add-PrinterPort failed: $lastError"
-  }
-
   $prnport = Get-PrnportScript
+
   if ($prnport) {
-    Write-Log "Trying prnport.vbs: $prnport"
+    Write-Log "Creating RAW port via prnport.vbs: $prnport"
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = "$env:windir\System32\cscript.exe"
     $psi.Arguments = "//NoLogo `"$prnport`" -a -r $PortName -h $HostAddress -o raw -n $PortNumber"
@@ -83,6 +104,7 @@ function Ensure-TcpPrinterPort {
     $proc.WaitForExit()
     Write-Log "prnport.vbs exit code: $($proc.ExitCode)"
     if ($proc.ExitCode -eq 0 -and (Get-PrinterPort -Name $PortName -ErrorAction SilentlyContinue)) {
+      Set-RawPortConfiguration -PortName $PortName -PortNumber $PortNumber
       return
     }
     if ($proc.ExitCode -ne 0) {
@@ -92,11 +114,24 @@ function Ensure-TcpPrinterPort {
     Write-Log "prnport.vbs not found under Printing_Admin_Scripts"
   }
 
+  try {
+    Write-Log "Add-PrinterPort $PortName -> ${HostAddress}:$PortNumber"
+    Add-PrinterPort -Name $PortName -PrinterHostAddress $HostAddress -PortNumber $PortNumber
+    if (Get-PrinterPort -Name $PortName -ErrorAction SilentlyContinue) {
+      Set-RawPortConfiguration -PortName $PortName -PortNumber $PortNumber
+      return
+    }
+  } catch {
+    $lastError = $_.Exception.Message
+    Write-Log "Add-PrinterPort failed: $lastError"
+  }
+
   if ($HostAddress -eq '127.0.0.1') {
     Write-Log "Retrying port with host localhost"
     try {
       Add-PrinterPort -Name $PortName -PrinterHostAddress 'localhost' -PortNumber $PortNumber
       if (Get-PrinterPort -Name $PortName -ErrorAction SilentlyContinue) {
+        Set-RawPortConfiguration -PortName $PortName -PortNumber $PortNumber
         return
       }
     } catch {
@@ -108,8 +143,10 @@ function Ensure-TcpPrinterPort {
   throw "Could not create TCP printer port ${PortName}: $lastError"
 }
 
-function Ensure-GenericTextDriver {
+function Ensure-PrintDriver {
   $candidates = @(
+    'Generic / PostScript',
+    'Generic PostScript',
     'Generic / Text Only',
     'Generic Text Only',
     'Generic / Text Only (MS)'
@@ -123,7 +160,7 @@ function Ensure-GenericTextDriver {
   }
 
   $generic = Get-PrinterDriver -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -match 'Generic' -and $_.Name -match 'Text' } |
+    Where-Object { $_.Name -match 'Generic' -and ($_.Name -match 'PostScript' -or $_.Name -match 'Text') } |
     Select-Object -First 1
   if ($generic) {
     Write-Log "Found driver (scan): $($generic.Name)"
@@ -132,30 +169,48 @@ function Ensure-GenericTextDriver {
 
   $inf = Join-Path $env:windir 'inf\ntprint.inf'
   if (Test-Path $inf) {
-    Write-Log "Installing Generic / Text Only from $inf"
-    try {
-      Add-PrinterDriver -Name 'Generic / Text Only' -InfPath $inf -ErrorAction Stop
-      if (Get-PrinterDriver -Name 'Generic / Text Only' -ErrorAction SilentlyContinue) {
-        return 'Generic / Text Only'
+    foreach ($driverModel in @('Generic / PostScript', 'Generic / Text Only')) {
+      Write-Log "Installing $driverModel from $inf"
+      try {
+        Add-PrinterDriver -Name $driverModel -InfPath $inf -ErrorAction Stop
+        if (Get-PrinterDriver -Name $driverModel -ErrorAction SilentlyContinue) {
+          return $driverModel
+        }
+      } catch {
+        Write-Log "Add-PrinterDriver $driverModel failed: $($_.Exception.Message)"
       }
-    } catch {
-      Write-Log "Add-PrinterDriver failed: $($_.Exception.Message)"
-    }
 
-    $uiArgs = "/ia /f `"$inf`" /m `"Generic / Text Only`""
-    Write-Log "Trying printui driver install: $uiArgs"
-    $p = Start-Process -FilePath 'rundll32.exe' `
-      -ArgumentList "printui.dll,PrintUIEntry $uiArgs" `
-      -Wait -PassThru -NoNewWindow
-    Write-Log "printui driver install exit: $($p.ExitCode)"
-    if (Get-PrinterDriver -Name 'Generic / Text Only' -ErrorAction SilentlyContinue) {
-      return 'Generic / Text Only'
+      $uiArgs = "/ia /f `"$inf`" /m `"$driverModel`""
+      Write-Log "Trying printui driver install: $uiArgs"
+      $p = Start-Process -FilePath 'rundll32.exe' `
+        -ArgumentList "printui.dll,PrintUIEntry $uiArgs" `
+        -Wait -PassThru -NoNewWindow
+      Write-Log "printui driver install exit: $($p.ExitCode)"
+      if (Get-PrinterDriver -Name $driverModel -ErrorAction SilentlyContinue) {
+        return $driverModel
+      }
     }
   }
 
   $names = @(Get-PrinterDriver -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
   Write-Log "Available drivers: $($names -join '; ')"
-  throw 'No suitable Generic Text printer driver found on this system.'
+  throw 'No suitable Generic PostScript/Text printer driver found on this system.'
+}
+
+function Configure-PrinterQueue {
+  param([string]$Name)
+
+  try {
+    $escaped = $Name.Replace("'", "''")
+    $printer = Get-WmiObject Win32_Printer -Filter "Name='$escaped'" -ErrorAction SilentlyContinue
+    if ($printer) {
+      $printer.Direct = $true
+      $printer.Put() | Out-Null
+      Write-Log "Printer $Name set Direct=true"
+    }
+  } catch {
+    Write-Log "Configure-PrinterQueue: $($_.Exception.Message)"
+  }
 }
 
 function Add-PrinterSafe {
@@ -203,11 +258,14 @@ try {
     exit 2
   }
 
+  Ensure-SpoolDirectory
+
   $portName = "IP_127.0.0.1_$Port"
   Ensure-TcpPrinterPort -PortName $portName -HostAddress '127.0.0.1' -PortNumber $Port
 
-  $driver = Ensure-GenericTextDriver
+  $driver = Ensure-PrintDriver
   Add-PrinterSafe -Name $PrinterName -DriverName $driver -PortName $portName
+  Configure-PrinterQueue -Name $PrinterName
 
   $verify = Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue
   if (-not $verify) {

@@ -190,8 +190,8 @@ export function FaxInboxView() {
         <div className="flex-1 overflow-y-auto">
           {jobs.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">
-              Print to <span className="font-mono">RxConnectFax</span> (Windows: install via button above if
-              missing). Keep Rx-Connect open while printing.
+              Print to <span className="font-mono">RxConnectFax</span> with Rx-Connect running. Windows: use Install
+              printer if missing; avoid Windows Fax — pick RxConnectFax in the print dialog.
             </p>
           ) : (
             jobs.map((job) => (

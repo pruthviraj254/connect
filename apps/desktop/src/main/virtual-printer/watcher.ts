@@ -24,6 +24,16 @@ async function scanAndEmit(): Promise<void> {
 }
 
 const watchers: FSWatcher[] = [];
+let scanTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleScan(): void {
+  if (scanTimer) clearTimeout(scanTimer);
+  const delay = process.platform === 'win32' ? 400 : 0;
+  scanTimer = setTimeout(() => {
+    scanTimer = null;
+    void scanAndEmit();
+  }, delay);
+}
 
 export async function startSpoolWatchers(): Promise<void> {
   await seedKnown();
@@ -41,7 +51,7 @@ export async function startSpoolWatchers(): Promise<void> {
     }
     try {
       const w = watch(dir, { persistent: true }, () => {
-        void scanAndEmit();
+        scheduleScan();
       });
       watchers.push(w);
     } catch {
@@ -52,6 +62,10 @@ export async function startSpoolWatchers(): Promise<void> {
 }
 
 export function stopSpoolWatchers(): void {
+  if (scanTimer) {
+    clearTimeout(scanTimer);
+    scanTimer = null;
+  }
   for (const w of watchers) {
     w.close();
   }

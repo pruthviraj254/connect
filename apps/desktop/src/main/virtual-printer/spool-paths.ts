@@ -3,6 +3,7 @@ import { app } from 'electron';
 
 const SHARED_MAC = '/Library/Application Support/Rx-Connect/print-spool';
 const SHARED_LINUX = '/var/spool/rx-connect';
+const SHARED_WIN = path.join(process.env.ProgramData ?? 'C:\\ProgramData', 'Rx-Connect', 'print-spool');
 
 function envOverride(): string | null {
   const v = process.env.RX_CONNECT_PRINT_SPOOL;
@@ -12,6 +13,7 @@ function envOverride(): string | null {
 function sharedCandidate(): string | null {
   if (process.platform === 'darwin') return SHARED_MAC;
   if (process.platform === 'linux') return SHARED_LINUX;
+  if (process.platform === 'win32') return SHARED_WIN;
   return null;
 }
 
@@ -27,10 +29,12 @@ export function resolveSpoolDir(): string {
   return path.join(app.getPath('userData'), 'print-spool');
 }
 
-/** Writable spool: shared path may not exist in dev — fall back to userData. */
+/** Writable spool: on Windows/macOS installer paths when set; else userData (dev). */
 export function getWritableSpoolDir(): string {
   const override = envOverride();
   if (override) return override;
+  const shared = sharedCandidate();
+  if (shared) return shared;
   return path.join(app.getPath('userData'), 'print-spool');
 }
 
