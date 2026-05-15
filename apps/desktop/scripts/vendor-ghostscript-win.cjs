@@ -2,6 +2,7 @@
  * Downloads Ghostscript (Windows x64) into resources/ghostscript-win for packaging.
  * Skips on non-Windows. Safe to run multiple times (cached).
  *
+ * Release gs10051 ships gs10051w64.exe (Inno Setup), not a .zip — we silent-install to a temp dir.
  * License: Ghostscript is AGPL — see COPYING in the vendored folder.
  */
 const { execSync } = require('node:child_process');
@@ -15,10 +16,10 @@ const DEST_ROOT = path.join(DESKTOP_ROOT, 'resources', 'ghostscript-win');
 const MARKER = path.join(DEST_ROOT, 'bin', 'gswin64c.exe');
 
 const GS_TAG = process.env.GS_WINDOWS_TAG || 'gs10051';
-const GS_ZIP = process.env.GS_WINDOWS_ZIP || `${GS_TAG}w64.zip`;
+const GS_INSTALLER = process.env.GS_WINDOWS_INSTALLER || `${GS_TAG}w64.exe`;
 const GS_URL =
   process.env.GS_WINDOWS_URL ||
-  `https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/${GS_ZIP}`;
+  `https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/${GS_INSTALLER}`;
 
 function log(msg) {
   console.log(`[vendor-ghostscript] ${msg}`);
@@ -64,17 +65,44 @@ function copyDir(src, dest) {
   }
 }
 
-function findGsRoot(extractedDir) {
-  const queue = [extractedDir];
+function findGsRoot(searchDir) {
+  const queue = [searchDir];
   while (queue.length) {
     const dir = queue.shift();
     const binExe = path.join(dir, 'bin', 'gswin64c.exe');
     if (fs.existsSync(binExe)) return dir;
-    for (const name of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (name.isDirectory()) queue.push(path.join(dir, name.name));
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (entry.isDirectory()) queue.push(path.join(dir, entry.name));
     }
   }
   return null;
+}
+
+function silentInstall(installerPath, installDir) {
+  const dest = path.resolve(installDir);
+  fs.mkdirSync(dest, { recursive: true });
+  log(`silent install to ${dest}`);
+  // Inno Setup: /S silent, /D=dir (no trailing backslash)
+  execSync(`"${installerPath}" /S /D=${dest}`, {
+    stdio: 'inherit',
+    timeout: 10 * 60 * 1000,
+  });
+}
+
+async function extractZipArchive(zipPath, extractDir) {
+  log('extracting zip…');
+  const escapedZip = zipPath.replace(/'/g, "''");
+  const escapedOut = extractDir.replace(/'/g, "''");
+  execSync(
+    `powershell -NoProfile -Command "Expand-Archive -LiteralPath '${escapedZip}' -DestinationPath '${escapedOut}' -Force"`,
+    { stdio: 'inherit' },
+  );
 }
 
 async function main() {
@@ -89,26 +117,31 @@ async function main() {
   }
 
   const tmp = path.join(DESKTOP_ROOT, '.cache', 'ghostscript-vendor');
-  const zipPath = path.join(tmp, GS_ZIP);
+  const installerPath = path.join(tmp, GS_INSTALLER);
+  const installDir = path.join(tmp, 'install');
   const extractDir = path.join(tmp, 'extract');
 
   rmrf(tmp);
   fs.mkdirSync(tmp, { recursive: true });
 
   log(`downloading ${GS_URL}`);
-  await download(GS_URL, zipPath);
+  await download(GS_URL, installerPath);
 
-  log('extracting…');
-  const escapedZip = zipPath.replace(/'/g, "''");
-  const escapedOut = extractDir.replace(/'/g, "''");
-  execSync(
-    `powershell -NoProfile -Command "Expand-Archive -LiteralPath '${escapedZip}' -DestinationPath '${escapedOut}' -Force"`,
-    { stdio: 'inherit' },
-  );
+  let gsRoot = null;
+  const lower = GS_INSTALLER.toLowerCase();
 
-  const gsRoot = findGsRoot(extractDir);
+  if (lower.endsWith('.zip')) {
+    await extractZipArchive(installerPath, extractDir);
+    gsRoot = findGsRoot(extractDir);
+  } else if (lower.endsWith('.exe')) {
+    silentInstall(installerPath, installDir);
+    gsRoot = findGsRoot(installDir);
+  } else {
+    throw new Error(`unsupported Ghostscript asset type: ${GS_INSTALLER}`);
+  }
+
   if (!gsRoot) {
-    throw new Error('gswin64c.exe not found in extracted Ghostscript archive');
+    throw new Error('gswin64c.exe not found after Ghostscript install/extract');
   }
 
   log(`packaging from ${gsRoot}`);
