@@ -52,6 +52,7 @@ export function registerPrinterHandlers(): void {
         ok: false,
         error: result.error ?? 'install_failed',
         logPath: result.logPath,
+        logTail: result.logTail,
       },
     };
   });

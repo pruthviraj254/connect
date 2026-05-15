@@ -12,17 +12,17 @@ if (-not (Test-Path -LiteralPath $TargetScript)) {
   exit 3
 }
 
-$argList = @(
-  '-NoProfile',
-  '-ExecutionPolicy', 'Bypass',
-  '-File', $TargetScript,
-  '-LogPath', $LogPath
-)
+# Single ArgumentList string — array form breaks paths with spaces (AppData\Local\RxConnect\...).
+$argLine = "-NoProfile -ExecutionPolicy Bypass -File `"$TargetScript`" -LogPath `"$LogPath`""
 
 $p = Start-Process -FilePath 'powershell.exe' `
   -Verb RunAs `
   -Wait `
   -PassThru `
-  -ArgumentList $argList
+  -ArgumentList $argLine
+
+if ($null -eq $p) {
+  exit 5
+}
 
 exit $p.ExitCode

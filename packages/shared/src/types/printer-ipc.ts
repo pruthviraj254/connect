@@ -10,4 +10,5 @@ export type PrinterInstallResult = {
   ok: boolean;
   error?: string;
   logPath?: string;
+  logTail?: string;
 };

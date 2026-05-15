@@ -7,6 +7,7 @@ import {
   isWindowsPrinterInstalled,
   isWindowsPlatform,
   PRINTER_INSTALL_LOG_PATH,
+  readPrinterInstallLogTail,
   WINDOWS_PRINTER_NAME,
 } from './virtual-printer/windows-printer.js';
 
@@ -110,11 +111,19 @@ export async function promptWindowsPrinterInstallIfMissing(): Promise<void> {
     return;
   }
 
+  const logTail = result.logTail ?? readPrinterInstallLogTail();
+  const reason =
+    result.error === 'uac_cancelled'
+      ? 'Administrator permission was not granted.'
+      : result.error === 'script_not_found'
+        ? 'Install scripts were missing from the app package.'
+        : 'The elevated install script did not register the printer.';
+
   await dialog.showMessageBox({
     type: 'warning',
     title: 'Printer not installed',
     message: 'Could not add RxConnectFax.',
-    detail: `Log file:\n${result.logPath}\n\nYou can retry from Fax Inbox → Install printer.`,
+    detail: `${reason}\n\nLog file:\n${result.logPath}\n\nRecent log:\n${logTail}\n\nRetry from Fax Inbox → Install printer.`,
     buttons: ['OK'],
   });
 

@@ -74,7 +74,16 @@ export function FaxInboxView() {
         setPrinterInstalled(true);
         toast.success('RxConnectFax printer installed');
       } else {
-        toast.error(result.error ?? 'Could not install printer. Check install log on disk.');
+        const hint =
+          result.error === 'uac_cancelled'
+            ? 'Admin permission was denied.'
+            : result.logPath
+              ? `See log: ${result.logPath}`
+              : 'Could not install printer.';
+        toast.error(hint, {
+          description: result.logTail?.split('\n').slice(-2).join(' ') ?? undefined,
+          duration: 8000,
+        });
       }
     } catch {
       toast.error('Printer install failed');
