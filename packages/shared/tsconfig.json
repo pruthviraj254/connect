@@ -6,7 +6,6 @@
     "module": "CommonJS",
     "moduleResolution": "Node",
     "verbatimModuleSyntax": false,
-    "composite": true,
     "declaration": true,
     "declarationMap": true,
     "noEmit": false
