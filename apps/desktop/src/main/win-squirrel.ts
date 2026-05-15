@@ -1,48 +1,26 @@
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import path from 'node:path';
+import { dialog } from 'electron';
 import log from 'electron-log';
-
-function virtualPrinterDir(): string {
-  return path.join(process.resourcesPath, 'virtual-printer');
-}
+import {
+  installWindowsPrinterElevated,
+  isWindowsPrinterInstalled,
+  isWindowsPlatform,
+  PRINTER_INSTALL_LOG_PATH,
+  WINDOWS_PRINTER_NAME,
+} from './virtual-printer/windows-printer.js';
 
 function runUpdateExe(args: string[]): void {
   const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
   spawn(updateExe, args, { detached: true, stdio: 'ignore' }).unref();
 }
 
-/** Launch a PowerShell script elevated (UAC). */
-function runElevatedPs1(scriptName: string, wait = false): void {
-  const scriptPath = path.join(virtualPrinterDir(), scriptName);
-  const escaped = scriptPath.replace(/'/g, "''");
-  const psCommand = `Start-Process powershell.exe -Verb RunAs -Wait -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','${escaped}'`;
-
-  const args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', psCommand];
-
-  try {
-    if (wait) {
-      const result = spawnSync('powershell.exe', args, { stdio: 'inherit', windowsHide: false });
-      if (result.status !== 0) {
-        log.warn(`[win-squirrel] ${scriptName} exited with code ${result.status ?? 'unknown'}`);
-      }
-      return;
-    }
-    const child = spawn('powershell.exe', args, { stdio: 'ignore', windowsHide: false });
-    child.on('error', (err) => log.error('[win-squirrel] elevated script spawn failed', err));
-    child.on('close', (code) => {
-      if (code !== 0) log.warn(`[win-squirrel] ${scriptName} exited with code ${code}`);
-    });
-  } catch (err) {
-    log.error('[win-squirrel] failed to run elevated script', err);
-  }
-}
-
 /**
- * Handle Squirrel.Windows install/update/uninstall events (replaces electron-squirrel-startup).
+ * Handle Squirrel.Windows install/update/uninstall events.
  * Returns true when the app should exit immediately (installer-driven launch).
  */
 export function handleWindowsSquirrelStartup(): boolean {
-  if (process.platform !== 'win32') {
+  if (!isWindowsPlatform()) {
     return false;
   }
 
@@ -56,13 +34,13 @@ export function handleWindowsSquirrelStartup(): boolean {
 
   if (cmd === '--squirrel-install' || cmd === '--squirrel-updated') {
     runUpdateExe([`--createShortcut=${target}`]);
-    runElevatedPs1('install-windows-printer.ps1', true);
+    void installWindowsPrinterElevated();
     return true;
   }
 
   if (cmd === '--squirrel-uninstall') {
     runUpdateExe([`--removeShortcut=${target}`]);
-    runElevatedPs1('uninstall-windows-printer.ps1', true);
+    void runElevatedUninstall();
     return true;
   }
 
@@ -73,31 +51,74 @@ export function handleWindowsSquirrelStartup(): boolean {
   return false;
 }
 
-/** Is RxConnectFax registered in Windows? */
-export async function isWindowsPrinterInstalled(): Promise<boolean> {
-  if (process.platform !== 'win32') return true;
-  return new Promise((resolve) => {
-    const child = spawn(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-Command',
-        "if (Get-Printer -Name 'RxConnectFax' -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }",
-      ],
-      { windowsHide: true },
-    );
-    child.on('close', (code) => resolve(code === 0));
-    child.on('error', () => resolve(false));
-  });
+function runElevatedUninstall(): void {
+  const scriptPath = path.join(process.resourcesPath, 'virtual-printer', 'uninstall-windows-printer.ps1');
+  const launcherPath = path.join(process.resourcesPath, 'virtual-printer', 'elevate-run-script.ps1');
+  spawn(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      launcherPath,
+      '-TargetScript',
+      scriptPath,
+    ],
+    { stdio: 'ignore', windowsHide: false },
+  ).unref();
 }
 
-/** Fallback if Squirrel install was skipped or UAC was denied. */
-export function scheduleWindowsPrinterInstallIfMissing(): void {
-  if (process.platform !== 'win32') return;
-  void (async () => {
-    const installed = await isWindowsPrinterInstalled();
-    if (installed) return;
-    log.info('[win-squirrel] RxConnectFax missing — running elevated install');
-    runElevatedPs1('install-windows-printer.ps1', false);
-  })();
+/** Prompt user and install RxConnectFax (primary path on Windows). */
+export async function promptWindowsPrinterInstallIfMissing(): Promise<void> {
+  if (!isWindowsPlatform()) {
+    return;
+  }
+
+  const installed = await isWindowsPrinterInstalled();
+  if (installed) {
+    return;
+  }
+
+  log.info('[win-squirrel] RxConnectFax missing — showing install dialog');
+
+  const { response } = await dialog.showMessageBox({
+    type: 'info',
+    title: 'Install virtual printer',
+    message: `Rx-Connect needs to add the "${WINDOWS_PRINTER_NAME}" printer.`,
+    detail:
+      'Windows will ask for administrator permission (UAC). Accept to print from any app into Fax Inbox.\n\nKeep Rx-Connect running while you print.',
+    buttons: ['Install printer', 'Not now'],
+    defaultId: 0,
+    cancelId: 1,
+  });
+
+  if (response !== 0) {
+    return;
+  }
+
+  const result = installWindowsPrinterElevated();
+
+  if (result.ok) {
+    await dialog.showMessageBox({
+      type: 'info',
+      title: 'Printer installed',
+      message: `"${WINDOWS_PRINTER_NAME}" is ready.`,
+      detail: 'Choose it in any app’s Print dialog. Keep Rx-Connect open while printing.',
+      buttons: ['OK'],
+    });
+    return;
+  }
+
+  await dialog.showMessageBox({
+    type: 'warning',
+    title: 'Printer not installed',
+    message: 'Could not add RxConnectFax.',
+    detail: `Log file:\n${result.logPath}\n\nYou can retry from Fax Inbox → Install printer.`,
+    buttons: ['OK'],
+  });
+
+  log.warn('[win-squirrel] printer install failed', result);
 }
+
+export { isWindowsPrinterInstalled, installWindowsPrinterElevated, PRINTER_INSTALL_LOG_PATH };

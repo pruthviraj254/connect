@@ -31,6 +31,9 @@ export const IpcChannel = {
   PrintJobGetPdfBase64: 'print-job:get-pdf-base64',
   PrintJobDelete: 'print-job:delete',
 
+  PrinterGetStatus: 'printer:get-status',
+  PrinterInstall: 'printer:install',
+
   BlacklistList: 'blacklist:list',
   BlacklistAdd: 'blacklist:add',
 

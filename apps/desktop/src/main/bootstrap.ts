@@ -3,10 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { stat } from 'node:fs/promises';
 import log from 'electron-log';
-import {
-  handleWindowsSquirrelStartup,
-  scheduleWindowsPrinterInstallIfMissing,
-} from './win-squirrel.js';
+import { handleWindowsSquirrelStartup, promptWindowsPrinterInstallIfMissing } from './win-squirrel.js';
 import { registerIpcHandlers } from './ipc/index.js';
 import { buildAppMenu } from './menu.js';
 import { getStore } from './store.js';
@@ -240,7 +237,7 @@ if (!gotLock) {
     nativeTheme.themeSource = getStore().get('theme', 'system') as 'system' | 'light' | 'dark';
 
     await createWindow();
-    scheduleWindowsPrinterInstallIfMissing();
+    await promptWindowsPrinterInstallIfMissing();
 
     app.on('activate', async () => {
       if (BrowserWindow.getAllWindows().length === 0) {

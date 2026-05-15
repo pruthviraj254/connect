@@ -1,6 +1,5 @@
-#Requires -RunAsAdministrator
 <#
-  Removes RxConnectFax printer and TCP port created by install-windows-printer.ps1.
+  Removes RxConnectFax printer and TCP port. Caller must elevate (RunAs).
 #>
 param(
   [string]$PrinterName = "RxConnectFax",
@@ -8,6 +7,12 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+    [Security.Principal.WindowsBuiltInRole]::Administrator)) {
+  Write-Error "Administrator rights required."
+  exit 2
+}
 
 $portName = "IP_127.0.0.1_$Port"
 

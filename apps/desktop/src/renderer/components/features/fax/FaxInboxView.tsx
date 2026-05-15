@@ -11,7 +11,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { deletePrintJobFile, getPrintJobPdfBase64, listIncomingPrintJobs, sendFaxFromPdf } from '@/lib/fax-print';
+import {
+  deletePrintJobFile,
+  getPrintJobPdfBase64,
+  getPrinterStatus,
+  installVirtualPrinter,
+  listIncomingPrintJobs,
+  sendFaxFromPdf,
+} from '@/lib/fax-print';
 import { PdfPreviewPanel } from '@/components/features/fax/PdfPreviewPanel';
 import { isElectronApp } from '@/lib/auth/auth-actions';
 
@@ -30,6 +37,8 @@ export function FaxInboxView() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [printerInstalled, setPrinterInstalled] = useState<boolean | null>(null);
+  const [printerInstalling, setPrinterInstalling] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!isElectronApp()) return;
@@ -44,6 +53,35 @@ export function FaxInboxView() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!isElectronApp()) return;
+    void (async () => {
+      try {
+        const status = await getPrinterStatus();
+        setPrinterInstalled(status.installed);
+      } catch {
+        setPrinterInstalled(null);
+      }
+    })();
+  }, []);
+
+  const onInstallPrinter = async () => {
+    setPrinterInstalling(true);
+    try {
+      const result = await installVirtualPrinter();
+      if (result.ok) {
+        setPrinterInstalled(true);
+        toast.success('RxConnectFax printer installed');
+      } else {
+        toast.error(result.error ?? 'Could not install printer. Check install log on disk.');
+      }
+    } catch {
+      toast.error('Printer install failed');
+    } finally {
+      setPrinterInstalling(false);
+    }
+  };
 
   useEffect(() => {
     if (!isElectronApp() || !window.electronAPI?.onPrintJob) return;
@@ -143,8 +181,8 @@ export function FaxInboxView() {
         <div className="flex-1 overflow-y-auto">
           {jobs.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">
-              Print to <span className="font-mono">RxConnectFax</span> (after install) or drop PDFs into the spool
-              folder.
+              Print to <span className="font-mono">RxConnectFax</span> (Windows: install via button above if
+              missing). Keep Rx-Connect open while printing.
             </p>
           ) : (
             jobs.map((job) => (
@@ -182,6 +220,23 @@ export function FaxInboxView() {
     <div className="flex flex-1 min-h-0 rounded-lg border border-border overflow-hidden bg-background">
       {aside}
       <div className="flex-1 flex flex-col min-w-0">
+        {printerInstalled === false && (
+          <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            <p>
+              <span className="font-medium">RxConnectFax</span> is not installed. Accept the Windows admin prompt to
+              add it. Keep Rx-Connect open while printing.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              className="shrink-0 bg-teal text-teal-foreground"
+              disabled={printerInstalling}
+              onClick={() => void onInstallPrinter()}
+            >
+              {printerInstalling ? 'Installing…' : 'Install printer'}
+            </Button>
+          </div>
+        )}
         <PdfPreviewPanel
           base64={previewBase64}
           loading={previewLoading}

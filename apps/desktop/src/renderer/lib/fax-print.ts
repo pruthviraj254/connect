@@ -4,6 +4,8 @@ import {
   type FaxSendResult,
   type IpcResult,
   type PrintJobRecord,
+  type PrinterInstallResult,
+  type PrinterStatus,
 } from '@rx-connect/shared';
 import { ipcInvoke } from '@/lib/ipc';
 import { unwrapIpc } from '@/lib/ipc/unwrap';
@@ -25,5 +27,15 @@ export async function deletePrintJobFile(pdfPath: string): Promise<void> {
 
 export async function sendFaxFromPdf(payload: FaxSendPayload): Promise<FaxSendResult> {
   const result = await ipcInvoke<IpcResult<FaxSendResult>>(IpcChannel.FaxSend, payload);
+  return unwrapIpc(result);
+}
+
+export async function getPrinterStatus(): Promise<PrinterStatus> {
+  const result = await ipcInvoke<IpcResult<PrinterStatus>>(IpcChannel.PrinterGetStatus);
+  return unwrapIpc(result);
+}
+
+export async function installVirtualPrinter(): Promise<PrinterInstallResult> {
+  const result = await ipcInvoke<IpcResult<PrinterInstallResult>>(IpcChannel.PrinterInstall);
   return unwrapIpc(result);
 }
