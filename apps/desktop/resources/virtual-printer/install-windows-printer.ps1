@@ -1,6 +1,7 @@
-# Installs RxConnectFax (Standard TCP/IP raw -> 127.0.0.1:19101). Caller must elevate (RunAs).
+# Installs RxConnect (Standard TCP/IP raw -> 127.0.0.1:19101). Caller must elevate (RunAs).
+# Queue name must NOT contain "Fax" — Windows routes those to Windows Fax and Scan.
 param(
-  [string]$PrinterName = "RxConnectFax",
+  [string]$PrinterName = "RxConnect",
   [int]$Port = 19101,
   [string]$LogPath = "$env:ProgramData\Rx-Connect\logs\printer-install.log"
 )
@@ -259,6 +260,16 @@ try {
   }
 
   Ensure-SpoolDirectory
+
+  foreach ($legacyName in @('RxConnectFax')) {
+    if ($legacyName -ne $PrinterName) {
+      $legacy = Get-Printer -Name $legacyName -ErrorAction SilentlyContinue
+      if ($legacy) {
+        Write-Log "Removing legacy printer $legacyName (Fax in name triggers Windows Fax UI)"
+        Remove-Printer -Name $legacyName -Confirm:$false
+      }
+    }
+  }
 
   $portName = "IP_127.0.0.1_$Port"
   Ensure-TcpPrinterPort -PortName $portName -HostAddress '127.0.0.1' -PortNumber $Port

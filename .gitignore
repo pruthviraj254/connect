@@ -14,3 +14,7 @@ playwright-report
 test-results
 *.local.*
 .env.example
+apps/desktop/resources/ghostscript-win/bin/
+apps/desktop/resources/ghostscript-win/lib/
+apps/desktop/resources/ghostscript-win/Resource/
+apps/desktop/.cache/

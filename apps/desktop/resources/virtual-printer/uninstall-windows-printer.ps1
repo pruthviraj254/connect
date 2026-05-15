@@ -2,7 +2,7 @@
   Removes RxConnectFax printer and TCP port. Caller must elevate (RunAs).
 #>
 param(
-  [string]$PrinterName = "RxConnectFax",
+  [string]$PrinterName = "RxConnect",
   [int]$Port = 19101
 )
 
@@ -16,9 +16,11 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 
 $portName = "IP_127.0.0.1_$Port"
 
-$printer = Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue
-if ($printer) {
-  Remove-Printer -Name $PrinterName -Confirm:$false
+foreach ($name in @($PrinterName, 'RxConnectFax')) {
+  $printer = Get-Printer -Name $name -ErrorAction SilentlyContinue
+  if ($printer) {
+    Remove-Printer -Name $name -Confirm:$false
+  }
 }
 
 $printerPort = Get-PrinterPort -Name $portName -ErrorAction SilentlyContinue

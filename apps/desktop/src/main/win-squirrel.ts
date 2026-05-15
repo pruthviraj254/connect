@@ -122,7 +122,7 @@ export async function promptWindowsPrinterInstallIfMissing(): Promise<void> {
   await dialog.showMessageBox({
     type: 'warning',
     title: 'Printer not installed',
-    message: 'Could not add RxConnectFax.',
+    message: `Could not add ${WINDOWS_PRINTER_NAME}.`,
     detail: `${reason}\n\nLog file:\n${result.logPath}\n\nRecent log:\n${logTail}\n\nRetry from Fax Inbox → Install printer.`,
     buttons: ['OK'],
   });

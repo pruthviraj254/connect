@@ -4,7 +4,11 @@ import path from 'node:path';
 import { app } from 'electron';
 import log from 'electron-log';
 
-export const WINDOWS_PRINTER_NAME = 'RxConnectFax';
+/** Windows queue name — avoid "Fax" in the name (OS opens Windows Fax and Scan). */
+export const WINDOWS_PRINTER_NAME = 'RxConnect';
+
+/** Legacy Windows install name; removed on reinstall. */
+export const WINDOWS_LEGACY_PRINTER_NAME = 'RxConnectFax';
 
 export const PRINTER_INSTALL_LOG_PATH = path.join(
   process.env.ProgramData ?? 'C:\\ProgramData',
@@ -126,7 +130,7 @@ export function installWindowsPrinterElevated(): PrinterInstallResult {
     return { ok: false, exitCode, logPath, error, logTail };
   }
 
-  log.info('[windows-printer] RxConnectFax installed');
+  log.info(`[windows-printer] ${WINDOWS_PRINTER_NAME} installed`);
   return { ok: true, exitCode, logPath, logTail };
 }
 

@@ -50,6 +50,9 @@ jobs:
       - name: Build shared package (fresh dist for CI)
         run: pnpm --filter @rx-connect/shared run build
 
+      - name: Vendor Ghostscript (Windows x64, bundled in installer)
+        run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
+
       - name: Build Windows installer
         run: pnpm --filter @rx-connect/desktop run make
 

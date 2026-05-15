@@ -9,6 +9,7 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import MakerRxPKG from './forge-makers/maker-rx-pkg';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,11 +22,22 @@ const virtualPrinterPkgScripts = path.join(
   'pkg',
 );
 
+const virtualPrinterResource = path.join(__dirname, 'resources', 'virtual-printer');
+const ghostscriptWinResource = path.join(__dirname, 'resources', 'ghostscript-win');
+const extraResources = [virtualPrinterResource];
+if (fsSync.existsSync(path.join(ghostscriptWinResource, 'bin', 'gswin64c.exe'))) {
+  extraResources.push(ghostscriptWinResource);
+} else if (process.platform === 'win32') {
+  console.warn(
+    '[forge] ghostscript-win not vendored — run `node scripts/vendor-ghostscript-win.cjs` before make for Windows PDF preview.',
+  );
+}
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     executableName: 'rx-connect',
-    extraResource: [path.join(__dirname, 'resources', 'virtual-printer')],
+    extraResource: extraResources,
     protocols: [
       {
         name: 'Rx Connect',

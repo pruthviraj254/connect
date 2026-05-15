@@ -39,6 +39,7 @@ export function FaxInboxView() {
   const [busy, setBusy] = useState(false);
   const [printerInstalled, setPrinterInstalled] = useState<boolean | null>(null);
   const [printerInstalling, setPrinterInstalling] = useState(false);
+  const [printerName, setPrinterName] = useState('RxConnect');
 
   const refresh = useCallback(async () => {
     if (!isElectronApp()) return;
@@ -60,6 +61,7 @@ export function FaxInboxView() {
       try {
         const status = await getPrinterStatus();
         setPrinterInstalled(status.installed);
+        if (status.printerName) setPrinterName(status.printerName);
       } catch {
         setPrinterInstalled(null);
       }
@@ -72,7 +74,7 @@ export function FaxInboxView() {
       const result = await installVirtualPrinter();
       if (result.ok) {
         setPrinterInstalled(true);
-        toast.success('RxConnectFax printer installed');
+        toast.success(`${printerName} printer installed`);
       } else {
         const hint =
           result.error === 'uac_cancelled'
@@ -113,12 +115,6 @@ export function FaxInboxView() {
       setPreviewLoading(false);
       return;
     }
-    if (!selected.pdfPath.toLowerCase().endsWith('.pdf')) {
-      setPreviewBase64(null);
-      setPreviewError('not_pdf');
-      setPreviewLoading(false);
-      return;
-    }
     let cancelled = false;
     setPreviewBase64(null);
     setPreviewError(null);
@@ -128,10 +124,13 @@ export function FaxInboxView() {
         const b64 = await getPrintJobPdfBase64(selected.pdfPath);
         if (!cancelled) {
           setPreviewBase64(b64);
+          setPreviewError(null);
         }
       } catch (e) {
         if (!cancelled) {
-          setPreviewError(e instanceof Error ? e.message : 'preview_failed');
+          const msg = e instanceof Error ? e.message : 'preview_failed';
+          setPreviewError(msg);
+          setPreviewBase64(null);
         }
       } finally {
         if (!cancelled) setPreviewLoading(false);
@@ -190,8 +189,8 @@ export function FaxInboxView() {
         <div className="flex-1 overflow-y-auto">
           {jobs.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">
-              Print to <span className="font-mono">RxConnectFax</span> with Rx-Connect running. Windows: use Install
-              printer if missing; avoid Windows Fax — pick RxConnectFax in the print dialog.
+              Print to <span className="font-mono">{printerName}</span> with Rx-Connect running. Do not use Windows Fax
+              — pick <span className="font-mono">{printerName}</span> in the print dialog.
             </p>
           ) : (
             jobs.map((job) => (
@@ -211,7 +210,7 @@ export function FaxInboxView() {
         </div>
       </div>
     ),
-    [jobs, selected?.pdfPath],
+    [jobs, selected?.pdfPath, printerName],
   );
 
   if (!isElectronApp()) {
@@ -232,7 +231,7 @@ export function FaxInboxView() {
         {printerInstalled === false && (
           <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
             <p>
-              <span className="font-medium">RxConnectFax</span> is not installed. Accept the Windows admin prompt to
+              <span className="font-medium">{printerName}</span> is not installed. Accept the Windows admin prompt to
               add it. Keep Rx-Connect open while printing.
             </p>
             <Button

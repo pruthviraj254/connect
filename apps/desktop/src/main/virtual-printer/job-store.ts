@@ -1,7 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { IpcResult, PrintJobRecord } from '@rx-connect/shared';
-import { getWritableSpoolDir, resolveSpoolDir } from './spool-paths.js';
+import { ensureJobPdf, extractEmbeddedPdfIfAny } from './ensure-job-pdf.js';
+import { getWritableSpoolDir, isAllowedSpoolPath, resolveSpoolDir } from './spool-paths.js';
+
+export { isAllowedSpoolPath } from './spool-paths.js';
 
 function idFromFile(name: string): string {
   const base = path.basename(name, path.extname(name));
@@ -24,20 +27,29 @@ async function collectFromDir(dir: string, seen: Set<string>, out: PrintJobRecor
   } catch {
     return;
   }
+  const byStem = new Map<string, PrintJobRecord>();
   for (const name of names) {
     if (!name.endsWith('.pdf') && !name.endsWith('.bin')) continue;
     const full = path.join(dir, name);
-    if (seen.has(full)) continue;
     const st = await statSafe(full);
     if (!st) continue;
-    seen.add(full);
-    out.push({
+    const stem = name.replace(/\.(pdf|bin)$/i, '');
+    const record: PrintJobRecord = {
       id: idFromFile(name),
-      title: name.replace(/\.(pdf|bin)$/i, ''),
+      title: stem,
       fileName: name,
       pdfPath: full,
       receivedAt: new Date(st.mtimeMs).toISOString(),
-    });
+    };
+    const prev = byStem.get(stem);
+    if (!prev || name.toLowerCase().endsWith('.pdf')) {
+      byStem.set(stem, record);
+    }
+  }
+  for (const record of byStem.values()) {
+    if (seen.has(record.pdfPath)) continue;
+    seen.add(record.pdfPath);
+    out.push(record);
   }
 }
 
@@ -55,26 +67,29 @@ export async function listPrintJobs(): Promise<PrintJobRecord[]> {
   return out;
 }
 
-export function isAllowedSpoolPath(absPath: string): boolean {
-  const allowedDirs = [resolveSpoolDir(), getWritableSpoolDir()];
-  const resolved = path.resolve(absPath);
-  return allowedDirs.some((d) => {
-    const root = path.resolve(d);
-    return resolved === root || resolved.startsWith(root + path.sep);
-  });
-}
-
 export async function readPdfAsBase64(absPath: string): Promise<IpcResult<string>> {
   if (!isAllowedSpoolPath(absPath)) {
     return { ok: false, error: 'path_not_allowed' };
   }
-  const resolved = path.resolve(absPath);
+
+  let resolved = path.resolve(absPath);
+
+  if (process.platform === 'win32') {
+    const embedded = await extractEmbeddedPdfIfAny(resolved);
+    if (embedded) resolved = embedded;
+    const pdfPath = await ensureJobPdf(resolved);
+    if (pdfPath) resolved = pdfPath;
+  }
+
   try {
     const buf = await fs.readFile(resolved);
     if (buf.length >= 5 && buf.subarray(0, 5).toString() === '%PDF-') {
       return { ok: true, data: buf.toString('base64') };
     }
-    return { ok: false, error: 'not_pdf' };
+    return {
+      ok: false,
+      error: process.platform === 'win32' ? 'conversion_failed' : 'not_pdf',
+    };
   } catch {
     return { ok: false, error: 'read_failed' };
   }

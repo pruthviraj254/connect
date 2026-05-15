@@ -41,3 +41,12 @@ export function getWritableSpoolDir(): string {
 export const RAW_PRINT_PORT = Number(process.env.RX_CONNECT_RAW_PRINT_PORT ?? 19101);
 
 export const PRINT_JOB_INCOMING_CHANNEL = 'print-job:incoming' as const;
+
+export function isAllowedSpoolPath(absPath: string): boolean {
+  const allowedDirs = [resolveSpoolDir(), getWritableSpoolDir()];
+  const resolved = path.resolve(absPath);
+  return allowedDirs.some((d) => {
+    const root = path.resolve(d);
+    return resolved === root || resolved.startsWith(root + path.sep);
+  });
+}
