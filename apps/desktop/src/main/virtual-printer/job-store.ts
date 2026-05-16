@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { IpcResult, PrintJobRecord } from '@rx-connect/shared';
 import { ensureJobPdf, extractEmbeddedPdfIfAny } from './ensure-job-pdf.js';
+import { isGhostscriptAvailable, renderPdfToPngs } from './gs-convert.js';
 import { getWritableSpoolDir, isAllowedSpoolPath, resolveSpoolDir } from './spool-paths.js';
 
 export { isAllowedSpoolPath } from './spool-paths.js';
@@ -109,6 +110,34 @@ export async function readPdfAsBase64(absPath: string): Promise<IpcResult<string
   } catch {
     return { ok: false, error: 'read_failed' };
   }
+}
+
+/**
+ * Renders the print job's PDF to base64 PNG pages for safe in-renderer preview.
+ * Resolves/converts spool file to a valid PDF first, then rasterizes via Ghostscript.
+ */
+export async function getPrintJobPagePngs(absPath: string): Promise<IpcResult<string[]>> {
+  const resolved = await resolveToReadablePdfPath(absPath);
+  if (!resolved.ok) return resolved;
+
+  if (!isGhostscriptAvailable()) {
+    return { ok: false, error: 'ghostscript_unavailable' };
+  }
+
+  try {
+    const pages = await renderPdfToPngs(resolved.data);
+    if (pages.length === 0) {
+      return { ok: false, error: 'render_failed' };
+    }
+    return { ok: true, data: pages };
+  } catch {
+    return { ok: false, error: 'render_failed' };
+  }
+}
+
+/** Returns the resolved PDF path so the IPC layer can copy it to a user-chosen location. */
+export async function getPrintJobAbsolutePdfPath(absPath: string): Promise<IpcResult<string>> {
+  return resolveToReadablePdfPath(absPath);
 }
 
 export async function deletePrintJob(absPath: string): Promise<IpcResult<null>> {

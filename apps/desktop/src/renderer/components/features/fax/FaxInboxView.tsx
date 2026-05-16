@@ -13,7 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   deletePrintJobFile,
-  getPrintJobPdfBase64,
+  downloadPrintJob,
+  getPrintJobPagePngs,
   getPrinterStatus,
   installVirtualPrinter,
   listIncomingPrintJobs,
@@ -33,7 +34,7 @@ export function FaxInboxView() {
   const router = useRouter();
   const [jobs, setJobs] = useState<PrintJobRecord[]>([]);
   const [selected, setSelected] = useState<PrintJobRecord | null>(null);
-  const [previewBase64, setPreviewBase64] = useState<string | null>(null);
+  const [pagePngs, setPagePngs] = useState<string[] | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -110,27 +111,27 @@ export function FaxInboxView() {
 
   useEffect(() => {
     if (!selected || !isElectronApp()) {
-      setPreviewBase64(null);
+      setPagePngs(null);
       setPreviewError(null);
       setPreviewLoading(false);
       return;
     }
     let cancelled = false;
-    setPreviewBase64(null);
+    setPagePngs(null);
     setPreviewError(null);
     setPreviewLoading(true);
     void (async () => {
       try {
-        const b64 = await getPrintJobPdfBase64(selected.pdfPath);
+        const pages = await getPrintJobPagePngs(selected.pdfPath);
         if (!cancelled) {
-          setPreviewBase64(b64);
+          setPagePngs(pages);
           setPreviewError(null);
         }
       } catch (e) {
         if (!cancelled) {
           const msg = e instanceof Error ? e.message : 'preview_failed';
           setPreviewError(msg);
-          setPreviewBase64(null);
+          setPagePngs(null);
         }
       } finally {
         if (!cancelled) setPreviewLoading(false);
@@ -176,6 +177,19 @@ export function FaxInboxView() {
       await refresh();
     } catch {
       toast.error('Could not delete job.');
+    }
+  };
+
+  const onDownload = async () => {
+    if (!selected || !isElectronApp()) return;
+    try {
+      const savedTo = await downloadPrintJob(selected.pdfPath);
+      if (savedTo) {
+        toast.success('PDF saved', { description: savedTo });
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'download_failed';
+      toast.error('Could not download PDF', { description: msg });
     }
   };
 
@@ -246,7 +260,7 @@ export function FaxInboxView() {
           </div>
         )}
         <PdfPreviewPanel
-          previewBase64={previewBase64}
+          pagePngs={pagePngs}
           loading={previewLoading}
           error={previewError}
         />
@@ -262,6 +276,9 @@ export function FaxInboxView() {
             </div>
             <Button type="submit" disabled={!selected || busy} className="bg-teal text-teal-foreground">
               {busy ? 'Sending…' : 'Send fax'}
+            </Button>
+            <Button type="button" variant="outline" disabled={!selected || busy} onClick={() => void onDownload()}>
+              Download
             </Button>
             <Button type="button" variant="outline" disabled={!selected || busy} onClick={() => void onDelete()}>
               Delete job

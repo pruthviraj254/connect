@@ -20,9 +20,21 @@ export async function getPrintJobPdfBase64(pdfPath: string): Promise<string> {
   return unwrapIpc(result);
 }
 
+/** Returns base64 PNG renderings of each PDF page (Ghostscript). Bulletproof preview path. */
+export async function getPrintJobPagePngs(pdfPath: string): Promise<string[]> {
+  const result = await ipcInvoke<IpcResult<string[]>>(IpcChannel.PrintJobGetPagePngs, pdfPath);
+  return unwrapIpc(result);
+}
+
 /** Resolves/converts spool file to PDF path for rx-pdf:// preview (Windows converts PostScript). */
 export async function getPrintJobPreviewPath(spoolPath: string): Promise<string> {
   const result = await ipcInvoke<IpcResult<string>>(IpcChannel.PrintJobGetPreviewPath, spoolPath);
+  return unwrapIpc(result);
+}
+
+/** Opens a save dialog and copies the PDF to the chosen location. Returns the saved path or null if cancelled. */
+export async function downloadPrintJob(pdfPath: string): Promise<string | null> {
+  const result = await ipcInvoke<IpcResult<string | null>>(IpcChannel.PrintJobDownload, pdfPath);
   return unwrapIpc(result);
 }
 

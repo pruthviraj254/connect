@@ -1,7 +1,9 @@
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { app } from 'electron';
 import log from 'electron-log';
 import { detectRawPrintFormat, pdfByteOffset, type RawPrintFormat } from './raw-print-format.js';
@@ -239,4 +241,78 @@ export async function tryConvertToPdfWithGhostscript(
 
 export function isGhostscriptAvailable(): boolean {
   return resolveGhostscriptBin() !== null;
+}
+
+/**
+ * Renders a PDF file's pages to PNG images and returns each as a base64 string.
+ * Bulletproof preview path: images always render in the renderer, no PDF.js required.
+ * Returns empty array if Ghostscript unavailable (caller can show a friendly message).
+ *
+ * @param pdfPath absolute path to a valid PDF file (must already start with %PDF-)
+ * @param maxPages safety cap; defaults to 20 pages
+ * @param dpi raster DPI; 150 is a good preview/quality balance
+ */
+export async function renderPdfToPngs(
+  pdfPath: string,
+  maxPages = 20,
+  dpi = 150,
+): Promise<string[]> {
+  const bin = resolveGhostscriptBin();
+  if (!bin) {
+    log.warn('[virtual-printer] renderPdfToPngs: Ghostscript not available');
+    return [];
+  }
+
+  let tempBase: string;
+  try {
+    tempBase = app.getPath('temp');
+  } catch {
+    tempBase = os.tmpdir();
+  }
+  const tempDir = path.join(tempBase, `rxconnect-preview-${Date.now()}-${randomUUID().slice(0, 8)}`);
+  await fsPromises.mkdir(tempDir, { recursive: true });
+
+  const outputPattern = path.join(tempDir, 'page-%d.png');
+  const gsRoot = ghostscriptRoot(bin);
+  const args = [
+    '-dNOPAUSE',
+    '-dBATCH',
+    '-dQUIET',
+    process.platform === 'win32' ? '-dNOSAFER' : '-dSAFER',
+    '-sDEVICE=png16m',
+    `-r${dpi}`,
+    '-dFirstPage=1',
+    `-dLastPage=${maxPages}`,
+    `-sOutputFile=${outputPattern}`,
+  ];
+  const resource = path.join(gsRoot, 'Resource');
+  if (fs.existsSync(resource)) {
+    args.push(`-I${resource}`);
+  }
+  args.push(pdfPath);
+
+  const ok = await runGhostscript(args);
+  if (!ok) {
+    log.warn('[virtual-printer] renderPdfToPngs: Ghostscript exited non-zero');
+    await fsPromises.rm(tempDir, { recursive: true, force: true }).catch(() => undefined);
+    return [];
+  }
+
+  const pages: string[] = [];
+  for (let i = 1; i <= maxPages; i += 1) {
+    const pagePath = path.join(tempDir, `page-${i}.png`);
+    try {
+      const buf = await fsPromises.readFile(pagePath);
+      pages.push(buf.toString('base64'));
+    } catch {
+      break;
+    }
+  }
+
+  await fsPromises.rm(tempDir, { recursive: true, force: true }).catch(() => undefined);
+
+  if (pages.length === 0) {
+    log.warn('[virtual-printer] renderPdfToPngs: no pages produced');
+  }
+  return pages;
 }

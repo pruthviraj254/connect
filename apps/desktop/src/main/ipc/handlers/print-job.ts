@@ -1,7 +1,12 @@
-import { ipcMain } from 'electron';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { dialog, ipcMain } from 'electron';
+import log from 'electron-log';
 import { IpcChannel, type IpcResult, type PrintJobRecord } from '@rx-connect/shared';
 import {
   deletePrintJob,
+  getPrintJobAbsolutePdfPath,
+  getPrintJobPagePngs,
   listPrintJobs,
   readPdfAsBase64,
   resolvePrintJobPreviewPath,
@@ -34,6 +39,48 @@ export function registerPrintJobHandlers(): void {
         return { ok: false, error: 'invalid_payload' };
       }
       return resolvePrintJobPreviewPath(raw);
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.PrintJobGetPagePngs,
+    async (_e, raw: unknown): Promise<IpcResult<string[]>> => {
+      if (typeof raw !== 'string' || raw.length === 0) {
+        return { ok: false, error: 'invalid_payload' };
+      }
+      return getPrintJobPagePngs(raw);
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.PrintJobDownload,
+    async (_e, raw: unknown): Promise<IpcResult<string | null>> => {
+      if (typeof raw !== 'string' || raw.length === 0) {
+        return { ok: false, error: 'invalid_payload' };
+      }
+
+      const resolved = await getPrintJobAbsolutePdfPath(raw);
+      if (!resolved.ok) return resolved;
+
+      const defaultName = `${path.basename(resolved.data, path.extname(resolved.data))}.pdf`;
+      const result = await dialog.showSaveDialog({
+        title: 'Save fax PDF',
+        defaultPath: defaultName,
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      });
+
+      if (result.canceled || !result.filePath) {
+        return { ok: true, data: null };
+      }
+
+      try {
+        await fs.copyFile(resolved.data, result.filePath);
+        log.info('[print-job] downloaded to', result.filePath);
+        return { ok: true, data: result.filePath };
+      } catch (e) {
+        log.error('[print-job] download failed', e);
+        return { ok: false, error: 'download_failed' };
+      }
     },
   );
 
