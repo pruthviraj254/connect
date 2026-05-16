@@ -6,6 +6,7 @@ import { VitePlugin } from '@electron-forge/plugin-vite';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs/promises';
@@ -14,6 +15,7 @@ import MakerRxPKG from './forge-makers/maker-rx-pkg';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
 
 const virtualPrinterPkgScripts = path.join(
   __dirname,
@@ -105,6 +107,19 @@ const config: ForgeConfig = {
       try {
         await fs.access(src);
         await fs.cp(src, dest, { recursive: true });
+        let workerSrc = path.join(__dirname, 'node_modules', 'pdfjs-dist', 'build', 'pdf.worker.min.mjs');
+        try {
+          workerSrc = path.join(
+            path.dirname(require.resolve('pdfjs-dist/package.json')),
+            'build',
+            'pdf.worker.min.mjs',
+          );
+        } catch {
+          /* use local node_modules path */
+        }
+        if (fsSync.existsSync(workerSrc)) {
+          await fs.copyFile(workerSrc, path.join(dest, 'pdf.worker.min.mjs'));
+        }
       } catch {
         console.warn('[forge] Skipping renderer copy — run `pnpm run build:renderer` before packaging.');
       }

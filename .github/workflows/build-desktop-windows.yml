@@ -50,6 +50,9 @@ jobs:
       - name: Build shared package (fresh dist for CI)
         run: pnpm --filter @rx-connect/shared run build
 
+      - name: Build renderer (includes pdf.js worker for preview)
+        run: pnpm --filter @rx-connect/desktop run build:renderer
+
       - name: Vendor Ghostscript (Windows x64, bundled in installer)
         run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
 

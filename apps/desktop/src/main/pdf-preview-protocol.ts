@@ -1,5 +1,4 @@
-import { net, protocol } from 'electron';
-import { pathToFileURL } from 'node:url';
+import { protocol } from 'electron';
 import fs from 'node:fs/promises';
 import { ensureJobPdf, extractEmbeddedPdfIfAny } from './virtual-printer/ensure-job-pdf.js';
 import { isAllowedSpoolPath } from './virtual-printer/job-store.js';
@@ -62,6 +61,14 @@ export function wirePdfPreviewProtocol(): void {
       return new Response('Not a PDF', { status: 415 });
     }
 
-    return net.fetch(pathToFileURL(servePath).href);
+    const body = await fs.readFile(servePath);
+    return new Response(body, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Length': String(body.length),
+        'Cache-Control': 'no-store',
+      },
+    });
   });
 }

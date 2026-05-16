@@ -93,38 +93,30 @@ async function persistRawJob(body: Buffer): Promise<PrintJobRecord | null> {
     };
   }
 
-  const fileName = `${path.basename(base)}.bin`;
-  debugLog(`kept raw job ${rawPath} (no PDF conversion yet)`);
+  debugLog(`sync convert retry for ${rawPath}`);
+  const retryOk = await convertRawFileToPdf(rawPath, pdfPath);
+  if (retryOk) {
+    await fs.unlink(rawPath).catch(() => undefined);
+    const fileName = `${path.basename(base)}.pdf`;
+    debugLog(`converted to ${pdfPath}`);
+    return {
+      id: idFromFile(fileName),
+      title: fileName.replace(/\.pdf$/i, ''),
+      fileName,
+      pdfPath,
+      receivedAt,
+    };
+  }
 
-  const record: PrintJobRecord = {
+  const fileName = `${path.basename(base)}.bin`;
+  debugLog(`kept raw job ${rawPath} (conversion failed)`);
+  return {
     id: idFromFile(fileName),
     title: fileName.replace(/\.bin$/i, ''),
     fileName,
     pdfPath: rawPath,
     receivedAt,
   };
-
-  void convertRawFileToPdf(rawPath, pdfPath).then(async (ok) => {
-    if (!ok) return;
-    try {
-      const st = await fs.stat(pdfPath);
-      if (st.size < 32) return;
-      await fs.unlink(rawPath).catch(() => undefined);
-      const pdfRecord: PrintJobRecord = {
-        id: idFromFile(`${path.basename(base)}.pdf`),
-        title: path.basename(base),
-        fileName: `${path.basename(base)}.pdf`,
-        pdfPath,
-        receivedAt: new Date().toISOString(),
-      };
-      debugLog(`background conversion ok ${pdfPath}`);
-      broadcastPrintJobToAll(pdfRecord);
-    } catch {
-      /* ignore */
-    }
-  });
-
-  return record;
 }
 
 function handlePrintSocket(socket: net.Socket): void {

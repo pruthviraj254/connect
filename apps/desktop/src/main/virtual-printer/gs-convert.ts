@@ -123,7 +123,7 @@ function gsArgsForFormat(
   const base = [
     '-dNOPAUSE',
     '-dBATCH',
-    '-dSAFER',
+    process.platform === 'win32' ? '-dNOSAFER' : '-dSAFER',
     '-sDEVICE=pdfwrite',
     `-sOutputFile=${outputPdfPath}`,
   ];
