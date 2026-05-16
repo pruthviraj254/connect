@@ -89,18 +89,20 @@ export function PdfPreviewPanel({ previewBase64, loading, error }: PdfPreviewPan
   }, [previewBase64]);
 
   const displayError = error || renderError;
+  const showOverlay =
+    loading ||
+    rendering ||
+    Boolean(displayError) ||
+    !previewBase64;
 
-  if (loading || rendering) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm bg-muted/20">
-        {loading ? 'Loading preview…' : 'Rendering PDF…'}
-      </div>
-    );
-  }
-
-  if (displayError === 'not_pdf' || displayError === 'conversion_failed') {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-sm p-8 text-center gap-2 bg-muted/20">
+  let overlayContent: React.ReactNode = null;
+  if (loading) {
+    overlayContent = <p className="text-muted-foreground text-sm">Loading preview…</p>;
+  } else if (rendering) {
+    overlayContent = <p className="text-muted-foreground text-sm">Rendering PDF…</p>;
+  } else if (displayError === 'not_pdf' || displayError === 'conversion_failed') {
+    overlayContent = (
+      <div className="flex flex-col items-center text-muted-foreground text-sm p-8 text-center gap-2">
         <p className="font-medium">Could not show PDF preview</p>
         <p className="text-xs max-w-md">
           The print data could not be converted to a viewable PDF. Try printing again with Rx-Connect
@@ -108,30 +110,31 @@ export function PdfPreviewPanel({ previewBase64, loading, error }: PdfPreviewPan
         </p>
       </div>
     );
-  }
-
-  if (displayError) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-sm p-8 text-center gap-2 bg-muted/20">
+  } else if (displayError) {
+    overlayContent = (
+      <div className="flex flex-col items-center text-muted-foreground text-sm p-8 text-center gap-2">
         <p className="font-medium">Preview error</p>
         <p className="text-xs max-w-md">{displayError}</p>
       </div>
     );
-  }
-
-  if (!previewBase64) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm p-8 text-center bg-muted/20">
-        Select a job to preview.
-      </div>
+  } else if (!previewBase64) {
+    overlayContent = (
+      <p className="text-muted-foreground text-sm p-8 text-center">Select a job to preview.</p>
     );
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="flex-1 overflow-y-auto p-4 bg-neutral-100 min-h-0"
-      aria-label="PDF preview"
-    />
+    <div className="flex-1 flex flex-col min-h-0 relative bg-neutral-100">
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-y-auto p-4 min-h-0"
+        aria-label="PDF preview"
+      />
+      {showOverlay && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/20 backdrop-blur-[2px]">
+          {overlayContent}
+        </div>
+      )}
+    </div>
   );
 }
