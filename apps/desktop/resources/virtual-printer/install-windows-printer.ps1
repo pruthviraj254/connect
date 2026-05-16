@@ -145,40 +145,37 @@ function Ensure-TcpPrinterPort {
 }
 
 function Ensure-PrintDriver {
+  # IMPORTANT: ONLY real PostScript drivers — Ghostscript needs PostScript input to produce a PDF.
+  # "Generic / Text Only" produces plain text + form feeds (NOT PostScript) and yields BLANK PDFs.
+  # MS Publisher drivers ship with every Windows 10/11 and output proper PostScript Level 2.
   $candidates = @(
+    'Microsoft PS Class Driver',
+    'MS Publisher Color Printer',
+    'MS Publisher Imagesetter',
     'Generic / PostScript',
-    'Generic PostScript',
-    'Generic / Text Only',
-    'Generic Text Only',
-    'Generic / Text Only (MS)'
+    'Generic PostScript'
   )
 
   foreach ($name in $candidates) {
     if (Get-PrinterDriver -Name $name -ErrorAction SilentlyContinue) {
-      Write-Log "Found driver: $name"
+      Write-Log "Found PostScript driver: $name"
       return $name
     }
   }
 
-  $generic = Get-PrinterDriver -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -match 'Generic' -and ($_.Name -match 'PostScript' -or $_.Name -match 'Text') } |
-    Select-Object -First 1
-  if ($generic) {
-    Write-Log "Found driver (scan): $($generic.Name)"
-    return $generic.Name
-  }
-
+  # Try to install MS Publisher drivers from ntprint.inf (always present on Windows)
   $inf = Join-Path $env:windir 'inf\ntprint.inf'
   if (Test-Path $inf) {
-    foreach ($driverModel in @('Generic / PostScript', 'Generic / Text Only')) {
-      Write-Log "Installing $driverModel from $inf"
+    foreach ($driverModel in @('MS Publisher Color Printer', 'MS Publisher Imagesetter', 'Microsoft PS Class Driver')) {
+      Write-Log "Installing PostScript driver '$driverModel' from $inf"
       try {
         Add-PrinterDriver -Name $driverModel -InfPath $inf -ErrorAction Stop
         if (Get-PrinterDriver -Name $driverModel -ErrorAction SilentlyContinue) {
+          Write-Log "Installed driver: $driverModel"
           return $driverModel
         }
       } catch {
-        Write-Log "Add-PrinterDriver $driverModel failed: $($_.Exception.Message)"
+        Write-Log "Add-PrinterDriver '$driverModel' failed: $($_.Exception.Message)"
       }
 
       $uiArgs = "/ia /f `"$inf`" /m `"$driverModel`""
@@ -188,14 +185,24 @@ function Ensure-PrintDriver {
         -Wait -PassThru -NoNewWindow
       Write-Log "printui driver install exit: $($p.ExitCode)"
       if (Get-PrinterDriver -Name $driverModel -ErrorAction SilentlyContinue) {
+        Write-Log "Installed driver: $driverModel"
         return $driverModel
       }
     }
   }
 
+  # Last resort: scan for ANY PostScript-capable driver
+  $ps = Get-PrinterDriver -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -match 'PostScript|PS\s' -or $_.Name -match 'Publisher' } |
+    Select-Object -First 1
+  if ($ps) {
+    Write-Log "Found PostScript driver (scan): $($ps.Name)"
+    return $ps.Name
+  }
+
   $names = @(Get-PrinterDriver -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
   Write-Log "Available drivers: $($names -join '; ')"
-  throw 'No suitable Generic PostScript/Text printer driver found on this system.'
+  throw 'No PostScript printer driver found. Install Microsoft PS Class Driver via Windows Settings > Printers.'
 }
 
 function Configure-PrinterQueue {

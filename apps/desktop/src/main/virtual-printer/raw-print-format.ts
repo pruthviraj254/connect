@@ -11,10 +11,18 @@ export function detectRawPrintFormat(body: Buffer): RawPrintFormat {
 
   if (pdfByteOffset(body) >= 0) return 'pdf';
 
-  const head = body.subarray(0, Math.min(2048, body.length)).toString('latin1');
+  const head = body.subarray(0, Math.min(4096, body.length)).toString('latin1');
 
   if (head.includes('%!PS') || head.startsWith('%!')) return 'postscript';
-  if (head.includes('@PJL')) return 'postscript';
+
+  if (head.includes('@PJL')) {
+    if (/ENTER\s+LANGUAGE\s*=\s*PCL/i.test(head)) return 'pcl';
+    if (/ENTER\s+LANGUAGE\s*=\s*POSTSCRIPT/i.test(head)) return 'postscript';
+    if (head.includes('%!PS') || head.includes('%!')) return 'postscript';
+    if (head.includes('\u001bE') || head.includes('\u001b&')) return 'pcl';
+    return 'postscript';
+  }
+
   if (head.includes('PCL') || body[0] === 0x1b) return 'pcl';
 
   if (body[0] === 0x50 && body[1] === 0x4b) return 'xps';

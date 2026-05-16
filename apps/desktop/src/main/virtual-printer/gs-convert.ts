@@ -189,8 +189,22 @@ async function outputPdfValid(outputPdfPath: string): Promise<boolean> {
   try {
     const st = await fsPromises.stat(outputPdfPath);
     if (st.size < 32) return false;
-    const head = await fsPromises.readFile(outputPdfPath);
-    return head.length >= 5 && head.subarray(0, 5).toString() === '%PDF-';
+    const buf = await fsPromises.readFile(outputPdfPath);
+    if (buf.length < 5 || buf.subarray(0, 5).toString() !== '%PDF-') return false;
+
+    // Reject "blank" PDFs that Ghostscript produces when fed Text-Only driver output
+    // (no /Page objects + no content streams = effectively empty). A real PDF will
+    // always have at least one /Type /Page and a stream block.
+    const ascii = buf.toString('latin1');
+    const hasPage = /\/Type\s*\/Page[^s]/.test(ascii);
+    const hasStream = ascii.includes('stream\n') || ascii.includes('stream\r');
+    if (!hasPage || !hasStream) {
+      log.warn(
+        `[virtual-printer] produced PDF has no real content (size=${st.size}, hasPage=${hasPage}, hasStream=${hasStream}) — driver likely Text-Only`,
+      );
+      return false;
+    }
+    return true;
   } catch {
     return false;
   }

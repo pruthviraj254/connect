@@ -12,7 +12,7 @@ import { broadcastPrintJobToAll } from './print-notify.js';
 
 let server: net.Server | null = null;
 
-const JOB_IDLE_MS = 2000;
+const JOB_IDLE_MS = 5000;
 const RAW_PRINT_DEBUG_LOG = path.join(
   process.env.ProgramData ?? 'C:\\ProgramData',
   'Rx-Connect',
@@ -39,11 +39,24 @@ function idFromFile(name: string): string {
   return base || name;
 }
 
+function describeBody(body: Buffer): string {
+  const head = body.subarray(0, Math.min(64, body.length));
+  const printable = Array.from(head)
+    .map((b) => (b >= 0x20 && b < 0x7f ? String.fromCharCode(b) : '.'))
+    .join('');
+  const hex = Array.from(head)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join(' ');
+  return `len=${body.length} head="${printable}" hex=${hex}`;
+}
+
 async function persistRawJob(body: Buffer): Promise<PrintJobRecord | null> {
   if (body.length === 0) {
     debugLog('ignored empty payload');
     return null;
   }
+
+  debugLog(`incoming payload: ${describeBody(body)}`);
 
   if (body[0] === 0x02) {
     debugLog('LPR-like payload (port may not be RAW); bytes=' + body.length);
@@ -74,6 +87,8 @@ async function persistRawJob(body: Buffer): Promise<PrintJobRecord | null> {
     return record;
   }
 
+  // Keep raw .bin alongside .pdf for diagnostics. Lets users / devs inspect
+  // exactly what the driver sent (PostScript? Text? PCL?) when conversion fails.
   const rawPath = `${base}.bin`;
   await fs.writeFile(rawPath, body);
   debugLog(`saved raw ${rawPath} (${body.length} bytes)`);
@@ -81,24 +96,18 @@ async function persistRawJob(body: Buffer): Promise<PrintJobRecord | null> {
   const pdfPath = `${base}.pdf`;
   const ok = await convertRawFileToPdf(rawPath, pdfPath);
   if (ok) {
-    await fs.unlink(rawPath).catch(() => undefined);
     const fileName = `${path.basename(base)}.pdf`;
-    debugLog(`ghostscript converted to ${pdfPath}`);
-    return {
-      id: idFromFile(fileName),
-      title: fileName.replace(/\.pdf$/i, ''),
-      fileName,
-      pdfPath,
-      receivedAt,
-    };
-  }
-
-  debugLog(`sync convert retry for ${rawPath}`);
-  const retryOk = await convertRawFileToPdf(rawPath, pdfPath);
-  if (retryOk) {
-    await fs.unlink(rawPath).catch(() => undefined);
-    const fileName = `${path.basename(base)}.pdf`;
-    debugLog(`converted to ${pdfPath}`);
+    try {
+      const pdfStat = await fs.stat(pdfPath);
+      debugLog(`ghostscript converted to ${pdfPath} (${pdfStat.size} bytes)`);
+      if (pdfStat.size < 1024) {
+        log.warn(
+          `[virtual-printer] suspiciously small PDF (${pdfStat.size} bytes) — driver may be Text-Only; reinstall printer with PostScript driver`,
+        );
+      }
+    } catch {
+      /* stat best-effort */
+    }
     return {
       id: idFromFile(fileName),
       title: fileName.replace(/\.pdf$/i, ''),
@@ -109,7 +118,11 @@ async function persistRawJob(body: Buffer): Promise<PrintJobRecord | null> {
   }
 
   const fileName = `${path.basename(base)}.bin`;
-  debugLog(`kept raw job ${rawPath} (conversion failed)`);
+  debugLog(`kept raw job ${rawPath} (Ghostscript conversion failed)`);
+  log.warn(
+    `[virtual-printer] could not convert raw job to PDF — likely wrong printer driver. ` +
+      `Reinstall the printer from the Fax Inbox to use the PostScript driver.`,
+  );
   return {
     id: idFromFile(fileName),
     title: fileName.replace(/\.bin$/i, ''),

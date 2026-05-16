@@ -1,7 +1,9 @@
 import { ipcMain } from 'electron';
 import { IpcChannel, type IpcResult, type PrinterInstallResult, type PrinterStatus } from '@rx-connect/shared';
 import {
+  getInstalledPrinterDriver,
   installWindowsPrinterElevated,
+  isAcceptablePrinterDriver,
   isWindowsPlatform,
   isWindowsPrinterInstalled,
   PRINTER_INSTALL_LOG_PATH,
@@ -27,6 +29,8 @@ export function registerPrinterHandlers(): void {
       };
     }
     const installed = await isWindowsPrinterInstalled();
+    const driverName = installed ? getInstalledPrinterDriver() : null;
+    const driverOk = isAcceptablePrinterDriver(driverName);
     return {
       ok: true,
       data: {
@@ -34,6 +38,8 @@ export function registerPrinterHandlers(): void {
         platform: 'win32',
         printerName: WINDOWS_PRINTER_NAME,
         logPath: PRINTER_INSTALL_LOG_PATH,
+        driverName,
+        driverOk,
       },
     };
   });

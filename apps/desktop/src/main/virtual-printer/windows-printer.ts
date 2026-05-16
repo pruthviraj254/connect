@@ -147,11 +147,60 @@ function checkWindowsPrinterInstalledSync(): boolean {
   return result.status === 0;
 }
 
+/**
+ * Returns the current driver name assigned to the RxConnect printer, or null
+ * if the printer is missing.
+ */
+export function getInstalledPrinterDriver(): string | null {
+  if (process.platform !== 'win32') return null;
+  const result = spawnSync(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-Command',
+      `(Get-Printer -Name '${WINDOWS_PRINTER_NAME}' -ErrorAction SilentlyContinue).DriverName`,
+    ],
+    { windowsHide: true, encoding: 'utf8' },
+  );
+  const out = result.stdout?.trim() ?? '';
+  return out.length > 0 ? out : null;
+}
+
+/**
+ * A driver is "good" only if it can produce PostScript that Ghostscript can
+ * convert to a real PDF. Text-Only drivers produce plain text → blank PDFs.
+ */
+export function isAcceptablePrinterDriver(driverName: string | null): boolean {
+  if (!driverName) return false;
+  const lower = driverName.toLowerCase();
+  if (lower.includes('text only') || lower.includes('text-only')) return false;
+  return (
+    lower.includes('postscript') ||
+    lower.includes('publisher') ||
+    lower.includes(' ps ') ||
+    lower.endsWith(' ps') ||
+    lower.includes('ps class') ||
+    lower.includes('xerox') ||
+    lower.includes('hp') ||
+    lower.includes('adobe pdf')
+  );
+}
+
 export function isWindowsPrinterInstalled(): Promise<boolean> {
   if (process.platform !== 'win32') {
     return Promise.resolve(true);
   }
   return Promise.resolve(checkWindowsPrinterInstalledSync());
+}
+
+/**
+ * Returns true when the printer is installed AND uses a driver capable of
+ * producing PostScript (i.e. a driver we can convert to PDF).
+ */
+export function isWindowsPrinterReady(): boolean {
+  if (process.platform !== 'win32') return true;
+  if (!checkWindowsPrinterInstalledSync()) return false;
+  return isAcceptablePrinterDriver(getInstalledPrinterDriver());
 }
 
 export function isWindowsPlatform(): boolean {

@@ -41,6 +41,8 @@ export function FaxInboxView() {
   const [printerInstalled, setPrinterInstalled] = useState<boolean | null>(null);
   const [printerInstalling, setPrinterInstalling] = useState(false);
   const [printerName, setPrinterName] = useState('RxConnect');
+  const [driverName, setDriverName] = useState<string | null>(null);
+  const [driverOk, setDriverOk] = useState<boolean>(true);
 
   const refresh = useCallback(async () => {
     if (!isElectronApp()) return;
@@ -56,18 +58,22 @@ export function FaxInboxView() {
     void refresh();
   }, [refresh]);
 
-  useEffect(() => {
+  const refreshPrinterStatus = useCallback(async () => {
     if (!isElectronApp()) return;
-    void (async () => {
-      try {
-        const status = await getPrinterStatus();
-        setPrinterInstalled(status.installed);
-        if (status.printerName) setPrinterName(status.printerName);
-      } catch {
-        setPrinterInstalled(null);
-      }
-    })();
+    try {
+      const status = await getPrinterStatus();
+      setPrinterInstalled(status.installed);
+      if (status.printerName) setPrinterName(status.printerName);
+      setDriverName(status.driverName ?? null);
+      setDriverOk(status.driverOk !== false);
+    } catch {
+      setPrinterInstalled(null);
+    }
   }, []);
+
+  useEffect(() => {
+    void refreshPrinterStatus();
+  }, [refreshPrinterStatus]);
 
   const onInstallPrinter = async () => {
     setPrinterInstalling(true);
@@ -76,6 +82,7 @@ export function FaxInboxView() {
       if (result.ok) {
         setPrinterInstalled(true);
         toast.success(`${printerName} printer installed`);
+        await refreshPrinterStatus();
       } else {
         const hint =
           result.error === 'uac_cancelled'
@@ -256,6 +263,26 @@ export function FaxInboxView() {
               onClick={() => void onInstallPrinter()}
             >
               {printerInstalling ? 'Installing…' : 'Install printer'}
+            </Button>
+          </div>
+        )}
+        {printerInstalled === true && !driverOk && (
+          <div className="flex items-center justify-between gap-3 border-b border-red-200 bg-red-50 px-4 py-3 text-sm text-red-950">
+            <p>
+              <span className="font-medium">{printerName}</span> is using an outdated driver
+              {driverName ? <> (<span className="font-mono text-xs">{driverName}</span>)</> : null}
+              {' '}that produces blank PDFs. Click <span className="font-medium">Reinstall printer</span> to upgrade
+              to a PostScript driver.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              className="shrink-0"
+              variant="destructive"
+              disabled={printerInstalling}
+              onClick={() => void onInstallPrinter()}
+            >
+              {printerInstalling ? 'Reinstalling…' : 'Reinstall printer'}
             </Button>
           </div>
         )}

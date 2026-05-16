@@ -3,7 +3,9 @@ import path from 'node:path';
 import { dialog } from 'electron';
 import log from 'electron-log';
 import {
+  getInstalledPrinterDriver,
   installWindowsPrinterElevated,
+  isAcceptablePrinterDriver,
   isWindowsPrinterInstalled,
   isWindowsPlatform,
   PRINTER_INSTALL_LOG_PATH,
@@ -70,26 +72,42 @@ function runElevatedUninstall(): void {
   ).unref();
 }
 
-/** Prompt user and install RxConnectFax (primary path on Windows). */
+/** Prompt user and install RxConnect (primary path on Windows). */
 export async function promptWindowsPrinterInstallIfMissing(): Promise<void> {
   if (!isWindowsPlatform()) {
     return;
   }
 
   const installed = await isWindowsPrinterInstalled();
-  if (installed) {
+  const currentDriver = installed ? getInstalledPrinterDriver() : null;
+  const driverOk = isAcceptablePrinterDriver(currentDriver);
+
+  // Already installed AND using a real PostScript driver → nothing to do.
+  if (installed && driverOk) {
     return;
   }
 
-  log.info('[win-squirrel] RxConnectFax missing — showing install dialog');
+  const isUpgradeFix = installed && !driverOk;
+  log.info('[win-squirrel] printer needs install/upgrade', {
+    installed,
+    currentDriver,
+    driverOk,
+    isUpgradeFix,
+  });
 
   const { response } = await dialog.showMessageBox({
     type: 'info',
-    title: 'Install virtual printer',
-    message: `Rx-Connect needs to add the "${WINDOWS_PRINTER_NAME}" printer.`,
-    detail:
-      'Windows will ask for administrator permission (UAC). Accept to print from any app into Fax Inbox.\n\nKeep Rx-Connect running while you print.',
-    buttons: ['Install printer', 'Not now'],
+    title: isUpgradeFix ? 'Update virtual printer' : 'Install virtual printer',
+    message: isUpgradeFix
+      ? `"${WINDOWS_PRINTER_NAME}" is using an outdated driver that produces blank PDFs.`
+      : `Rx-Connect needs to add the "${WINDOWS_PRINTER_NAME}" printer.`,
+    detail: isUpgradeFix
+      ? `Current driver: "${currentDriver ?? 'unknown'}".\n\n` +
+        'Click "Reinstall printer" to upgrade to a PostScript driver. ' +
+        'Windows will ask for administrator permission (UAC).\n\n' +
+        'After upgrading, all newly printed jobs will render correctly in Fax Inbox.'
+      : 'Windows will ask for administrator permission (UAC). Accept to print from any app into Fax Inbox.\n\nKeep Rx-Connect running while you print.',
+    buttons: [isUpgradeFix ? 'Reinstall printer' : 'Install printer', 'Not now'],
     defaultId: 0,
     cancelId: 1,
   });
