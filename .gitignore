@@ -19,3 +19,4 @@ apps/desktop/resources/ghostscript-win/lib/
 apps/desktop/resources/ghostscript-win/Resource/
 apps/desktop/.cache/
 apps/desktop/src/renderer/public/pdf.worker.min.mjs
+apps/desktop/src/renderer/lib/pdfjs-worker-inline.ts

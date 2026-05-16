@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as pdfjs from 'pdfjs-dist';
 import { base64ToUint8Array } from '@/lib/pdf-preview';
+import { PDFJS_WORKER_BASE64 } from '@/lib/pdfjs-worker-inline';
 
 type PdfPreviewPanelProps = {
   previewBase64: string | null;
@@ -10,47 +11,24 @@ type PdfPreviewPanelProps = {
   error?: string | null;
 };
 
-let workerReady: Promise<void> | null = null;
+let workerBlobUrl: string | null = null;
 
-/**
- * Fetches the pdf.js worker script as text and sets workerSrc to a blob: URL.
- * This bypasses Electron's restriction on creating Web Workers from app:// URLs.
- * CSP allows worker-src blob: and connect-src app:, so this path works reliably.
- */
-function ensureWorker(): Promise<void> {
-  if (workerReady) return workerReady;
-  if (typeof window === 'undefined') return Promise.resolve();
-
-  workerReady = (async () => {
-    const scriptUrl = new URL('/pdf.worker.min.mjs', window.location.href).href;
-    const resp = await fetch(scriptUrl);
-    if (!resp.ok) throw new Error(`Worker fetch ${resp.status}`);
-    const code = await resp.text();
-    const blob = new Blob([code], { type: 'application/javascript' });
-    pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
-  })();
-
-  workerReady.catch(() => {
-    workerReady = null;
-  });
-
-  return workerReady;
-}
-
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
-    promise.then(
-      (v) => { clearTimeout(timer); resolve(v); },
-      (e) => { clearTimeout(timer); reject(e); },
-    );
-  });
+function ensureWorker(): void {
+  if (workerBlobUrl || typeof window === 'undefined') return;
+  const code = atob(PDFJS_WORKER_BASE64);
+  const blob = new Blob([code], { type: 'application/javascript' });
+  workerBlobUrl = URL.createObjectURL(blob);
+  pdfjs.GlobalWorkerOptions.workerSrc = workerBlobUrl;
 }
 
 export function PdfPreviewPanel({ previewBase64, loading, error }: PdfPreviewPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);
+
+  useEffect(() => {
+    ensureWorker();
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -67,14 +45,9 @@ export function PdfPreviewPanel({ previewBase64, loading, error }: PdfPreviewPan
 
     void (async () => {
       try {
-        await withTimeout(ensureWorker(), 10_000, 'PDF worker load');
-
+        ensureWorker();
         const data = base64ToUint8Array(previewBase64);
-        const doc = await withTimeout(
-          pdfjs.getDocument({ data }).promise,
-          15_000,
-          'PDF parse',
-        );
+        const doc = await pdfjs.getDocument({ data }).promise;
         if (cancelled) return;
 
         if (doc.numPages < 1) {
