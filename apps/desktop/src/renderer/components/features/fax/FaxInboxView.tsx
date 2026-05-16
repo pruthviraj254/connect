@@ -10,11 +10,10 @@ import type { PrintJobRecord } from '@rx-connect/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   deletePrintJobFile,
   getPrintJobPdfBase64,
-  getPrintJobPreviewPath,
   getPrinterStatus,
   installVirtualPrinter,
   listIncomingPrintJobs,
@@ -35,7 +34,6 @@ export function FaxInboxView() {
   const [jobs, setJobs] = useState<PrintJobRecord[]>([]);
   const [selected, setSelected] = useState<PrintJobRecord | null>(null);
   const [previewBase64, setPreviewBase64] = useState<string | null>(null);
-  const [resolvedPdfPath, setResolvedPdfPath] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -113,24 +111,18 @@ export function FaxInboxView() {
   useEffect(() => {
     if (!selected || !isElectronApp()) {
       setPreviewBase64(null);
-      setResolvedPdfPath(null);
       setPreviewError(null);
       setPreviewLoading(false);
       return;
     }
     let cancelled = false;
     setPreviewBase64(null);
-    setResolvedPdfPath(null);
     setPreviewError(null);
     setPreviewLoading(true);
     void (async () => {
       try {
-        const [resolved, b64] = await Promise.all([
-          getPrintJobPreviewPath(selected.pdfPath),
-          getPrintJobPdfBase64(selected.pdfPath),
-        ]);
+        const b64 = await getPrintJobPdfBase64(selected.pdfPath);
         if (!cancelled) {
-          setResolvedPdfPath(resolved);
           setPreviewBase64(b64);
           setPreviewError(null);
         }
@@ -139,7 +131,6 @@ export function FaxInboxView() {
           const msg = e instanceof Error ? e.message : 'preview_failed';
           setPreviewError(msg);
           setPreviewBase64(null);
-          setResolvedPdfPath(null);
         }
       } finally {
         if (!cancelled) setPreviewLoading(false);
@@ -165,7 +156,7 @@ export function FaxInboxView() {
       await sendFaxFromPdf({
         to: values.to,
         from: values.from?.trim() ? values.from.trim() : undefined,
-        pdfPath: resolvedPdfPath ?? selected.pdfPath,
+        pdfPath: selected.pdfPath,
       });
       toast.success('Fax queued with provider');
     } catch (e) {
@@ -234,7 +225,7 @@ export function FaxInboxView() {
   }
 
   return (
-    <div className="flex flex-1 min-h-0 rounded-lg border border-border overflow-hidden bg-background">
+    <div className="flex flex-1 min-h-0 overflow-hidden bg-background">
       {aside}
       <div className="flex-1 flex flex-col min-w-0">
         {printerInstalled === false && (

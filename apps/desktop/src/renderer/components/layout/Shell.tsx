@@ -205,8 +205,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex-1 overflow-x-auto">
-          <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">{children}</div>
+        <main className="flex-1 flex flex-col overflow-hidden min-h-0">
+          {children}
         </main>
       </div>
     </div>

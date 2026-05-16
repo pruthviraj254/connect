@@ -120,6 +120,7 @@ async function createWindow(): Promise<void> {
       nodeIntegration: false,
       sandbox: true,
       webSecurity: true,
+      plugins: true,
     },
   });
 
