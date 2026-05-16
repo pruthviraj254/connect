@@ -98,20 +98,28 @@ function resolveGhostscriptBin(): string | null {
   return null;
 }
 
-function ghostscriptRuntime(binPath: string): { cwd: string; env: NodeJS.ProcessEnv } {
+function ghostscriptRoot(binPath: string): string {
   const binDir = path.dirname(binPath);
-  const root = path.basename(binDir).toLowerCase() === 'bin' ? path.dirname(binDir) : binDir;
-  const lib = path.join(root, 'lib');
-  return {
-    cwd: binDir,
-    env: {
-      ...process.env,
-      ...(fs.existsSync(lib) ? { GS_LIB: lib } : {}),
-    },
-  };
+  return path.basename(binDir).toLowerCase() === 'bin' ? path.dirname(binDir) : binDir;
 }
 
-function gsArgsForFormat(format: RawPrintFormat, outputPdfPath: string, inputPath: string): string[] {
+function ghostscriptRuntime(binPath: string): { cwd: string; env: NodeJS.ProcessEnv; root: string } {
+  const binDir = path.dirname(binPath);
+  const root = ghostscriptRoot(binPath);
+  const lib = path.join(root, 'lib');
+  const resource = path.join(root, 'Resource');
+  const env: NodeJS.ProcessEnv = { ...process.env };
+  if (fs.existsSync(lib)) env.GS_LIB = lib;
+  if (fs.existsSync(resource)) env.GS_RESOURCE_DIR = resource;
+  return { cwd: binDir, env, root };
+}
+
+function gsArgsForFormat(
+  format: RawPrintFormat,
+  outputPdfPath: string,
+  inputPath: string,
+  gsRoot: string,
+): string[] {
   const base = [
     '-dNOPAUSE',
     '-dBATCH',
@@ -119,6 +127,10 @@ function gsArgsForFormat(format: RawPrintFormat, outputPdfPath: string, inputPat
     '-sDEVICE=pdfwrite',
     `-sOutputFile=${outputPdfPath}`,
   ];
+  const resource = path.join(gsRoot, 'Resource');
+  if (fs.existsSync(resource)) {
+    base.push(`-I${resource}`);
+  }
   if (format === 'postscript' || format === 'pcl') {
     base.push('-dPDFSETTINGS=/prepress');
   }
@@ -137,13 +149,20 @@ function runGhostscript(args: string[]): Promise<boolean> {
 
   return new Promise((resolve) => {
     const gs = spawn(bin, args, {
-      stdio: 'ignore',
+      stdio: ['ignore', 'ignore', 'pipe'],
       windowsHide: true,
       cwd: runtime.cwd,
       env: runtime.env,
     });
+    let stderr = '';
+    gs.stderr?.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
     gs.on('error', () => resolve(false));
     gs.on('close', (code) => {
+      if (code !== 0 && stderr.trim()) {
+        log.warn('[virtual-printer] ghostscript stderr', stderr.trim().slice(0, 500));
+      }
       resolve(code === 0);
     });
   });
@@ -191,8 +210,11 @@ export async function convertRawFileToPdf(inputPath: string, outputPdfPath: stri
   }
 
   const format = detectRawPrintFormat(body);
+  const bin = resolveGhostscriptBin();
+  if (!bin) return false;
+  const gsRoot = ghostscriptRoot(bin);
 
-  const gsOk = await runGhostscript(gsArgsForFormat(format, outputPdfPath, inputPath));
+  const gsOk = await runGhostscript(gsArgsForFormat(format, outputPdfPath, inputPath, gsRoot));
   if (gsOk && (await outputPdfValid(outputPdfPath))) {
     return true;
   }

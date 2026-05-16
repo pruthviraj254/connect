@@ -20,6 +20,12 @@ export async function getPrintJobPdfBase64(pdfPath: string): Promise<string> {
   return unwrapIpc(result);
 }
 
+/** Resolves/converts spool file to PDF path for rx-pdf:// preview (Windows converts PostScript). */
+export async function getPrintJobPreviewPath(spoolPath: string): Promise<string> {
+  const result = await ipcInvoke<IpcResult<string>>(IpcChannel.PrintJobGetPreviewPath, spoolPath);
+  return unwrapIpc(result);
+}
+
 export async function deletePrintJobFile(pdfPath: string): Promise<void> {
   const result = await ipcInvoke<IpcResult<null>>(IpcChannel.PrintJobDelete, pdfPath);
   unwrapIpc(result);

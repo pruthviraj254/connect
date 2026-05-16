@@ -1,9 +1,35 @@
 import { net, protocol } from 'electron';
 import { pathToFileURL } from 'node:url';
 import fs from 'node:fs/promises';
+import { ensureJobPdf, extractEmbeddedPdfIfAny } from './virtual-printer/ensure-job-pdf.js';
 import { isAllowedSpoolPath } from './virtual-printer/job-store.js';
 
 export const RX_PDF_SCHEME = 'rx-pdf';
+
+async function pathToServe(filePath: string): Promise<string | null> {
+  let resolved = filePath;
+  if (process.platform === 'win32') {
+    const embedded = await extractEmbeddedPdfIfAny(resolved);
+    if (embedded) resolved = embedded;
+    const pdf = await ensureJobPdf(resolved);
+    if (pdf) resolved = pdf;
+  }
+  try {
+    const head = Buffer.alloc(5);
+    const fh = await fs.open(resolved, 'r');
+    try {
+      await fh.read(head, 0, 5, 0);
+    } finally {
+      await fh.close();
+    }
+    if (head.toString('utf8') !== '%PDF-') {
+      return null;
+    }
+    return resolved;
+  } catch {
+    return null;
+  }
+}
 
 export function registerPdfPreviewProtocol(): void {
   protocol.registerSchemesAsPrivileged([
@@ -30,20 +56,12 @@ export function wirePdfPreviewProtocol(): void {
     if (!filePath || !isAllowedSpoolPath(filePath)) {
       return new Response('Forbidden', { status: 403 });
     }
-    try {
-      const head = Buffer.alloc(5);
-      const fh = await fs.open(filePath, 'r');
-      try {
-        await fh.read(head, 0, 5, 0);
-      } finally {
-        await fh.close();
-      }
-      if (head.toString('utf8') !== '%PDF-') {
-        return new Response('Not a PDF', { status: 415 });
-      }
-    } catch {
-      return new Response('Not found', { status: 404 });
+
+    const servePath = await pathToServe(filePath);
+    if (!servePath) {
+      return new Response('Not a PDF', { status: 415 });
     }
-    return net.fetch(pathToFileURL(filePath).href);
+
+    return net.fetch(pathToFileURL(servePath).href);
   });
 }

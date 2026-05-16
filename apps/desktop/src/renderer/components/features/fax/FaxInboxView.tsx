@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   deletePrintJobFile,
-  getPrintJobPdfBase64,
+  getPrintJobPreviewPath,
   getPrinterStatus,
   installVirtualPrinter,
   listIncomingPrintJobs,
@@ -33,7 +33,7 @@ export function FaxInboxView() {
   const router = useRouter();
   const [jobs, setJobs] = useState<PrintJobRecord[]>([]);
   const [selected, setSelected] = useState<PrintJobRecord | null>(null);
-  const [previewBase64, setPreviewBase64] = useState<string | null>(null);
+  const [previewPath, setPreviewPath] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -110,27 +110,27 @@ export function FaxInboxView() {
 
   useEffect(() => {
     if (!selected || !isElectronApp()) {
-      setPreviewBase64(null);
+      setPreviewPath(null);
       setPreviewError(null);
       setPreviewLoading(false);
       return;
     }
     let cancelled = false;
-    setPreviewBase64(null);
+    setPreviewPath(null);
     setPreviewError(null);
     setPreviewLoading(true);
     void (async () => {
       try {
-        const b64 = await getPrintJobPdfBase64(selected.pdfPath);
+        const resolved = await getPrintJobPreviewPath(selected.pdfPath);
         if (!cancelled) {
-          setPreviewBase64(b64);
+          setPreviewPath(resolved);
           setPreviewError(null);
         }
       } catch (e) {
         if (!cancelled) {
           const msg = e instanceof Error ? e.message : 'preview_failed';
           setPreviewError(msg);
-          setPreviewBase64(null);
+          setPreviewPath(null);
         }
       } finally {
         if (!cancelled) setPreviewLoading(false);
@@ -156,7 +156,7 @@ export function FaxInboxView() {
       await sendFaxFromPdf({
         to: values.to,
         from: values.from?.trim() ? values.from.trim() : undefined,
-        pdfPath: selected.pdfPath,
+        pdfPath: previewPath ?? selected.pdfPath,
       });
       toast.success('Fax queued with provider');
     } catch (e) {
@@ -246,7 +246,7 @@ export function FaxInboxView() {
           </div>
         )}
         <PdfPreviewPanel
-          base64={previewBase64}
+          previewPath={previewPath}
           loading={previewLoading}
           error={previewError}
         />

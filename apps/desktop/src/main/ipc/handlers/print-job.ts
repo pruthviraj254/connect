@@ -1,6 +1,11 @@
 import { ipcMain } from 'electron';
 import { IpcChannel, type IpcResult, type PrintJobRecord } from '@rx-connect/shared';
-import { deletePrintJob, listPrintJobs, readPdfAsBase64 } from '../../virtual-printer/job-store.js';
+import {
+  deletePrintJob,
+  listPrintJobs,
+  readPdfAsBase64,
+  resolvePrintJobPreviewPath,
+} from '../../virtual-printer/job-store.js';
 
 export function registerPrintJobHandlers(): void {
   ipcMain.handle(IpcChannel.PrintJobList, async (): Promise<IpcResult<PrintJobRecord[]>> => {
@@ -19,6 +24,16 @@ export function registerPrintJobHandlers(): void {
         return { ok: false, error: 'invalid_payload' };
       }
       return readPdfAsBase64(raw);
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.PrintJobGetPreviewPath,
+    async (_e, raw: unknown): Promise<IpcResult<string>> => {
+      if (typeof raw !== 'string' || raw.length === 0) {
+        return { ok: false, error: 'invalid_payload' };
+      }
+      return resolvePrintJobPreviewPath(raw);
     },
   );
 

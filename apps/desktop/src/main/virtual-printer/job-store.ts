@@ -67,7 +67,7 @@ export async function listPrintJobs(): Promise<PrintJobRecord[]> {
   return out;
 }
 
-export async function readPdfAsBase64(absPath: string): Promise<IpcResult<string>> {
+async function resolveToReadablePdfPath(absPath: string): Promise<IpcResult<string>> {
   if (!isAllowedSpoolPath(absPath)) {
     return { ok: false, error: 'path_not_allowed' };
   }
@@ -84,12 +84,28 @@ export async function readPdfAsBase64(absPath: string): Promise<IpcResult<string
   try {
     const buf = await fs.readFile(resolved);
     if (buf.length >= 5 && buf.subarray(0, 5).toString() === '%PDF-') {
-      return { ok: true, data: buf.toString('base64') };
+      return { ok: true, data: resolved };
     }
     return {
       ok: false,
       error: process.platform === 'win32' ? 'conversion_failed' : 'not_pdf',
     };
+  } catch {
+    return { ok: false, error: 'read_failed' };
+  }
+}
+
+/** Resolves spool path to a PDF on disk (converts on Windows). Used for rx-pdf preview. */
+export async function resolvePrintJobPreviewPath(absPath: string): Promise<IpcResult<string>> {
+  return resolveToReadablePdfPath(absPath);
+}
+
+export async function readPdfAsBase64(absPath: string): Promise<IpcResult<string>> {
+  const resolved = await resolveToReadablePdfPath(absPath);
+  if (!resolved.ok) return resolved;
+  try {
+    const buf = await fs.readFile(resolved.data);
+    return { ok: true, data: buf.toString('base64') };
   } catch {
     return { ok: false, error: 'read_failed' };
   }
