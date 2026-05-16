@@ -225,9 +225,9 @@ export function FaxInboxView() {
   }
 
   return (
-    <div className="flex flex-1 min-h-0 overflow-hidden bg-background">
+    <div className="flex flex-1 min-h-0 bg-background">
       {aside}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {printerInstalled === false && (
           <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
             <p>
@@ -250,7 +250,7 @@ export function FaxInboxView() {
           loading={previewLoading}
           error={previewError}
         />
-        <div className="border-t border-border p-4 space-y-3 bg-muted/30">
+        <div className="border-t border-border p-4 space-y-3 bg-muted/30 shrink-0">
           <form onSubmit={onSend} className="flex flex-wrap gap-3 items-end">
             <div className="space-y-1">
               <Label htmlFor="fax-to">Fax number</Label>

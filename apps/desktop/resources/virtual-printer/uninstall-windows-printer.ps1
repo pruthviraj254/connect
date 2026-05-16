@@ -3,7 +3,8 @@
 #>
 param(
   [string]$PrinterName = "RxConnect",
-  [int]$Port = 19101
+  [int]$Port = 19101,
+  [string]$LogPath = ""
 )
 
 $ErrorActionPreference = "Stop"

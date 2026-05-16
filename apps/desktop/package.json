@@ -9,11 +9,11 @@
   "license": "UNLICENSED",
   "scripts": {
     "dev": "concurrently -k --success command-electron -n renderer,electron -c cyan,magenta \"pnpm run dev:renderer\" \"pnpm run dev:electron\"",
-    "dev:renderer": "node scripts/run-next.cjs dev -p 3000",
+    "dev:renderer": "node scripts/copy-pdf-worker.cjs && node scripts/run-next.cjs dev -p 3000",
     "dev:electron": "wait-on http://127.0.0.1:3000 && cross-env ELECTRON_RENDERER_URL=http://127.0.0.1:3000 electron-forge start",
     "build": "pnpm run build:shared && pnpm run build:renderer && pnpm run build:electron",
     "build:shared": "pnpm --filter @rx-connect/shared run build",
-    "build:renderer": "node scripts/run-next.cjs build",
+    "build:renderer": "node scripts/run-next.cjs build && node scripts/copy-pdf-worker.cjs",
     "build:electron": "electron-forge package",
     "make": "pnpm run build:shared && pnpm run build:renderer && node scripts/vendor-ghostscript-win.cjs && electron-forge make",
     "vendor:ghostscript-win": "node scripts/vendor-ghostscript-win.cjs",
