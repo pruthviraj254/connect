@@ -116,10 +116,16 @@ export async function deletePrintJob(absPath: string): Promise<IpcResult<null>> 
     return { ok: false, error: 'path_not_allowed' };
   }
   const resolved = path.resolve(absPath);
-  try {
-    await fs.unlink(resolved);
-    return { ok: true, data: null };
-  } catch {
-    return { ok: false, error: 'delete_failed' };
+  const stem = resolved.replace(/\.(pdf|bin)$/i, '');
+  const siblings = [`${stem}.pdf`, `${stem}.bin`];
+  let deleted = false;
+  for (const p of [resolved, ...siblings]) {
+    try {
+      await fs.unlink(p);
+      deleted = true;
+    } catch {
+      /* file may not exist */
+    }
   }
+  return deleted ? { ok: true, data: null } : { ok: false, error: 'delete_failed' };
 }
