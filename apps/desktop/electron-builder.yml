@@ -2,6 +2,8 @@ appId: health.onerx.rxconnect
 productName: Rx-Connect
 artifactName: ${productName}-Setup-${version}-${arch}.${ext}
 copyright: Copyright (c) OneRx Health
+# Required with pnpm hoisted monorepos — must match resolved electron in pnpm-lock.yaml.
+electronVersion: 33.4.11
 
 directories:
   output: dist
