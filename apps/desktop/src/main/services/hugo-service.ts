@@ -267,7 +267,8 @@ export async function buildSite(sitePath: string): Promise<{
     return {
       success: false,
       outputPath,
-      buildLog: 'Hugo binary not found. Run: node apps/desktop/scripts/download-hugo.cjs',
+      buildLog:
+        'Website preview is unavailable in this build. Reinstall Rx-Connect from the official installer, or contact support.',
     };
   }
 
@@ -340,7 +341,10 @@ export async function startPreviewServer(
 
   const bin = getHugoBinaryPath();
   if (!bin) {
-    throw new Error('Hugo binary not found. Run: pnpm vendor:hugo');
+    log.warn('[hugo-service] preview requested but Hugo binary is not bundled in this build');
+    throw new Error(
+      'Website preview is unavailable in this build. Reinstall Rx-Connect from the official installer, or contact support.',
+    );
   }
 
   const port = await findPreviewPort();

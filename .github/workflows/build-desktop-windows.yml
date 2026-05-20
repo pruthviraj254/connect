@@ -57,6 +57,9 @@ jobs:
       - name: Vendor Ghostscript (Windows x64, bundled in installer)
         run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
 
+      - name: Vendor Hugo (Windows x64, bundled for website preview)
+        run: node apps/desktop/scripts/download-hugo.cjs --platform=win32
+
       - name: Build Windows installer (NSIS)
         run: pnpm --filter @rx-connect/desktop run dist:win
 
@@ -110,6 +113,9 @@ jobs:
 
       - name: Vendor Ghostscript
         run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
+
+      - name: Vendor Hugo (Windows x64)
+        run: node apps/desktop/scripts/download-hugo.cjs --platform=win32
 
       - name: Build and publish to GitHub Releases
         run: pnpm --filter @rx-connect/desktop run dist:win:publish

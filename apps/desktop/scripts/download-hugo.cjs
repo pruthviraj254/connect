@@ -127,9 +127,45 @@ async function vendorTarget(target) {
   log(`installed ${destBinary}`);
 }
 
+function resolveSelection() {
+  const argSel = process.argv.slice(2).find((a) => a.startsWith('--platform='));
+  const cliValue = argSel ? argSel.split('=')[1] : null;
+  const envValue = process.env.HUGO_VENDOR_PLATFORM;
+  const raw = (cliValue || envValue || 'all').trim().toLowerCase();
+  return raw;
+}
+
+function targetIdsForCurrentHost() {
+  if (process.platform === 'darwin') {
+    return process.arch === 'arm64' ? ['darwin'] : ['darwin-x64'];
+  }
+  if (process.platform === 'win32') return ['win32'];
+  return ['linux'];
+}
+
+function pickTargets(selection) {
+  if (selection === 'all') return TARGETS;
+  if (selection === 'current') {
+    const ids = targetIdsForCurrentHost();
+    return TARGETS.filter((t) => ids.includes(t.id));
+  }
+  const wanted = selection.split(',').map((s) => s.trim()).filter(Boolean);
+  const matched = TARGETS.filter((t) => wanted.includes(t.id));
+  if (matched.length === 0) {
+    throw new Error(
+      `No Hugo targets matched "${selection}". Valid: ${TARGETS.map((t) => t.id).join(', ')}, current, all.`,
+    );
+  }
+  return matched;
+}
+
 async function main() {
+  const selection = resolveSelection();
+  const targets = pickTargets(selection);
+  log(`selection=${selection} -> [${targets.map((t) => t.id).join(', ')}]`);
+
   const unique = new Map();
-  for (const t of TARGETS) {
+  for (const t of targets) {
     if (!unique.has(t.asset + t.destDir)) unique.set(t.asset + t.destDir, t);
   }
   for (const t of unique.values()) {
