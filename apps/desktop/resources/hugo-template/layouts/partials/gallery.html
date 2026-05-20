@@ -1,0 +1,16 @@
+{{ $p := .Site.Data.pharmacy }}
+{{ $gallery := $p.galleryImages | default (slice) }}
+{{ if gt (len $gallery) 0 }}
+<section class="py-5" id="gallery">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-4">Our <span class="text-secondary">Pharmacy</span></h2>
+    <div class="gallery-scroll">
+      <div class="gallery-row mx-auto">
+        {{ range $gallery }}
+        <img src="{{ . }}" alt="" loading="lazy">
+        {{ end }}
+      </div>
+    </div>
+  </div>
+</section>
+{{ end }}

@@ -1,0 +1,41 @@
+name: 'Your Pharmacy'
+tagline: 'Your neighborhood pharmacy'
+phone: ''
+fax: ''
+email: ''
+address: ''
+city: ''
+province: ''
+postalCode: ''
+aboutText: ''
+googleMapsUrl: ''
+bookingUrl: ''
+pharmacyLicense: ''
+pharmacistLicense: ''
+
+hours:
+  monday: { open: '9:00 AM', close: '6:00 PM', closed: false }
+  tuesday: { open: '9:00 AM', close: '6:00 PM', closed: false }
+  wednesday: { open: '9:00 AM', close: '6:00 PM', closed: false }
+  thursday: { open: '9:00 AM', close: '6:00 PM', closed: false }
+  friday: { open: '9:00 AM', close: '6:00 PM', closed: false }
+  saturday: { open: '10:00 AM', close: '4:00 PM', closed: false }
+  sunday: { open: '', close: '', closed: true }
+
+services:
+  - icon: '💊'
+    title: 'Prescription Filling'
+    description: 'Fast, accurate prescription services.'
+    enabled: true
+  - icon: '💉'
+    title: 'Vaccinations'
+    description: 'Flu shots and immunizations.'
+    enabled: true
+
+team: []
+
+social:
+  facebook: ''
+  instagram: ''
+  twitter: ''
+  linkedin: ''

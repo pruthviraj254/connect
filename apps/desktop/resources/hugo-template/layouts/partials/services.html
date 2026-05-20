@@ -1,0 +1,24 @@
+{{ $p := .Site.Data.pharmacy }}
+<section class="bg-light py-5" id="services">
+  <div class="container py-2">
+    <h2 class="fw-bold text-center mb-4">Our <span style="color: var(--bs-primary);">Services</span></h2>
+    <div class="row row-cols-2 row-cols-md-3 g-4 justify-content-center">
+      {{ range $p.services }}
+      {{ if .enabled }}
+      <div class="col d-flex flex-column align-items-center text-center">
+        {{ if .imageUrl }}
+        <img class="service-icon-img mb-2" src="{{ .imageUrl }}" alt="{{ .title }}">
+        {{ else }}
+        <div class="service-emoji mb-2">{{ .icon }}</div>
+        {{ end }}
+        <div class="fw-semibold">{{ .title }}</div>
+        {{ with .description }}<p class="small text-muted mb-0 mt-1">{{ . }}</p>{{ end }}
+      </div>
+      {{ end }}
+      {{ end }}
+    </div>
+    <p class="text-center mt-4 mb-0">
+      <a href="/services/" class="fw-semibold text-secondary text-decoration-none">View all services →</a>
+    </p>
+  </div>
+</section>

@@ -11,4 +11,17 @@ export type {
 } from './types/auth-ipc';
 export type { PrintJobRecord, FaxSendPayload, FaxSendResult } from './types/print-job-ipc';
 export type { PrinterStatus, PrinterInstallResult } from './types/printer-ipc';
+export type {
+  PharmacyWebsiteData,
+  PharmacyService,
+  TeamMember,
+  Testimonial,
+  DayHours,
+  ThemeId,
+  ThemeConfig,
+  WebBuilderBuildResult,
+  WebBuilderPreviewResult,
+  WebBuilderPublishResult,
+} from './types/website-builder';
+export { THEMES, DEFAULT_SERVICES, DEFAULT_HOURS, DEFAULT_TESTIMONIALS } from './types/website-builder';
 export { assertNever } from './utils/assert';

@@ -1,6 +1,8 @@
 /**
  * Run Next.js CLI from src/renderer (cross-platform; Windows CI cannot use `cd … && ../.bin/next`).
  */
+require('./load-env.cjs');
+
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 

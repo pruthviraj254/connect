@@ -1,5 +1,4 @@
 import type { ForgeConfig } from '@electron-forge/shared-types';
-import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerDMG } from '@electron-forge/maker-dmg';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { VitePlugin } from '@electron-forge/plugin-vite';
@@ -24,7 +23,12 @@ const virtualPrinterPkgScripts = path.join(
 
 const virtualPrinterResource = path.join(__dirname, 'resources', 'virtual-printer');
 const ghostscriptWinResource = path.join(__dirname, 'resources', 'ghostscript-win');
-const extraResources = [virtualPrinterResource];
+const hugoTemplateResource = path.join(__dirname, 'resources', 'hugo-template');
+const hugoBinResource = path.join(__dirname, 'resources', 'bin');
+const extraResources = [virtualPrinterResource, hugoTemplateResource];
+if (fsSync.existsSync(hugoBinResource)) {
+  extraResources.push(hugoBinResource);
+}
 if (fsSync.existsSync(path.join(ghostscriptWinResource, 'bin', 'gswin64c.exe'))) {
   extraResources.push(ghostscriptWinResource);
 } else if (process.platform === 'win32') {
@@ -35,6 +39,8 @@ if (fsSync.existsSync(path.join(ghostscriptWinResource, 'bin', 'gswin64c.exe')))
 
 const config: ForgeConfig = {
   packagerConfig: {
+    // Stable folder name for electron-builder --prepackaged (out/Rx-Connect-win32-x64).
+    name: 'Rx-Connect',
     asar: true,
     executableName: 'rx-connect',
     extraResource: extraResources,
@@ -47,11 +53,6 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({
-      // Squirrel/NuGet id must be alphanumeric (no @scope/name from package.json).
-      name: 'RxConnect',
-      setupExe: 'Rx-Connect-Setup.exe',
-    }),
     new MakerDMG({}),
     new MakerRxPKG({
       scripts: virtualPrinterPkgScripts,

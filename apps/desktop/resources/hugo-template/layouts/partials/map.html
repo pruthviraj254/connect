@@ -1,0 +1,6 @@
+{{ $p := .Site.Data.pharmacy }}
+{{ with $p.googleMapsUrl }}
+<div class="map-embed">
+  <iframe src="{{ . }}" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map"></iframe>
+</div>
+{{ end }}

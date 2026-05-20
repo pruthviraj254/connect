@@ -1,4 +1,1 @@
-declare module 'electron-squirrel-startup' {
-  const started: boolean;
-  export default started;
-}
+// Ambient module declarations for packages without bundled types.

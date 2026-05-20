@@ -1,6 +1,46 @@
-appId: com.onerx.rxconnect
+appId: health.onerx.rxconnect
 productName: Rx-Connect
+artifactName: ${productName}-Setup-${version}-${arch}.${ext}
+copyright: Copyright (c) OneRx Health
+
 directories:
-  output: dist-electron-builder
-publish: null
-# Signing & auto-update: configure when CI secrets are available.
+  output: dist
+  buildResources: build
+
+files:
+  - '**/*'
+
+asar: true
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  publisherName: OneRx Health
+  # Future EV code signing — set CSC_LINK + CSC_KEY_PASSWORD in CI/local, or use a custom sign hook:
+  # certificateFile: build/cert.pfx
+  # certificatePassword: ${env.CSC_KEY_PASSWORD}
+  # signingHashAlgorithms: ["sha256"]
+  # signAndEditExecutable: true
+  # signDlls: false
+  # rfc3161TimeStampServer: http://timestamp.digicert.com
+
+nsis:
+  oneClick: false
+  perMachine: true
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  shortcutName: Rx-Connect
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  menuCategory: OneRx
+  deleteAppDataOnUninstall: false
+  runAfterFinish: true
+  include: build/installer.nsh
+
+publish:
+  - provider: github
+    owner: pruthviraj254
+    repo: connect
+    releaseType: release

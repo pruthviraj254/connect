@@ -1,0 +1,79 @@
+{{ $p := .Site.Data.pharmacy }}
+{{ $days := slice "monday" "tuesday" "wednesday" "thursday" "friday" "saturday" "sunday" }}
+{{ $abbr := dict "monday" "Mon" "tuesday" "Tue" "wednesday" "Wed" "thursday" "Thu" "friday" "Fri" "saturday" "Sat" "sunday" "Sun" }}
+<footer class="text-white fw-semibold" style="background-color: var(--bs-primary);">
+  <div class="container py-5">
+    <div class="row g-4 text-center text-md-start">
+      <div class="col-md-6 col-lg-3 order-lg-1">
+        <div class="mx-auto" style="width: max-content;">
+          <h3 class="h5 fw-bold mb-3">License</h3>
+          {{ with $p.pharmacyLicense }}
+          <p class="mb-2 small">
+            {{ if $p.pharmacyLicensePdfUrl }}
+            <a class="link-light" href="{{ $p.pharmacyLicensePdfUrl }}" target="_blank" rel="noopener">Pharmacy License {{ . }}</a>
+            {{ else }}Pharmacy License {{ . }}{{ end }}
+          </p>
+          {{ end }}
+          {{ with $p.pharmacistLicense }}<p class="mb-2 small">Pharmacist License {{ . }}</p>{{ end }}
+          <p class="mb-0 small">
+            <a class="link-light" href="{{ with $p.patientConcernsUrl }}{{ . }}{{ else }}/license/{{ end }}">Patient concerns</a>
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="mx-auto" style="width: max-content;">
+          <h3 class="h5 fw-bold mb-3">Contact</h3>
+          {{ with $p.phone }}<p class="mb-2 small">Call: {{ . }}</p>{{ end }}
+          {{ with $p.fax }}<p class="mb-2 small">Fax: {{ . }}</p>{{ end }}
+          {{ with $p.email }}<p class="mb-2 small"><a class="link-light" href="mailto:{{ . }}">{{ . }}</a></p>{{ end }}
+          {{ with $p.social.facebook }}
+          <a class="link-light d-inline-block mt-1" href="{{ . }}" target="_blank" rel="noopener" aria-label="Facebook">
+            <svg width="28" height="28" viewBox="0 0 16 16" fill="currentColor"><path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/></svg>
+          </a>
+          {{ end }}
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="mx-auto" style="width: max-content;">
+          <h3 class="h5 fw-bold mb-3">Opening Hours</h3>
+          <table class="footer-hours small text-start">
+            <tbody>
+              {{ range $days }}
+              {{ $h := index $p.hours . }}
+              {{ if $h }}
+              <tr>
+                <td>{{ index $abbr . }}</td>
+                <td class="ps-3">{{ if $h.closed }}Closed{{ else }}{{ $h.open }} – {{ $h.close }}{{ end }}</td>
+              </tr>
+              {{ end }}
+              {{ end }}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 order-lg-first">
+        <div class="mx-auto" style="width: max-content;">
+          <a href="/" class="d-inline-block mb-3">
+            {{ with $p.footerLogoUrl }}
+            <img class="footer-logo" src="{{ . }}" alt="{{ $p.name }}">
+            {{ else }}{{ with $p.logoUrl }}
+            <img class="footer-logo" src="{{ . }}" alt="{{ $p.name }}">
+            {{ else }}
+            <span class="brand-initial">{{ substr $p.name 0 1 }}</span>
+            {{ end }}{{ end }}
+          </a>
+          <p class="small mb-0 text-start">
+            {{ $p.address }}<br>
+            {{ $p.city }}, {{ $p.province }} {{ $p.postalCode }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container pb-4 text-center small">
+    <p class="mb-1">© {{ now.Year }} – {{ $p.name }}</p>
+    {{ with $p.establishedYear }}
+    <p class="mb-0 fw-normal">Serving the community since {{ . }}</p>
+    {{ end }}
+  </div>
+</footer>

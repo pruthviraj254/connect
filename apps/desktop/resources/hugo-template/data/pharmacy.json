@@ -1,0 +1,33 @@
+{
+  "name": "Your Pharmacy",
+  "tagline": "Your neighborhood pharmacy",
+  "heroHeadline": "Focused on your health needs",
+  "heroSubtext": "Convenient, accessible care with personalized service for you and your family.",
+  "establishedYear": "",
+  "logoUrl": "",
+  "phone": "",
+  "fax": "",
+  "email": "",
+  "address": "",
+  "city": "",
+  "province": "",
+  "postalCode": "",
+  "aboutText": "",
+  "googleMapsEmbedUrl": "",
+  "bookingUrl": "",
+  "pharmacyLicense": "",
+  "pharmacistLicense": "",
+  "hours": {
+    "monday": { "open": "9:00 AM", "close": "7:00 PM", "closed": false },
+    "tuesday": { "open": "9:00 AM", "close": "7:00 PM", "closed": false },
+    "wednesday": { "open": "9:00 AM", "close": "7:00 PM", "closed": false },
+    "thursday": { "open": "9:00 AM", "close": "7:00 PM", "closed": false },
+    "friday": { "open": "9:00 AM", "close": "7:00 PM", "closed": false },
+    "saturday": { "open": "10:00 AM", "close": "2:00 PM", "closed": false },
+    "sunday": { "open": "", "close": "", "closed": true }
+  },
+  "services": [],
+  "team": [],
+  "testimonials": [],
+  "social": { "facebook": "", "instagram": "", "twitter": "", "linkedin": "" }
+}

@@ -1,0 +1,9 @@
+{{ $p := .Site.Data.pharmacy }}
+{{ with $p.bookingUrl }}
+<section class="booking-section">
+  <div class="container">
+    <h2>Book an appointment</h2>
+    <iframe src="{{ . }}" class="booking-iframe" title="Book appointment"></iframe>
+  </div>
+</section>
+{{ end }}

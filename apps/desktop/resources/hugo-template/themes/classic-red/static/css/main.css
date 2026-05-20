@@ -1,0 +1,46 @@
+/* Theme overrides — colors come from inline :root in baseof.html */
+
+.bg-secondary {
+  background-color: var(--bs-primary) !important;
+}
+
+.text-secondary {
+  color: var(--bs-primary) !important;
+}
+
+.btn-primary {
+  background-color: var(--bs-primary) !important;
+  border-color: var(--bs-primary) !important;
+}
+
+.btn-secondary {
+  background-color: var(--bs-secondary) !important;
+  border-color: var(--bs-secondary) !important;
+}
+
+/* Navbar always visible (including narrow preview iframe) */
+.navbar-expand .navbar-nav {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+}
+
+.navbar-expand .navbar-nav .nav-link {
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.navbar-expand .navbar-nav .nav-link:hover {
+  color: #fff !important;
+}
+
+.navbar-dark .navbar-brand,
+.navbar-dark .navbar-brand:hover {
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .navbar-nav .nav-link {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.75rem;
+  }
+}

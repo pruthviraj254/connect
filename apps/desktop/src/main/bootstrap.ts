@@ -3,17 +3,14 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { stat } from 'node:fs/promises';
 import log from 'electron-log';
-import { handleWindowsSquirrelStartup, promptWindowsPrinterInstallIfMissing } from './win-squirrel.js';
+import { initAutoUpdater } from './auto-updater.js';
+import { promptWindowsPrinterInstallIfMissing } from './windows-runtime.js';
 import { registerIpcHandlers } from './ipc/index.js';
 import { buildAppMenu } from './menu.js';
 import { getStore } from './store.js';
 import { getMainWindow, setMainWindow } from './lifecycle.js';
 import { startPrintPipeline, stopPrintPipeline } from './virtual-printer/pipeline.js';
 import { registerPdfPreviewProtocol, wirePdfPreviewProtocol } from './pdf-preview-protocol.js';
-
-if (handleWindowsSquirrelStartup()) {
-  app.quit();
-}
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -185,19 +182,19 @@ function wireCsp(): void {
             "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com data:",
-            "img-src 'self' data: blob:",
-            "frame-src 'self' blob: data: rx-pdf:",
+            "img-src 'self' data: blob: https: http:",
+            "frame-src 'self' blob: data: rx-pdf: http://127.0.0.1:* http://localhost:*",
             "object-src 'self' blob: data: rx-pdf:",
             "worker-src 'self' blob:",
-            "connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* https:",
+            "connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* https: http:",
           ].join('; ')
         : [
             "default-src 'self' app:",
             "script-src 'self' 'unsafe-inline' app:",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com app:",
             "font-src 'self' https://fonts.gstatic.com data: app:",
-            "img-src 'self' data: blob: app:",
-            "frame-src 'self' app: blob: data: rx-pdf:",
+            "img-src 'self' data: blob: app: https: http:",
+            "frame-src 'self' app: blob: data: rx-pdf: http://127.0.0.1:* http://localhost:*",
             "object-src 'self' app: blob: data: rx-pdf:",
             "worker-src 'self' app: blob:",
             "connect-src 'self' app: https:",
@@ -239,6 +236,7 @@ if (!gotLock) {
 
     await createWindow();
     await promptWindowsPrinterInstallIfMissing();
+    initAutoUpdater();
 
     app.on('activate', async () => {
       if (BrowserWindow.getAllWindows().length === 0) {

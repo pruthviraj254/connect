@@ -1,0 +1,10 @@
+{{ define "title" }}{{ .Site.Data.pharmacy.name }}{{ end }}
+{{ define "main" }}
+{{ partial "hero.html" . }}
+{{ partial "welcome.html" . }}
+{{ partial "services.html" . }}
+{{ partial "testimonials.html" . }}
+{{ partial "gallery.html" . }}
+{{ partial "map.html" . }}
+{{ partial "booking.html" . }}
+{{ end }}

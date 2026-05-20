@@ -13,8 +13,13 @@ coverage
 playwright-report
 test-results
 *.local.*
-.env.example
 apps/desktop/resources/ghostscript-win/bin/
 apps/desktop/resources/ghostscript-win/lib/
 apps/desktop/resources/ghostscript-win/Resource/
 apps/desktop/.cache/
+apps/desktop/resources/bin/darwin/hugo
+apps/desktop/resources/bin/darwin-x64/hugo
+apps/desktop/resources/bin/win32/hugo.exe
+apps/desktop/resources/bin/linux/hugo
+apps/desktop/resources/hugo-template/public/
+apps/desktop/dist/

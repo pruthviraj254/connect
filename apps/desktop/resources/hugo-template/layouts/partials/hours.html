@@ -1,0 +1,11 @@
+{{ $p := .Site.Data.pharmacy }}
+<table class="hours-table">
+  <tbody>
+    {{ range $day, $h := $p.hours }}
+    <tr>
+      <td>{{ $day | title }}</td>
+      <td>{{ if $h.closed }}Closed{{ else }}{{ $h.open }} – {{ $h.close }}{{ end }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>

@@ -1,0 +1,25 @@
+{{ $p := .Site.Data.pharmacy }}
+{{ $items := slice }}
+{{ range $p.testimonials | default (slice) }}
+  {{ if .enabled }}
+    {{ $items = $items | append . }}
+  {{ end }}
+{{ end }}
+{{ if gt (len $items) 0 }}
+<section class="py-5">
+  <div class="container">
+    <h2 class="text-secondary fw-bold text-center mb-4">Testimonials</h2>
+    <div class="row g-4">
+      {{ range $items }}
+      <div class="col-sm-6 col-lg-3">
+        <div class="h-100">
+          <p class="mb-2">⭐⭐⭐⭐⭐</p>
+          <p class="small mb-3">{{ .quote }}</p>
+          <p class="fw-bold text-secondary mb-0">– {{ .author }}</p>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+  </div>
+</section>
+{{ end }}

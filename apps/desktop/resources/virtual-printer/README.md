@@ -14,7 +14,8 @@
 ## Windows
 
 - A **raw TCP** listener runs in Electron main on `127.0.0.1:19101` (override with `RX_CONNECT_RAW_PRINT_PORT`).
-- **Squirrel Setup.exe**: on `--squirrel-install` / `--squirrel-updated`, the app triggers an **elevated UAC** run of [`install-windows-printer.ps1`](./install-windows-printer.ps1) (same idea as macOS `.pkg` postinstall). On `--squirrel-uninstall`, [`uninstall-windows-printer.ps1`](./uninstall-windows-printer.ps1) runs elevated.
+- **NSIS installer** (`customInstall` in `apps/desktop/build/installer.nsh`): runs [`install-windows-printer.ps1`](./install-windows-printer.ps1) silently during setup (elevated). On uninstall, [`uninstall-windows-printer.ps1`](./uninstall-windows-printer.ps1) runs from `customUnInstall`.
+- **Runtime fallback**: if the printer is missing or uses a bad driver, the app prompts and runs the same scripts via UAC (`windows-runtime.ts`).
 - If the user **denies UAC** during install, the next normal app launch retries printer registration once.
 - Uses driver **Generic / Text Only** + raw port — some apps send PCL/PostScript; install Ghostscript on Windows for conversion when jobs are not already PDF.
 

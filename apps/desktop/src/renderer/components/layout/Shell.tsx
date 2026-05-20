@@ -13,6 +13,7 @@ import {
   Search,
   ChevronDown,
   Inbox,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -55,6 +56,7 @@ const nav = [
   { href: '/patients/', label: 'Tenants', icon: Users },
   { href: '/prescriptions/', label: 'Fax Center', icon: Send },
   { href: '/fax-inbox/', label: 'Fax Inbox', icon: Inbox },
+  { href: '/website-builder/', label: 'Website', icon: Globe },
   { href: '/blacklist/', label: 'Blacklist', icon: Ban },
   { href: '/api-logs/', label: 'API Logs', icon: FileCode2 },
   { href: '/settings/', label: 'Settings', icon: Settings },

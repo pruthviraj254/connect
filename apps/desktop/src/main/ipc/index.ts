@@ -11,6 +11,8 @@ import { registerStoreHandlers } from './handlers/store.js';
 import { registerSecretsHandlers } from './handlers/secrets.js';
 import { registerPrintJobHandlers } from './handlers/print-job.js';
 import { registerPrinterHandlers } from './handlers/printer.js';
+import { registerWebsiteBuilderHandlers } from './handlers/website-builder.js';
+import { registerUpdaterHandlers } from './handlers/updater.js';
 
 export function registerIpcHandlers(): void {
   registerAppHandlers();
@@ -26,4 +28,6 @@ export function registerIpcHandlers(): void {
   registerSettingsHandlers();
   registerStoreHandlers();
   registerSecretsHandlers();
+  registerWebsiteBuilderHandlers();
+  registerUpdaterHandlers();
 }

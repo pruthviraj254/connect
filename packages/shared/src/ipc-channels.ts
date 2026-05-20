@@ -10,6 +10,9 @@ export const IpcChannel = {
   AppSetLoginItemOpenAtLogin: 'app:set-login-item-open-at-login',
   AppGetOnlineStatus: 'app:get-online-status',
 
+  UpdateCheck: 'update:check',
+  UpdateQuitAndInstall: 'update:quit-and-install',
+
   AuthLogin: 'auth:login',
   AuthRegister: 'auth:register',
   AuthLogout: 'auth:logout',
@@ -55,6 +58,15 @@ export const IpcChannel = {
 
   DialogOpenFile: 'dialog:open-file',
   DialogSaveFile: 'dialog:save-file',
+
+  WebBuilderInit: 'website-builder:init',
+  WebBuilderBuild: 'website-builder:build',
+  WebBuilderPreview: 'website-builder:preview',
+  WebBuilderStopPreview: 'website-builder:stop-preview',
+  WebBuilderPublish: 'website-builder:publish',
+  WebBuilderSave: 'website-builder:save',
+  WebBuilderLoad: 'website-builder:load',
+  WebBuilderDeployConfigured: 'website-builder:deploy-configured',
 } as const;
 
 export type IpcChannel = (typeof IpcChannel)[keyof typeof IpcChannel];

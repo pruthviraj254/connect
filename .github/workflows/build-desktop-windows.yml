@@ -1,11 +1,12 @@
-# Builds the Windows Squirrel Setup.exe (cannot be produced on macOS).
-# Download artifacts: Actions → workflow run → Artifacts → rx-connect-windows-*
+# Builds the Windows NSIS installer + electron-updater metadata (cannot be produced on macOS).
+# Artifacts: Rx-Connect-Setup-*.exe, latest.yml, *.blockmap
 name: Build desktop (Windows)
 
 on:
   workflow_dispatch:
   push:
     branches: [main, master, develop]
+    tags: ['v*']
     paths:
       - 'apps/desktop/**'
       - 'packages/shared/**'
@@ -25,7 +26,7 @@ concurrency:
 jobs:
   build-windows:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -56,19 +57,61 @@ jobs:
       - name: Vendor Ghostscript (Windows x64, bundled in installer)
         run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
 
-      - name: Build Windows installer
-        run: pnpm --filter @rx-connect/desktop run make
+      - name: Build Windows installer (NSIS)
+        run: pnpm --filter @rx-connect/desktop run dist:win
 
       - name: List build output
         shell: pwsh
-        run: Get-ChildItem -Recurse apps/desktop/out/make | Select-Object FullName, Length
+        run: Get-ChildItem -Recurse apps/desktop/dist | Select-Object FullName, Length
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: rx-connect-windows-${{ github.run_number }}
           path: |
-            apps/desktop/out/make/**/*.exe
-            apps/desktop/out/make/squirrel.windows/**
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/*.exe.blockmap
+            apps/desktop/dist/latest.yml
           if-no-files-found: error
           retention-days: 30
+
+  publish-windows:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+
+      - name: Build shared package
+        run: pnpm --filter @rx-connect/shared run build
+
+      - name: Build renderer
+        run: pnpm --filter @rx-connect/desktop run build:renderer
+
+      - name: Vendor Ghostscript
+        run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
+
+      - name: Build and publish to GitHub Releases
+        run: pnpm --filter @rx-connect/desktop run dist:win:publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,38 @@
+baseURL = "https://example.com/"
+languageCode = "en-us"
+title = "Pharmacy"
+theme = "trust-blue"
+
+[params]
+  primaryColor = "#1a73e8"
+  accentColor = "#0d47a1"
+  pharmacyName = "Your Pharmacy"
+  tagline = "Your neighborhood pharmacy"
+  phone = ""
+  email = ""
+  address = ""
+  city = ""
+  province = ""
+  postalCode = ""
+
+[menu]
+  [[menu.main]]
+    name = "Home"
+    url = "/"
+    weight = 1
+  [[menu.main]]
+    name = "About"
+    url = "/about/"
+    weight = 2
+  [[menu.main]]
+    name = "License"
+    url = "/license/"
+    weight = 3
+  [[menu.main]]
+    name = "Services"
+    url = "/services/"
+    weight = 4
+  [[menu.main]]
+    name = "Contact"
+    url = "/contact/"
+    weight = 5

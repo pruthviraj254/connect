@@ -1,0 +1,21 @@
+{{ $p := .Site.Data.pharmacy }}
+{{ if $p.team }}
+<section class="team-section">
+  <div class="container">
+    <h2>Our Team</h2>
+    <div class="team-grid">
+      {{ range $p.team }}
+      {{ if .name }}
+      <article class="team-card">
+        {{ $name := .name }}
+        {{ with .photoUrl }}<img src="{{ . }}" alt="{{ $name }}" class="team-photo">{{ end }}
+        <h3>{{ .name }}</h3>
+        <p class="team-role">{{ .role }}</p>
+        {{ with .bio }}<p>{{ . }}</p>{{ end }}
+      </article>
+      {{ end }}
+      {{ end }}
+    </div>
+  </div>
+</section>
+{{ end }}

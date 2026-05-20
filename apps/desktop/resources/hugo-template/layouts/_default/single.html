@@ -1,0 +1,34 @@
+{{ define "title" }}{{ .Title }} | {{ .Site.Data.pharmacy.name }}{{ end }}
+{{ define "main" }}
+<article class="py-5">
+  <div class="container">
+    <h1 class="fw-bold mb-4">{{ .Title }}</h1>
+    <div class="content text-muted">{{ .Content }}</div>
+    {{ if eq .File.BaseFileName "contact" }}
+      {{ partial "map.html" . }}
+    {{ end }}
+    {{ if eq .File.BaseFileName "services" }}
+      {{ partial "services.html" . }}
+    {{ end }}
+    {{ if eq .File.BaseFileName "license" }}
+      <div class="card border-0 bg-light p-4 mt-4">
+        {{ with .Site.Data.pharmacy.pharmacyLicense }}
+        <p class="mb-2"><strong>Pharmacy license:</strong> {{ . }}</p>
+        {{ end }}
+        {{ with .Site.Data.pharmacy.pharmacistLicense }}
+        <p class="mb-2"><strong>Pharmacist license:</strong> {{ . }}</p>
+        {{ end }}
+        <p class="mb-0">
+          <a href="{{ with .Site.Data.pharmacy.patientConcernsUrl }}{{ . }}{{ else }}https://abpharmacy.ca/sites/default/files/PatientConcernPoster.pdf{{ end }}" target="_blank" rel="noopener">Patient concerns information</a>
+        </p>
+      </div>
+    {{ end }}
+    {{ if eq .File.BaseFileName "about" }}
+      {{ with .Site.Data.pharmacy.aboutText }}
+      <p class="lead">{{ . }}</p>
+      {{ end }}
+      {{ partial "team.html" . }}
+    {{ end }}
+  </div>
+</article>
+{{ end }}
