@@ -2,7 +2,6 @@ import path from 'node:path';
 import { app, BrowserWindow } from 'electron';
 import log from 'electron-log';
 import type { PrintJobRecord } from '@rx-connect/shared';
-import { getMainWindow } from '../lifecycle.js';
 
 const popupJobs = new Map<number, PrintJobRecord>();
 let activePopup: BrowserWindow | null = null;
@@ -20,17 +19,25 @@ export function closePopupForSender(sender: Electron.WebContents): void {
 
 function focusPopupWindow(win: BrowserWindow): void {
   if (win.isDestroyed()) return;
+  if (win.isMinimized()) {
+    win.restore();
+  }
+  if (process.platform === 'win32') {
+    // Independent top-level window — must stay above other apps when main is minimized.
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.setSkipTaskbar(false);
+  }
   win.show();
   win.focus();
   if (process.platform === 'win32') {
-    win.setAlwaysOnTop(true, 'screen-saver');
+    win.moveTop();
     win.flashFrame(true);
     app.focus({ steal: true });
-    setTimeout(() => {
+    win.once('blur', () => {
       if (!win.isDestroyed()) {
         win.setAlwaysOnTop(false);
       }
-    }, 800);
+    });
   }
 }
 
@@ -51,7 +58,6 @@ export async function openFaxPopup(job: PrintJobRecord): Promise<void> {
   }
 
   const preloadPath = path.join(__dirname, 'preload.js');
-  const mainWin = getMainWindow();
 
   const win = new BrowserWindow({
     width: 520,
@@ -64,7 +70,7 @@ export async function openFaxPopup(job: PrintJobRecord): Promise<void> {
     maximizable: false,
     fullscreenable: false,
     title: 'OneRx Fax',
-    parent: process.platform === 'win32' && mainWin && !mainWin.isDestroyed() ? mainWin : undefined,
+    // No parent on Windows — child windows are hidden when the main window is minimized.
     autoHideMenuBar: true,
     webPreferences: {
       preload: preloadPath,
