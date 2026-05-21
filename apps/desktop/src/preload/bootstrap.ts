@@ -39,6 +39,13 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.removeListener('print-job:incoming', listener);
     };
   },
+  onFaxSendLogUpdated: (handler: () => void) => {
+    const listener = () => handler();
+    ipcRenderer.on('fax-send-log:updated', listener);
+    return () => {
+      ipcRenderer.removeListener('fax-send-log:updated', listener);
+    };
+  },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

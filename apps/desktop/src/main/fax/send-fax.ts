@@ -1,6 +1,47 @@
 import fs from 'node:fs/promises';
+import path from 'node:path';
+import log from 'electron-log';
 import type { FaxSendPayload, FaxSendResult } from '@rx-connect/shared';
 import { isAllowedSpoolPath } from '../virtual-printer/job-store.js';
+
+async function readPdfMeta(pdfPath: string): Promise<{ sizeBytes: number; fileName: string }> {
+  const stat = await fs.stat(pdfPath);
+  return { sizeBytes: stat.size, fileName: path.basename(pdfPath) };
+}
+
+async function sendViaMock(payload: FaxSendPayload): Promise<FaxSendResult> {
+  if (!isAllowedSpoolPath(payload.pdfPath)) {
+    throw new Error('path_not_allowed');
+  }
+  const meta = await readPdfMeta(payload.pdfPath);
+  const head = await fs.readFile(payload.pdfPath);
+  const isPdf = head.length >= 5 && head.subarray(0, 5).toString() === '%PDF-';
+  if (!isPdf) {
+    throw new Error('file_is_not_pdf');
+  }
+  await new Promise((r) => setTimeout(r, 800));
+  const externalId = `mock-${Date.now()}`;
+  log.info('[send-fax] mock send', {
+    to: payload.to,
+    pdfPath: payload.pdfPath,
+    fileName: meta.fileName,
+    sizeBytes: meta.sizeBytes,
+    externalId,
+    resolution: payload.resolution,
+    coverSubject: payload.coverSubject,
+  });
+  return {
+    provider: 'mock',
+    externalId,
+    raw: {
+      ok: true,
+      message: 'mock provider — no fax was actually sent',
+      pdfPath: payload.pdfPath,
+      fileName: meta.fileName,
+      sizeBytes: meta.sizeBytes,
+    },
+  };
+}
 
 async function sendViaTelnyx(payload: FaxSendPayload): Promise<FaxSendResult> {
   if (!isAllowedSpoolPath(payload.pdfPath)) {
@@ -39,9 +80,8 @@ async function sendViaTelnyx(payload: FaxSendPayload): Promise<FaxSendResult> {
 }
 
 export async function sendFaxWithConfiguredProvider(payload: FaxSendPayload): Promise<FaxSendResult> {
-  const provider = (process.env.FAX_PROVIDER ?? 'telnyx').toLowerCase();
-  if (provider !== 'telnyx') {
-    throw new Error('unsupported_fax_provider_set_FAX_PROVIDER_telnyx');
-  }
-  return sendViaTelnyx(payload);
+  const provider = (process.env.FAX_PROVIDER ?? 'mock').toLowerCase();
+  if (provider === 'mock') return sendViaMock(payload);
+  if (provider === 'telnyx') return sendViaTelnyx(payload);
+  throw new Error(`unsupported_fax_provider: ${provider}`);
 }

@@ -29,6 +29,16 @@ export const IpcChannel = {
 
   FaxSend: 'fax:send',
   FaxList: 'fax:list',
+  FaxSendLogList: 'fax:send-log:list',
+  FaxSendLogClear: 'fax:send-log:clear',
+
+  ContactsList: 'contacts:list',
+  ContactsAdd: 'contacts:add',
+  ContactsDelete: 'contacts:delete',
+
+  FaxPopupGetJob: 'fax-popup:get-job',
+  FaxPopupClose: 'fax-popup:close',
+  FaxPopupBrowsePdf: 'fax-popup:browse-pdf',
 
   PrintJobList: 'print-job:list',
   PrintJobGetPdfBase64: 'print-job:get-pdf-base64',

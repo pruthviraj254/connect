@@ -13,6 +13,8 @@ import { registerPrintJobHandlers } from './handlers/print-job.js';
 import { registerPrinterHandlers } from './handlers/printer.js';
 import { registerWebsiteBuilderHandlers } from './handlers/website-builder.js';
 import { registerUpdaterHandlers } from './handlers/updater.js';
+import { registerContactsHandlers } from './handlers/contacts.js';
+import { registerFaxPopupHandlers } from './handlers/fax-popup.js';
 
 export function registerIpcHandlers(): void {
   registerAppHandlers();
@@ -30,4 +32,6 @@ export function registerIpcHandlers(): void {
   registerSecretsHandlers();
   registerWebsiteBuilderHandlers();
   registerUpdaterHandlers();
+  registerContactsHandlers();
+  registerFaxPopupHandlers();
 }

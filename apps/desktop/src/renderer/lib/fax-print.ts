@@ -1,5 +1,6 @@
 import {
   IpcChannel,
+  type FaxSendLogEntry,
   type FaxSendPayload,
   type FaxSendResult,
   type IpcResult,
@@ -56,4 +57,14 @@ export async function getPrinterStatus(): Promise<PrinterStatus> {
 export async function installVirtualPrinter(): Promise<PrinterInstallResult> {
   const result = await ipcInvoke<IpcResult<PrinterInstallResult>>(IpcChannel.PrinterInstall);
   return unwrapIpc(result);
+}
+
+export async function listFaxSendLog(): Promise<FaxSendLogEntry[]> {
+  const result = await ipcInvoke<IpcResult<FaxSendLogEntry[]>>(IpcChannel.FaxSendLogList);
+  return unwrapIpc(result);
+}
+
+export async function clearFaxSendLog(): Promise<void> {
+  const result = await ipcInvoke<IpcResult<null>>(IpcChannel.FaxSendLogClear);
+  unwrapIpc(result);
 }

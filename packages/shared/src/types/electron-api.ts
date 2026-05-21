@@ -6,4 +6,5 @@ export type ElectronAPI = {
   onDeepLink: (handler: (url: string) => void) => () => void;
   onNetworkStatus: (handler: (payload: { online: boolean }) => void) => () => void;
   onPrintJob: (handler: (job: PrintJobRecord) => void) => () => void;
+  onFaxSendLogUpdated: (handler: () => void) => () => void;
 };

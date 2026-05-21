@@ -10,6 +10,8 @@ export type {
   AuthForgotPasswordData,
 } from './types/auth-ipc';
 export type { PrintJobRecord, FaxSendPayload, FaxSendResult } from './types/print-job-ipc';
+export type { FaxContact, FaxContactCreate } from './types/fax-contact';
+export type { FaxSendLogEntry, FaxSendLogStatus } from './types/fax-send-log';
 export type { PrinterStatus, PrinterInstallResult } from './types/printer-ipc';
 export type {
   PharmacyWebsiteData,

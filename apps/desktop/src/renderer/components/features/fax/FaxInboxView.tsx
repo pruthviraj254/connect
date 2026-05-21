@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { z } from 'zod';
+import type { FaxSendLogEntry } from '@rx-connect/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -12,11 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  clearFaxSendLog,
   deletePrintJobFile,
   downloadPrintJob,
   getPrintJobPagePngs,
   getPrinterStatus,
   installVirtualPrinter,
+  listFaxSendLog,
   listIncomingPrintJobs,
   sendFaxFromPdf,
 } from '@/lib/fax-print';
@@ -31,8 +33,9 @@ const faxSchema = z.object({
 type FaxForm = z.infer<typeof faxSchema>;
 
 export function FaxInboxView() {
-  const router = useRouter();
   const [jobs, setJobs] = useState<PrintJobRecord[]>([]);
+  const [sendLog, setSendLog] = useState<FaxSendLogEntry[]>([]);
+  const [inboxTab, setInboxTab] = useState<'jobs' | 'sent'>('jobs');
   const [selected, setSelected] = useState<PrintJobRecord | null>(null);
   const [pagePngs, setPagePngs] = useState<string[] | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -47,8 +50,9 @@ export function FaxInboxView() {
   const refresh = useCallback(async () => {
     if (!isElectronApp()) return;
     try {
-      const list = await listIncomingPrintJobs();
+      const [list, log] = await Promise.all([listIncomingPrintJobs(), listFaxSendLog()]);
       setJobs(list);
+      setSendLog(log);
     } catch {
       toast.error('Could not load print jobs.');
     }
@@ -105,16 +109,23 @@ export function FaxInboxView() {
   useEffect(() => {
     if (!isElectronApp() || !window.electronAPI?.onPrintJob) return;
     const unsub = window.electronAPI.onPrintJob((job) => {
-      toast.info('New print job received');
-      void router.push('/fax-inbox/');
       setJobs((prev) => {
         if (prev.some((p) => p.pdfPath === job.pdfPath)) return prev;
         return [job, ...prev];
       });
-      setSelected(job);
     });
     return unsub;
-  }, [router]);
+  }, []);
+
+  useEffect(() => {
+    if (!isElectronApp() || !window.electronAPI?.onFaxSendLogUpdated) return;
+    const unsub = window.electronAPI.onFaxSendLogUpdated(() => {
+      void listFaxSendLog()
+        .then(setSendLog)
+        .catch(() => undefined);
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     if (!selected || !isElectronApp()) {
@@ -205,33 +216,96 @@ export function FaxInboxView() {
       <div className="border-r border-border bg-card flex flex-col w-72 shrink-0">
         <div className="p-4 border-b border-border">
           <h2 className="text-sm font-semibold text-navy">Fax inbox</h2>
-          <p className="text-xs text-muted-foreground mt-1">Print jobs from the virtual printer</p>
+          <p className="text-xs text-muted-foreground mt-1">Print jobs & sent log</p>
+          <div className="flex gap-1 mt-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={inboxTab === 'jobs' ? 'default' : 'outline'}
+              className={inboxTab === 'jobs' ? 'bg-teal text-teal-foreground' : ''}
+              onClick={() => setInboxTab('jobs')}
+            >
+              Jobs
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={inboxTab === 'sent' ? 'default' : 'outline'}
+              className={inboxTab === 'sent' ? 'bg-teal text-teal-foreground' : ''}
+              onClick={() => setInboxTab('sent')}
+            >
+              Sent
+            </Button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {jobs.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">
-              Print to <span className="font-mono">{printerName}</span> with Rx-Connect running. Do not use Windows Fax
-              — pick <span className="font-mono">{printerName}</span> in the print dialog.
-            </p>
+          {inboxTab === 'jobs' ? (
+            jobs.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">
+                Print to <span className="font-mono">{printerName}</span> with Rx-Connect running. A fax popup opens
+                automatically — the main window stays in the background.
+              </p>
+            ) : (
+              jobs.map((job) => (
+                <button
+                  key={job.pdfPath}
+                  type="button"
+                  onClick={() => setSelected(job)}
+                  className={`w-full text-left px-4 py-3 text-sm border-b border-border/60 hover:bg-muted/50 ${
+                    selected?.pdfPath === job.pdfPath ? 'bg-muted' : ''
+                  }`}
+                >
+                  <div className="font-medium truncate">{job.title}</div>
+                  <div className="text-xs text-muted-foreground">{new Date(job.receivedAt).toLocaleString()}</div>
+                </button>
+              ))
+            )
+          ) : sendLog.length === 0 ? (
+            <p className="p-4 text-sm text-muted-foreground">No faxes sent yet from the print popup.</p>
           ) : (
-            jobs.map((job) => (
-              <button
-                key={job.pdfPath}
-                type="button"
-                onClick={() => setSelected(job)}
-                className={`w-full text-left px-4 py-3 text-sm border-b border-border/60 hover:bg-muted/50 ${
-                  selected?.pdfPath === job.pdfPath ? 'bg-muted' : ''
-                }`}
-              >
-                <div className="font-medium truncate">{job.title}</div>
-                <div className="text-xs text-muted-foreground">{new Date(job.receivedAt).toLocaleString()}</div>
-              </button>
-            ))
+            <>
+              {sendLog.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="px-4 py-3 text-sm border-b border-border/60"
+                >
+                  <div className="font-medium truncate">{entry.jobTitle}</div>
+                  <div className="text-xs text-muted-foreground">To: {entry.to}</div>
+                  <div className="text-xs mt-0.5">
+                    <span
+                      className={
+                        entry.status === 'sent' ? 'text-teal font-medium' : 'text-destructive font-medium'
+                      }
+                    >
+                      {entry.status}
+                    </span>
+                    {' · '}
+                    {new Date(entry.sentAt).toLocaleString()}
+                  </div>
+                  {entry.externalId && (
+                    <div className="text-[10px] font-mono text-muted-foreground truncate">{entry.externalId}</div>
+                  )}
+                </div>
+              ))}
+              <div className="p-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    void clearFaxSendLog().then(() => refresh());
+                  }}
+                >
+                  Clear sent log
+                </Button>
+              </div>
+            </>
           )}
         </div>
       </div>
     ),
-    [jobs, selected?.pdfPath, printerName],
+    [jobs, sendLog, inboxTab, selected?.pdfPath, printerName, refresh],
   );
 
   if (!isElectronApp()) {

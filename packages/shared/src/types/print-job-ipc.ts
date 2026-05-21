@@ -15,6 +15,13 @@ export type FaxSendPayload = {
   from?: string;
   /** Absolute path to PDF readable by main process */
   pdfPath: string;
+  /** Print/fax resolution hint for provider */
+  resolution?: 'standard' | 'fine' | 'superfine';
+  coverSubject?: string;
+  coverMessage?: string;
+  /** Links send log entry to the originating print job */
+  jobId?: string;
+  jobTitle?: string;
 };
 
 export type FaxSendResult = {
