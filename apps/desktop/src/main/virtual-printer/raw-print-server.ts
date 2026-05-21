@@ -172,8 +172,17 @@ function handlePrintSocket(socket: net.Socket): void {
     chunks.push(Buffer.isBuffer(d) ? d : Buffer.from(d));
     scheduleIdleFinish();
   });
-  socket.on('end', finish);
-  socket.on('close', finish);
+  socket.on('end', () => {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(finish, 400);
+  });
+  socket.on('close', () => {
+    debugLog(`socket closed ${remote}`);
+    if (!finished && chunks.length > 0) {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(finish, 400);
+    }
+  });
   socket.on('error', (err) => {
     debugLog(`socket error ${remote}: ${err.message}`);
     finish();

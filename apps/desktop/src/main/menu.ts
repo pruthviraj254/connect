@@ -47,7 +47,7 @@ export function buildAppMenu(deps: MenuDeps): Menu {
       label: 'Help',
       submenu: [
         {
-          label: 'OneRx Health',
+          label: 'OneRx Inc',
           click: async () => {
             await deps.onOpenDocs();
           },

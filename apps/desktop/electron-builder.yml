@@ -1,7 +1,7 @@
 appId: health.onerx.rxconnect
 productName: Rx-Connect
 artifactName: ${productName}-Setup-${version}-${arch}.${ext}
-copyright: Copyright (c) OneRx Health
+copyright: Copyright (c) OneRx Inc
 # Required with pnpm hoisted monorepos — must match resolved electron in pnpm-lock.yaml.
 electronVersion: 33.4.11
 
@@ -19,14 +19,19 @@ win:
     - target: nsis
       arch:
         - x64
-  publisherName: OneRx Health
-  # Future EV code signing — set CSC_LINK + CSC_KEY_PASSWORD in CI/local, or use a custom sign hook:
-  # certificateFile: build/cert.pfx
-  # certificatePassword: ${env.CSC_KEY_PASSWORD}
-  # signingHashAlgorithms: ["sha256"]
-  # signAndEditExecutable: true
-  # signDlls: false
-  # rfc3161TimeStampServer: http://timestamp.digicert.com
+  publisherName: OneRx Inc
+  # Authenticode code signing (removes "Unknown publisher" SmartScreen warning).
+  # Provide the certificate at build time via env vars (preferred — no secrets in git):
+  #   CSC_LINK             = path to .pfx file OR base64-encoded .pfx contents
+  #   CSC_KEY_PASSWORD     = password for the .pfx
+  # OR for a cert installed in the Windows certificate store:
+  #   WIN_CSC_SUBJECT_NAME = subject name (e.g. "OneRx Inc")
+  signingHashAlgorithms:
+    - sha256
+  signAndEditExecutable: true
+  signDlls: false
+  rfc3161TimeStampServer: http://timestamp.digicert.com
+  verifyUpdateCodeSignature: true
 
 nsis:
   oneClick: false

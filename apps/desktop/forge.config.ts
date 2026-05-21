@@ -59,7 +59,7 @@ const config: ForgeConfig = {
     }),
     new MakerDeb({
       options: {
-        maintainer: 'OneRx Health',
+        maintainer: 'OneRx Inc',
         homepage: 'https://onerx.health',
         scripts: {
           postinst: path.join(__dirname, 'resources', 'virtual-printer', 'after-install-linux.sh'),

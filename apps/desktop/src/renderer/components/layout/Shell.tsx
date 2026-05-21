@@ -112,7 +112,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             Rx
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-semibold">OneRx Health</div>
+            <div className="text-sm font-semibold">OneRx Inc</div>
             <div className="text-[11px] text-sidebar-foreground/60">Operator Portal</div>
           </div>
         </div>

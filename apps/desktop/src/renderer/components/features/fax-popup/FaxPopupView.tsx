@@ -145,13 +145,16 @@ export function FaxPopupView() {
           jobId: job.id,
           jobTitle: job.title,
         });
-        const raw = result.raw as { fileName?: string; sizeBytes?: number } | undefined;
-        const sizeHint =
-          typeof raw?.sizeBytes === 'number'
-            ? ` (${raw.sizeBytes.toLocaleString()} bytes)`
-            : '';
-        const nameHint = raw?.fileName ? ` — ${raw.fileName}` : '';
-        lastFileHint = `${nameHint}${sizeHint}`;
+      const raw = result.raw as
+        | { fileName?: string; sizeBytes?: number; pdfPath?: string }
+        | undefined;
+      const sizeHint =
+        typeof raw?.sizeBytes === 'number'
+          ? ` (${raw.sizeBytes.toLocaleString()} bytes)`
+          : '';
+      const nameHint = raw?.fileName ? ` — ${raw.fileName}` : '';
+      const pathHint = raw?.pdfPath ? `\n${raw.pdfPath}` : '';
+      lastFileHint = `${nameHint}${sizeHint}${pathHint}`;
       }
       setStatus(
         `Sent to ${recipients.length} recipient${recipients.length === 1 ? '' : 's'} (mock)${lastFileHint}`,
@@ -343,7 +346,7 @@ export function FaxPopupView() {
       </div>
 
       <footer className="shrink-0 border-t border-border px-5 py-3 flex items-center justify-between gap-3 bg-muted/30">
-        <p className="text-xs text-muted-foreground flex-1">{status}</p>
+        <p className="text-xs text-muted-foreground flex-1 whitespace-pre-wrap break-all">{status}</p>
         <Button
           type="button"
           className="bg-teal text-teal-foreground shrink-0"
