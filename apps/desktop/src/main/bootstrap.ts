@@ -233,7 +233,7 @@ function wireCsp(): void {
 }
 
 const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) {
+if (!gotLock) { 
   app.quit();
 } else {
   app.on('second-instance', (_event, argv) => {

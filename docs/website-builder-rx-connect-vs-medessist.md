@@ -416,7 +416,7 @@ Pharmacy → Intake / CRM → MedEssist ops
 
 | Aspect             | Behavior                                                                                                                                |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **Trigger**        | User clicks **Publish website** in `StepPublish` → IPC `WebBuilderPublish`                                                              |
+| **Trigger**        | User clicks **Publish website** in `StepPublish` → IPC `WebBuilderPublish`                                                              |
 | **Steps**          | 1) `initPharmacySite` 2) `writePharmacyData` 3) `buildSite` (`hugo` → `public/`) 4) `deploySite`                                        |
 | **Upload**         | Walk `public/`, SHA1 digests, POST files to Vercel `/v2/files`, POST `/v13/deployments` with `target: "production"`                     |
 | **Project naming** | Default: `rx-{site-id}` (one Vercel project per site ID). Optional shared `VERCEL_PROJECT_NAME` when platform subdomain mode is enabled |
@@ -624,35 +624,35 @@ You do **not** need to copy WordPress to match the **experience**; you need to c
 
 #### A. Product & operations
 
-- [ ] **Two tiers:** (1) _Self-serve_ — pharmacy publishes instantly; (2) _Managed_ — intake form → OneRx ops builds/reviews (like MedEssist advisor flow).
-- [ ] **Domain program:** OneRx owns `rxsites.com` (or similar) **or** partners with registrar to provision `pharmacyname.ca`.
-- [ ] **Domain automation:** API to attach domain to Vercel project + display DNS status in UI (not raw CNAME instructions only).
-- [ ] **Monthly updates** (managed tier): ops ticket or CMS workflow to edit content without pharmacy using Electron.
+- **Two tiers:** (1) _Self-serve_ — pharmacy publishes instantly; (2) _Managed_ — intake form → OneRx ops builds/reviews (like MedEssist advisor flow).
+- **Domain program:** OneRx owns `rxsites.com` (or similar) **or** partners with registrar to provision `pharmacyname.ca`.
+- **Domain automation:** API to attach domain to Vercel project + display DNS status in UI (not raw CNAME instructions only).
+- **Monthly updates** (managed tier): ops ticket or CMS workflow to edit content without pharmacy using Electron.
 
 #### B. Architecture (biggest technical shift)
 
-- [ ] **Move deploy off the desktop:** Electron/Next.js **editor only**; **OneRx backend** calls Vercel (or CI) with org token.
-- [ ] **Central site registry:** DB row per pharmacy: `siteId`, `vercelProjectId`, `publishedUrl`, `customDomain`, `status`.
-- [ ] **Staging environment:** every save → `https://{id}.staging.onerx.health` (or preview deployment) before production promote.
-- [ ] **Remove `VERCEL_API_TOKEN` from pharmacy installs** (security + parity with MedEssist).
+- **Move deploy off the desktop:** Electron/Next.js **editor only**; **OneRx backend** calls Vercel (or CI) with org token.
+- **Central site registry:** DB row per pharmacy: `siteId`, `vercelProjectId`, `publishedUrl`, `customDomain`, `status`.
+- **Staging environment:** every save → `https://{id}.staging.onerx.health` (or preview deployment) before production promote.
+- **Remove `VERCEL_API_TOKEN` from pharmacy installs** (security + parity with MedEssist).
 
 #### C. Integrations (MedEssist “seamless storefront”)
 
-- [ ] **Refill / transfer:** embed OneRx patient portal or API-driven form in Hugo template (not generic URL field only).
-- [ ] **Appointments / booking:** same — native module or signed iframe to OneRx scheduling.
-- [ ] **Reserve with Google / listings:** backend sync (optional, later).
-- [ ] Single sign-on or pharmacy-scoped links from site → Rx-Connect services.
+- **Refill / transfer:** embed OneRx patient portal or API-driven form in Hugo template (not generic URL field only).
+- **Appointments / booking:** same — native module or signed iframe to OneRx scheduling.
+- **Reserve with Google / listings:** backend sync (optional, later).
+- Single sign-on or pharmacy-scoped links from site → Rx-Connect services.
 
 #### D. Editor UX (desktop + web)
 
-- [ ] **Web admin** (optional but recommended): same wizard in browser for staff who do not use Electron.
-- [ ] **WYSIWYG or block editor** for About / announcements (MedEssist-level content freedom) — Hugo markdown files or headless CMS fields.
-- [ ] **Theme picker + live preview** on staging URL (not only `127.0.0.1`).
+- **Web admin** (optional but recommended): same wizard in browser for staff who do not use Electron.
+- **WYSIWYG or block editor** for About / announcements (MedEssist-level content freedom) — Hugo markdown files or headless CMS fields.
+- **Theme picker + live preview** on staging URL (not only `127.0.0.1`).
 
 #### E. Compliance & support
 
-- [ ] Document PIPEDA/HIPAA posture for static hosting + forms (MedEssist markets this explicitly).
-- [ ] Support playbooks: domain failed, DNS pending, rollback deployment.
+- Document PIPEDA/HIPAA posture for static hosting + forms (MedEssist markets this explicitly).
+- Support playbooks: domain failed, DNS pending, rollback deployment.
 
 ---
 
