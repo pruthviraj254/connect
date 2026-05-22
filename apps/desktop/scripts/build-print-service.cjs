@@ -12,21 +12,22 @@ const outDir = path.join(root, 'resources', 'print-service');
 const outExe = path.join(outDir, 'rxconnect-print-service.exe');
 
 function hasGo() {
-  const r = spawnSync('go', ['version'], { encoding: 'utf8', shell: process.platform === 'win32' });
+  const r = spawnSync('go', ['version'], { encoding: 'utf8', shell: false });
   return r.status === 0;
 }
 
 function build() {
   fs.mkdirSync(outDir, { recursive: true });
   console.log('[build-print-service] building', outExe);
+  // Single -ldflags= value — on Windows, shell:true splits "-s -w" and Go sees orphan "-w".
   const r = spawnSync(
     'go',
-    ['build', '-ldflags', '-s -w', '-o', outExe, '.'],
+    ['build', '-ldflags=-s -w', '-o', outExe, '.'],
     {
       cwd: srcDir,
       env: { ...process.env, GOOS: 'windows', GOARCH: 'amd64', CGO_ENABLED: '0' },
       stdio: 'inherit',
-      shell: process.platform === 'win32',
+      shell: false,
     },
   );
   if (r.status !== 0) {
