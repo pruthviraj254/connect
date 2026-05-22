@@ -2,6 +2,7 @@ import path from 'node:path';
 import { BrowserWindow } from 'electron';
 import log from 'electron-log';
 import type { PrintJobRecord } from '@rx-connect/shared';
+import { captureMainUiBeforePopup, restoreMainUiAfterPopup } from '../lifecycle.js';
 
 const popupJobs = new Map<number, PrintJobRecord>();
 let activePopup: BrowserWindow | null = null;
@@ -25,7 +26,6 @@ function focusPopupWindow(win: BrowserWindow): void {
   if (process.platform === 'win32') {
     // Independent top-level window — must stay above other apps when main is minimized.
     win.setAlwaysOnTop(true, 'screen-saver');
-    win.setSkipTaskbar(false);
   }
   win.show();
   win.focus();
@@ -42,6 +42,7 @@ function focusPopupWindow(win: BrowserWindow): void {
 }
 
 export async function openFaxPopup(job: PrintJobRecord): Promise<void> {
+  captureMainUiBeforePopup();
   const pathKey = job.pdfPath.toLowerCase();
 
   if (activePopup && !activePopup.isDestroyed()) {
@@ -71,6 +72,7 @@ export async function openFaxPopup(job: PrintJobRecord): Promise<void> {
     fullscreenable: false,
     title: 'OneRx Fax',
     // No parent on Windows — child windows are hidden when the main window is minimized.
+    skipTaskbar: process.platform === 'win32',
     autoHideMenuBar: true,
     webPreferences: {
       preload: preloadPath,
@@ -95,6 +97,7 @@ export async function openFaxPopup(job: PrintJobRecord): Promise<void> {
     if (activePopup === win) {
       activePopup = null;
     }
+    restoreMainUiAfterPopup();
     log.info('[fax-popup] closed', job.id);
   });
 

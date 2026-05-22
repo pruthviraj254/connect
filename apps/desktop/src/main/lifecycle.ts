@@ -3,6 +3,11 @@ import type { BrowserWindow } from 'electron';
 let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
 
+/** How the main window was shown before a fax popup opened. */
+type MainUiState = 'visible' | 'minimized' | 'hidden';
+
+let mainUiBeforePopup: MainUiState | null = null;
+
 export function setMainWindow(win: BrowserWindow | null): void {
   mainWindow = win;
 }
@@ -19,12 +24,74 @@ export function getIsQuitting(): boolean {
   return isQuitting;
 }
 
+function resolveMainUiState(win: BrowserWindow): MainUiState {
+  if (!win.isVisible()) return 'hidden';
+  if (win.isMinimized()) return 'minimized';
+  return 'visible';
+}
+
+/** Remember main window state before showing the fax popup. */
+export function captureMainUiBeforePopup(): void {
+  const win = mainWindow;
+  if (!win || win.isDestroyed()) {
+    mainUiBeforePopup = 'hidden';
+    return;
+  }
+  mainUiBeforePopup = resolveMainUiState(win);
+}
+
+/** Restore main window to how it was before the fax popup (not forced to tray). */
+export function restoreMainUiAfterPopup(): void {
+  const win = mainWindow;
+  if (!win || win.isDestroyed() || !mainUiBeforePopup) return;
+  const prior = mainUiBeforePopup;
+  mainUiBeforePopup = null;
+
+  switch (prior) {
+    case 'hidden':
+      return;
+    case 'minimized':
+      if (!win.isVisible()) {
+        win.show();
+      }
+      if (!win.isMinimized()) {
+        win.minimize();
+      }
+      return;
+    case 'visible':
+      if (win.isMinimized()) {
+        win.restore();
+      }
+      if (!win.isVisible()) {
+        win.show();
+      }
+      return;
+  }
+}
+
+async function ensureMainContentLoaded(win: BrowserWindow): Promise<void> {
+  const url = win.webContents.getURL();
+  if (url && url !== 'about:blank' && !win.webContents.isLoadingMainFrame()) {
+    return;
+  }
+  const devUrl = process.env.ELECTRON_RENDERER_URL;
+  await win.loadURL(devUrl ?? 'app://rxconnect/');
+}
+
 export function showMainWindow(): void {
   const win = mainWindow;
   if (!win || win.isDestroyed()) return;
-  if (win.isMinimized()) win.restore();
-  if (!win.isVisible()) win.show();
-  win.focus();
+  if (win.isMinimized()) {
+    win.restore();
+  }
+  if (!win.isVisible()) {
+    win.show();
+  }
+  void ensureMainContentLoaded(win).then(() => {
+    if (!win.isDestroyed()) {
+      win.focus();
+    }
+  });
 }
 
 export function hideMainWindow(): void {
@@ -33,21 +100,15 @@ export function hideMainWindow(): void {
   win.hide();
 }
 
-/** Main window is on screen (not closed to tray). */
-export function isMainWindowOnScreen(): boolean {
-  const win = mainWindow;
-  if (!win || win.isDestroyed()) return false;
-  return win.isVisible();
-}
-
 /**
  * When a print job opens the fax popup, only hide main if it was already in the tray.
- * If the user had the dashboard open or minimized on the taskbar, leave it alone.
+ * On Windows, minimized taskbar windows often report isVisible() === false — never hide those.
  */
 export function hideMainForPrintPopupIfNeeded(): void {
   const win = mainWindow;
   if (!win || win.isDestroyed()) return;
-  if (isMainWindowOnScreen()) return;
+  if (win.isMinimized()) return;
+  if (win.isVisible()) return;
   win.hide();
 }
 
