@@ -3,11 +3,13 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/mgr"
 )
@@ -66,6 +68,30 @@ func runDebug() {
 	select {}
 }
 
+func removeServiceIfExists(m *mgr.Mgr) {
+	existing, err := m.OpenService(serviceName)
+	if err != nil {
+		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
+			return
+		}
+		logWarn("open existing service: " + err.Error())
+		return
+	}
+	defer existing.Close()
+	_, _ = existing.Control(svc.Stop)
+	timeout := time.Now().Add(15 * time.Second)
+	for time.Now().Before(timeout) {
+		st, qerr := existing.Query()
+		if qerr != nil || st.State == svc.Stopped {
+			break
+		}
+		time.Sleep(400 * time.Millisecond)
+	}
+	if err := existing.Delete(); err != nil {
+		logWarn("delete existing service: " + err.Error())
+	}
+}
+
 func installService() error {
 	exePath, err := os.Executable()
 	if err != nil {
@@ -82,7 +108,7 @@ func installService() error {
 	}
 	defer m.Disconnect()
 
-	_ = m.RemoveService(serviceName)
+	removeServiceIfExists(m)
 
 	s, err := m.CreateService(serviceName, exePath, mgr.Config{
 		DisplayName: serviceDisplayName,
@@ -105,21 +131,21 @@ func uninstallService() error {
 
 	s, err := m.OpenService(serviceName)
 	if err != nil {
+		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
+			return nil
+		}
 		return err
 	}
 	defer s.Close()
 
-	status, err := s.Control(svc.Stop)
-	if err == nil {
-		timeout := time.Now().Add(15 * time.Second)
-		for time.Now().Before(timeout) {
-			st, qerr := s.Query()
-			if qerr != nil || st.State == svc.Stopped {
-				break
-			}
-			time.Sleep(400 * time.Millisecond)
-			_ = status
+	_, _ = s.Control(svc.Stop)
+	timeout := time.Now().Add(15 * time.Second)
+	for time.Now().Before(timeout) {
+		st, qerr := s.Query()
+		if qerr != nil || st.State == svc.Stopped {
+			break
 		}
+		time.Sleep(400 * time.Millisecond)
 	}
 	return s.Delete()
 }
