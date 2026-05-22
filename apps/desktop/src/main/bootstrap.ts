@@ -12,10 +12,12 @@ import { applyFirstRunDefaults, maybeShowTrayHint } from './first-run.js';
 import {
   getIsQuitting,
   getMainWindow,
+  isWakeForPrint,
   setMainWindow,
   setQuitting,
   showMainWindow,
 } from './lifecycle.js';
+import { flushSpoolScan } from './virtual-printer/watcher.js';
 import { destroyTray, setupTray } from './tray.js';
 import { startPrintPipeline, stopPrintPipeline } from './virtual-printer/pipeline.js';
 import { registerPdfPreviewProtocol, wirePdfPreviewProtocol } from './pdf-preview-protocol.js';
@@ -240,6 +242,11 @@ if (!gotLock) {
     const deepLink = argv.find((a) => a.startsWith('rxconnect://'));
     if (deepLink) {
       getMainWindow()?.webContents.send('app:deep-link', deepLink);
+    }
+    if (isWakeForPrint(argv)) {
+      log.info('[app] second-instance print wake — scan spool, keep main hidden');
+      flushSpoolScan();
+      return;
     }
     showMainWindow();
   });

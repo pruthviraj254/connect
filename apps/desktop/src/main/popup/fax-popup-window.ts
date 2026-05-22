@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { app, BrowserWindow } from 'electron';
+import { BrowserWindow } from 'electron';
 import log from 'electron-log';
 import type { PrintJobRecord } from '@rx-connect/shared';
 
@@ -32,7 +32,7 @@ function focusPopupWindow(win: BrowserWindow): void {
   if (process.platform === 'win32') {
     win.moveTop();
     win.flashFrame(true);
-    app.focus({ steal: true });
+    // Do not app.focus({ steal: true }) — that raises the hidden main window too.
     win.once('blur', () => {
       if (!win.isDestroyed()) {
         win.setAlwaysOnTop(false);

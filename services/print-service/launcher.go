@@ -47,7 +47,7 @@ func launchInActiveSession(exePath string) error {
 
 	exe, _ := windows.UTF16PtrFromString(exePath)
 	workDir, _ := windows.UTF16PtrFromString(filepath.Dir(exePath))
-	cmdLine, _ := windows.UTF16PtrFromString(`"` + exePath + `" --hidden`)
+	cmdLine, _ := windows.UTF16PtrFromString(`"` + exePath + `" --hidden --wake-for-print`)
 
 	// User environment block (APPDATA, LOCALAPPDATA, USERPROFILE, …).
 	// Required so Electron can resolve app.getPath('userData').

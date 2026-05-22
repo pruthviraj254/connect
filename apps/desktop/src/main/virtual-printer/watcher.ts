@@ -6,10 +6,18 @@ import { getWritableSpoolDir, resolveSpoolDir } from './spool-paths.js';
 
 const knownPaths = new Set<string>();
 
+/** Jobs older than this are treated as already seen on startup (avoids popup flood). */
+const STALE_JOB_MS = 30_000;
+
 async function seedKnown(): Promise<void> {
   const jobs = await listPrintJobs();
+  const staleBefore = Date.now() - STALE_JOB_MS;
   for (const j of jobs) {
-    knownPaths.add(j.pdfPath);
+    const mtime = new Date(j.receivedAt).getTime();
+    // Do not mark very recent files — cold start after print service must still popup once.
+    if (mtime < staleBefore) {
+      knownPaths.add(j.pdfPath);
+    }
   }
 }
 
@@ -59,6 +67,11 @@ export async function startSpoolWatchers(): Promise<void> {
     }
   }
   await scanAndEmit();
+}
+
+/** Force a spool scan (e.g. second-instance print wake while app already in tray). */
+export function flushSpoolScan(): void {
+  scheduleScan();
 }
 
 export function stopSpoolWatchers(): void {

@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron';
 import type { PrintJobRecord } from '@rx-connect/shared';
+import { hideMainWindow } from '../lifecycle.js';
 import { openFaxPopup } from '../popup/fax-popup-window.js';
 import { refreshTrayMenu } from '../tray.js';
 import { PRINT_JOB_INCOMING_CHANNEL } from './spool-paths.js';
@@ -26,6 +27,7 @@ export function broadcastPrintJobToAll(job: PrintJobRecord): void {
   if (!shouldNotify(job)) {
     return;
   }
+  hideMainWindow();
   for (const win of BrowserWindow.getAllWindows()) {
     if (!win.isDestroyed() && !win.webContents.getURL().includes('/fax-popup')) {
       win.webContents.send(PRINT_JOB_INCOMING_CHANNEL, job);

@@ -32,3 +32,8 @@ export function hideMainWindow(): void {
   if (!win || win.isDestroyed()) return;
   win.hide();
 }
+
+/** Set when the print service (or CLI) wakes the app for a new spool job — do not show main window. */
+export function isWakeForPrint(argv: string[] = process.argv): boolean {
+  return argv.includes('--wake-for-print');
+}
