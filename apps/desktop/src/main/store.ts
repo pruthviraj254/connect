@@ -1,3 +1,4 @@
+import { app } from 'electron';
 import Store from 'electron-store';
 
 import type { PharmacyWebsiteData } from '@rx-connect/shared';
@@ -11,18 +12,32 @@ type AppStoreSchema = {
   websiteBuilder: Record<string, PharmacyWebsiteData>;
 };
 
-const store = new Store<AppStoreSchema>({
-  name: 'rx-connect-config',
-  defaults: {
-    theme: 'system',
-    openAtLogin: false,
-    firstRunCompleted: false,
-    trayHintShown: false,
-    zustandPersist: {},
-    websiteBuilder: {},
-  },
-});
+const defaults: AppStoreSchema = {
+  theme: 'system',
+  openAtLogin: false,
+  firstRunCompleted: false,
+  trayHintShown: false,
+  zustandPersist: {},
+  websiteBuilder: {},
+};
+
+let store: Store<AppStoreSchema> | null = null;
+
+/** Must run after app.whenReady() — electron-store needs app.getPath('userData'). */
+export function initStore(): void {
+  if (store) return;
+  store = new Store<AppStoreSchema>({
+    name: 'rx-connect-config',
+    defaults,
+  });
+}
 
 export function getStore(): Store<AppStoreSchema> {
-  return store;
+  if (!store) {
+    if (!app.isReady()) {
+      throw new Error('Store accessed before app.whenReady() — call initStore() first');
+    }
+    initStore();
+  }
+  return store as Store<AppStoreSchema>;
 }

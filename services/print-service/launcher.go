@@ -49,6 +49,15 @@ func launchInActiveSession(exePath string) error {
 	workDir, _ := windows.UTF16PtrFromString(filepath.Dir(exePath))
 	cmdLine, _ := windows.UTF16PtrFromString(`"` + exePath + `" --hidden`)
 
+	// User environment block (APPDATA, LOCALAPPDATA, USERPROFILE, …).
+	// Required so Electron can resolve app.getPath('userData').
+	var envBlock *uint16
+	if err := windows.CreateEnvironmentBlock(&envBlock, userToken, false); err != nil {
+		logWarn("CreateEnvironmentBlock: " + err.Error())
+	} else {
+		defer windows.DestroyEnvironmentBlock(envBlock)
+	}
+
 	err := windows.CreateProcessAsUser(
 		userToken,
 		exe,
@@ -56,8 +65,8 @@ func launchInActiveSession(exePath string) error {
 		nil,
 		nil,
 		false,
-		0,
-		nil,
+		windows.CREATE_UNICODE_ENVIRONMENT,
+		envBlock,
 		workDir,
 		&si,
 		&pi,

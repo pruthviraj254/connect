@@ -7,7 +7,7 @@ import { initAutoUpdater } from './auto-updater.js';
 import { promptWindowsPrinterInstallIfMissing } from './windows-runtime.js';
 import { registerIpcHandlers } from './ipc/index.js';
 import { buildAppMenu } from './menu.js';
-import { getStore } from './store.js';
+import { getStore, initStore } from './store.js';
 import { applyFirstRunDefaults, maybeShowTrayHint } from './first-run.js';
 import {
   getIsQuitting,
@@ -245,6 +245,7 @@ if (!gotLock) {
   });
 
   app.whenReady().then(async () => {
+    initStore();
     registerDeepLinkProtocol();
     registerAppProtocol();
     wirePdfPreviewProtocol();

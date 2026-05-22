@@ -35,6 +35,13 @@ export function getWritableSpoolDir(): string {
   if (override) return override;
   const shared = sharedCandidate();
   if (shared) return shared;
+  if (app.isReady()) {
+    return path.join(app.getPath('userData'), 'print-spool');
+  }
+  // Dev / early boot before Electron paths exist (e.g. service cold-start).
+  if (process.platform === 'win32') {
+    return path.join(process.env.ProgramData ?? 'C:\\ProgramData', 'Rx-Connect', 'print-spool');
+  }
   return path.join(app.getPath('userData'), 'print-spool');
 }
 
