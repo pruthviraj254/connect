@@ -33,6 +33,24 @@ export function hideMainWindow(): void {
   win.hide();
 }
 
+/** Main window is on screen (not closed to tray). */
+export function isMainWindowOnScreen(): boolean {
+  const win = mainWindow;
+  if (!win || win.isDestroyed()) return false;
+  return win.isVisible();
+}
+
+/**
+ * When a print job opens the fax popup, only hide main if it was already in the tray.
+ * If the user had the dashboard open or minimized on the taskbar, leave it alone.
+ */
+export function hideMainForPrintPopupIfNeeded(): void {
+  const win = mainWindow;
+  if (!win || win.isDestroyed()) return;
+  if (isMainWindowOnScreen()) return;
+  win.hide();
+}
+
 /** Set when the print service (or CLI) wakes the app for a new spool job — do not show main window. */
 export function isWakeForPrint(argv: string[] = process.argv): boolean {
   return argv.includes('--wake-for-print');
