@@ -16,10 +16,6 @@ async function seedKnown(): Promise<void> {
 async function scanAndEmit(): Promise<void> {
   const jobs = await listPrintJobs();
   for (const j of jobs) {
-    // Windows: raw-print-server already notifies when the job is captured.
-    if (process.platform === 'win32') {
-      continue;
-    }
     if (!knownPaths.has(j.pdfPath)) {
       knownPaths.add(j.pdfPath);
       broadcastPrintJobToAll(j);

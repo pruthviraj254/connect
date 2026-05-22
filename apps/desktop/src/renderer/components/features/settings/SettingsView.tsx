@@ -1,10 +1,13 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/layout/Shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { getAppSettings, setAppSettings } from '@/lib/settings';
 import {
   Table,
   TableBody,
@@ -13,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Server, KeyRound, Bell, Settings as SettingsIcon } from 'lucide-react';
+import { Server, KeyRound, Bell, Settings as SettingsIcon, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 
 const apiKeys = [
@@ -42,11 +45,63 @@ function Field({
 }
 
 export function SettingsView() {
+  const [openAtLogin, setOpenAtLogin] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const s = await getAppSettings();
+        setOpenAtLogin(s.openAtLogin);
+      } catch {
+        /* desktop IPC unavailable in web-only dev */
+      } finally {
+        setSettingsLoading(false);
+      }
+    })();
+  }, []);
+
+  const onToggleStartup = async (checked: boolean) => {
+    setOpenAtLogin(checked);
+    try {
+      await setAppSettings({ openAtLogin: checked });
+      toast.success(checked ? 'Rx-Connect will start at login' : 'Startup disabled');
+    } catch (e) {
+      setOpenAtLogin(!checked);
+      toast.error(e instanceof Error ? e.message : 'Could not update startup setting');
+    }
+  };
+
   return (
     <>
       <PageHeader title="Settings" description="Platform configuration, notifications, and credentials." />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Monitor className="h-4 w-4 text-teal" />
+              Desktop App
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="open-at-login">Run on startup</Label>
+                <p className="text-xs text-muted-foreground">
+                  Start Rx-Connect when you sign in (minimized to the system tray on Windows).
+                </p>
+              </div>
+              <Switch
+                id="open-at-login"
+                checked={openAtLogin}
+                disabled={settingsLoading}
+                onCheckedChange={(v) => void onToggleStartup(v)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">

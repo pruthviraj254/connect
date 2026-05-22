@@ -24,8 +24,13 @@ const virtualPrinterPkgScripts = path.join(
 const virtualPrinterResource = path.join(__dirname, 'resources', 'virtual-printer');
 const ghostscriptWinResource = path.join(__dirname, 'resources', 'ghostscript-win');
 const hugoTemplateResource = path.join(__dirname, 'resources', 'hugo-template');
+const iconsResource = path.join(__dirname, 'resources', 'icons');
+const printServiceResource = path.join(__dirname, 'resources', 'print-service');
 const hugoBinResource = path.join(__dirname, 'resources', 'bin');
-const extraResources = [virtualPrinterResource, hugoTemplateResource];
+const extraResources = [virtualPrinterResource, hugoTemplateResource, iconsResource];
+if (fsSync.existsSync(printServiceResource)) {
+  extraResources.push(printServiceResource);
+}
 if (fsSync.existsSync(hugoBinResource)) {
   extraResources.push(hugoBinResource);
 }

@@ -1,0 +1,3 @@
+# rxconnect-print-service.exe is produced by:
+#   node apps/desktop/scripts/build-print-service.cjs
+# (requires Go 1.22+). Windows CI builds this before dist:win.

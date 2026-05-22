@@ -8,7 +8,15 @@ import { promptWindowsPrinterInstallIfMissing } from './windows-runtime.js';
 import { registerIpcHandlers } from './ipc/index.js';
 import { buildAppMenu } from './menu.js';
 import { getStore } from './store.js';
-import { getMainWindow, setMainWindow } from './lifecycle.js';
+import { applyFirstRunDefaults, maybeShowTrayHint } from './first-run.js';
+import {
+  getIsQuitting,
+  getMainWindow,
+  setMainWindow,
+  setQuitting,
+  showMainWindow,
+} from './lifecycle.js';
+import { destroyTray, setupTray } from './tray.js';
 import { startPrintPipeline, stopPrintPipeline } from './virtual-printer/pipeline.js';
 import { registerPdfPreviewProtocol, wirePdfPreviewProtocol } from './pdf-preview-protocol.js';
 
@@ -102,8 +110,13 @@ function registerAppProtocol(): void {
   });
 }
 
+function shouldStartHidden(): boolean {
+  return process.argv.includes('--hidden');
+}
+
 async function createWindow(): Promise<void> {
   const devUrl = process.env.ELECTRON_RENDERER_URL;
+  const startHidden = shouldStartHidden();
 
   const mainWindow = new BrowserWindow({
     width: 1280,
@@ -129,8 +142,18 @@ async function createWindow(): Promise<void> {
   });
   mainWindow.setMenu(menu);
 
+  mainWindow.on('close', (event) => {
+    if (!getIsQuitting() && process.platform !== 'darwin') {
+      event.preventDefault();
+      mainWindow.hide();
+      maybeShowTrayHint();
+    }
+  });
+
   mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
+    if (!startHidden) {
+      mainWindow.show();
+    }
   });
 
   if (devUrl) {
@@ -218,11 +241,7 @@ if (!gotLock) {
     if (deepLink) {
       getMainWindow()?.webContents.send('app:deep-link', deepLink);
     }
-    const win = BrowserWindow.getAllWindows()[0];
-    if (win) {
-      if (win.isMinimized()) win.restore();
-      win.focus();
-    }
+    showMainWindow();
   });
 
   app.whenReady().then(async () => {
@@ -234,6 +253,9 @@ if (!gotLock) {
     wireNetworkStatus();
     nativeTheme.themeSource = getStore().get('theme', 'system') as 'system' | 'light' | 'dark';
 
+    applyFirstRunDefaults();
+    setupTray();
+
     await createWindow();
     await promptWindowsPrinterInstallIfMissing();
     initAutoUpdater();
@@ -241,6 +263,8 @@ if (!gotLock) {
     app.on('activate', async () => {
       if (BrowserWindow.getAllWindows().length === 0) {
         await createWindow();
+      } else {
+        showMainWindow();
       }
     });
   });
@@ -251,12 +275,15 @@ if (!gotLock) {
   });
 
   app.on('before-quit', () => {
+    setQuitting(true);
     stopPrintPipeline();
+    destroyTray();
   });
 
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-      app.quit();
+    // Windows/Linux: stay alive in system tray when the main window is closed.
+    if (process.platform === 'darwin' && !getIsQuitting()) {
+      /* macOS: keep running in Dock until explicit Quit */
     }
   });
 }

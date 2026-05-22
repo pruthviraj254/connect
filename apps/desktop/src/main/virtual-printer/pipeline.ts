@@ -9,7 +9,10 @@ export async function startPrintPipeline(): Promise<void> {
   }
   pipelineStarted = true;
   await startSpoolWatchers();
-  startRawPrintServer();
+  // Windows: RxConnectPrintService owns TCP 127.0.0.1:19101; Electron watches spool only.
+  if (process.platform !== 'win32') {
+    startRawPrintServer();
+  }
 }
 
 export function stopPrintPipeline(): void {

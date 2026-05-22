@@ -46,6 +46,8 @@ nsis:
   runAfterFinish: true
   include: build/installer.nsh
 
+afterSign: scripts/after-sign.cjs
+
 publish:
   - provider: github
     owner: pruthviraj254

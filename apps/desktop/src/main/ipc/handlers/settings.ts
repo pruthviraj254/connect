@@ -24,7 +24,11 @@ export function registerSettingsHandlers(): void {
       }
       if (typeof payload.openAtLogin === 'boolean') {
         store.set('openAtLogin', payload.openAtLogin);
-        app.setLoginItemSettings({ openAtLogin: payload.openAtLogin });
+        app.setLoginItemSettings({
+          openAtLogin: payload.openAtLogin,
+          openAsHidden: payload.openAtLogin,
+          args: process.platform === 'win32' && payload.openAtLogin ? ['--hidden'] : [],
+        });
       }
       return { ok: true as const, data: null };
     },

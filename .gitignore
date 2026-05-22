@@ -21,3 +21,4 @@ apps/desktop/resources/bin/win32/hugo.exe
 apps/desktop/resources/bin/linux/hugo
 apps/desktop/resources/hugo-template/public/
 apps/desktop/dist/
+apps/desktop/resources/print-service/*.exe

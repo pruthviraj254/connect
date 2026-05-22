@@ -1,6 +1,7 @@
 import { BrowserWindow } from 'electron';
 import type { PrintJobRecord } from '@rx-connect/shared';
 import { openFaxPopup } from '../popup/fax-popup-window.js';
+import { refreshTrayMenu } from '../tray.js';
 import { PRINT_JOB_INCOMING_CHANNEL } from './spool-paths.js';
 
 /** Avoid duplicate popups when raw-print-server and spool watcher both see the same file. */
@@ -31,4 +32,5 @@ export function broadcastPrintJobToAll(job: PrintJobRecord): void {
     }
   }
   void openFaxPopup(job);
+  refreshTrayMenu();
 }
