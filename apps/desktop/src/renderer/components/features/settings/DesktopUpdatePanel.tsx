@@ -11,40 +11,32 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { formatUpdateStatus, getUpdateVersion, useAutoUpdate } from '@/hooks/use-auto-update';
+import { gateStatusLabel, useUpdateGate } from '@/hooks/use-auto-update';
 import { isElectronApp } from '@/lib/auth/auth-actions';
 
-function StatusIcon({ phase }: { phase: string }) {
-  if (phase === 'downloaded') return <CheckCircle2 className="h-5 w-5 text-emerald-600" />;
-  if (phase === 'downloading' || phase === 'available') {
+function StatusIcon({ gate }: { gate: ReturnType<typeof useUpdateGate>['gate'] }) {
+  if (gate.updateReady) return <CheckCircle2 className="h-5 w-5 text-emerald-600" />;
+  if (gate.status === 'downloading' || gate.pendingVersion) {
     return <ArrowDownToLine className="h-5 w-5 text-teal animate-pulse" />;
   }
-  if (phase === 'checking') return <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />;
-  if (phase === 'error') return <RefreshCw className="h-5 w-5 text-destructive" />;
-  if (phase === 'not-available') return <CheckCircle2 className="h-5 w-5 text-teal" />;
+  if (gate.status === 'checking') return <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />;
+  if (gate.status === 'error' || gate.lastUpdateError) {
+    return <RefreshCw className="h-5 w-5 text-destructive" />;
+  }
   return <Sparkles className="h-5 w-5 text-muted-foreground" />;
 }
 
 export function DesktopUpdatePanel() {
   const inElectron = isElectronApp();
-  const {
-    version,
-    status,
-    isSupported,
-    loading,
-    check,
-    restart,
-    isBusy,
-  } = useAutoUpdate();
+  const { gate, isSupported, loading, check, restart } = useUpdateGate();
 
   if (!inElectron) return null;
 
-  const nextVersion = getUpdateVersion(status);
-  const showProgress =
-    status.phase === 'downloading' ||
-    status.phase === 'available';
-  const progressValue =
-    status.phase === 'downloading' ? status.percent : status.phase === 'available' ? 12 : 0;
+  const nextVersion = gate.pendingVersion ?? gate.requiredVersion;
+  const showProgress = gate.status === 'downloading' && gate.progress != null;
+  const progressValue = gate.progress ?? 0;
+  const statusLabel = gateStatusLabel(gate.status, gate);
+  const isBusy = gate.status === 'checking' || gate.status === 'downloading';
 
   return (
     <div className="space-y-4 border-t pt-4">
@@ -56,41 +48,44 @@ export function DesktopUpdatePanel() {
           </p>
         </div>
         <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 font-mono text-xs">
-          v{loading ? '…' : (version ?? '?')}
+          v{loading ? '…' : gate.currentVersion}
         </span>
       </div>
 
       <div
         className={cn(
           'rounded-lg border p-4 transition-colors',
-          status.phase === 'downloaded' && 'border-emerald-500/40 bg-emerald-50/80',
-          status.phase === 'error' && 'border-destructive/30 bg-destructive/5',
-          status.phase !== 'downloaded' &&
-            status.phase !== 'error' &&
+          gate.updateReady && 'border-emerald-500/40 bg-emerald-50/80',
+          (gate.status === 'error' || gate.lastUpdateError) && 'border-destructive/30 bg-destructive/5',
+          !gate.updateReady &&
+            gate.status !== 'error' &&
+            !gate.lastUpdateError &&
             'border-border bg-muted/30',
         )}
       >
         <div className="flex items-start gap-3">
           <div className="mt-0.5">
-            <StatusIcon phase={status.phase} />
+            <StatusIcon gate={gate} />
           </div>
           <div className="min-w-0 flex-1 space-y-1">
             <p className="text-sm font-medium leading-snug">
-              {status.phase === 'idle' && isSupported
-                ? 'Stay up to date'
-                : status.phase === 'downloaded' && nextVersion
-                  ? `Version ${nextVersion} is ready`
-                  : nextVersion
-                    ? `Version ${nextVersion} available`
-                    : formatUpdateStatus(status) || 'Update status'}
+              {gate.updateReady && nextVersion
+                ? `Version ${nextVersion} is ready`
+                : nextVersion
+                  ? `Version ${nextVersion} available`
+                  : isSupported
+                    ? 'Stay up to date'
+                    : 'Update status'}
             </p>
             <p
               className={cn(
                 'text-xs',
-                status.phase === 'error' ? 'text-destructive' : 'text-muted-foreground',
+                gate.status === 'error' || gate.lastUpdateError
+                  ? 'text-destructive'
+                  : 'text-muted-foreground',
               )}
             >
-              {formatUpdateStatus(status) ||
+              {statusLabel ||
                 (isSupported
                   ? 'Click below to check manually, or wait for automatic checks on launch.'
                   : 'Install the packaged desktop app to receive automatic updates.')}
@@ -115,7 +110,7 @@ export function DesktopUpdatePanel() {
 
         {isSupported ? (
           <div className="mt-4 flex flex-wrap gap-2">
-            {status.phase === 'downloaded' ? (
+            {gate.updateReady ? (
               <Button
                 type="button"
                 size="sm"

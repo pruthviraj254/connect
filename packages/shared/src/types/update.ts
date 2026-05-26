@@ -1,3 +1,33 @@
+export type UpdateGateStatus =
+  | 'idle'
+  | 'checking'
+  | 'ok'
+  | 'required'
+  | 'downloading'
+  | 'ready'
+  | 'error';
+
+export interface UpdateGateState {
+  status: UpdateGateStatus;
+  currentVersion: string;
+  minimumVersion: string | null;
+  requiredVersion: string | null;
+  message: string | null;
+  progress: number | null;
+  error: string | null;
+  pendingVersion: string | null;
+  updateReady: boolean;
+  lastUpdateError: string | null;
+  /** True when running a packaged build with auto-update enabled. */
+  supported: boolean;
+}
+
+export interface UpdatePolicy {
+  minimumVersion: string;
+  message?: string;
+}
+
+/** @deprecated Use UpdateGateState */
 export type UpdateStatus =
   | { phase: 'idle' }
   | { phase: 'checking' }
@@ -7,9 +37,16 @@ export type UpdateStatus =
   | { phase: 'downloaded'; version: string }
   | { phase: 'error'; message: string };
 
+/** @deprecated Use UpdateGateState */
 export type UpdateCapabilities = {
-  /** True when running a packaged build with auto-update enabled (Windows or macOS). */
   supported: boolean;
-  /** Current update phase from the main process (for Settings mount). */
   status: UpdateStatus;
 };
+
+export const UPDATE_GATE_BLOCKING_STATUSES: ReadonlySet<UpdateGateStatus> = new Set([
+  'checking',
+  'required',
+  'downloading',
+  'ready',
+  'error',
+]);

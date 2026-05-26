@@ -66,3 +66,4 @@ publish:
     owner: ${env.GH_OWNER}
     repo: ${env.GH_REPO}
     releaseType: release
+    private: true

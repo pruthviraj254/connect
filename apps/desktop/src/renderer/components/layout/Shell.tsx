@@ -35,7 +35,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'sonner';
 import { isElectronApp, logoutWithTempDb } from '@/lib/auth/auth-actions';
-import { UpdateBanner } from '@/components/features/settings/UpdateBanner';
+import { AppVersionBadge } from '@/components/features/settings/UpdateGate';
 
 function getInitials(displayName: string | null, email: string | null): string {
   const name = (displayName ?? '').trim();
@@ -176,6 +176,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </ul>
             </PopoverContent>
           </Popover>
+          <AppVersionBadge />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -210,7 +211,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <UpdateBanner />
         <main className="flex-1 flex flex-col overflow-hidden min-h-0">
           {children}
         </main>

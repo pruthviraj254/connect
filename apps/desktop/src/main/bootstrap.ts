@@ -3,12 +3,12 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { stat } from 'node:fs/promises';
 import log from 'electron-log';
-import { initAutoUpdater } from './auto-updater.js';
+import { initializeUpdateService } from './update-service.js';
 import { promptWindowsPrinterInstallIfMissing } from './windows-runtime.js';
 import { registerIpcHandlers } from './ipc/index.js';
 import { buildAppMenu } from './menu.js';
 import { getStore, initStore } from './store.js';
-import { applyFirstRunDefaults, maybeShowTrayHint } from './first-run.js';
+import { applyFirstRunDefaults, ensureOpenAtLoginEnabled, maybeShowTrayHint } from './first-run.js';
 import {
   getIsQuitting,
   getMainWindow,
@@ -259,14 +259,16 @@ if (!gotLock) {
     registerIpcHandlers();
     wireCsp();
     wireNetworkStatus();
-    nativeTheme.themeSource = getStore().get('theme', 'system') as 'system' | 'light' | 'dark';
+    nativeTheme.themeSource = 'light';
 
     applyFirstRunDefaults();
+    ensureOpenAtLoginEnabled();
     setupTray();
+
+    await initializeUpdateService();
 
     await createWindow();
     await promptWindowsPrinterInstallIfMissing();
-    initAutoUpdater();
 
     app.on('activate', async () => {
       if (BrowserWindow.getAllWindows().length === 0) {

@@ -11,8 +11,9 @@ export const IpcChannel = {
   AppGetOnlineStatus: 'app:get-online-status',
 
   UpdateCheck: 'update:check',
-  UpdateQuitAndInstall: 'update:quit-and-install',
-  UpdateGetCapabilities: 'update:get-capabilities',
+  UpdateGetGate: 'update:get-gate',
+  UpdateRetry: 'update:retry',
+  UpdateInstallPending: 'update:install-pending',
 
   AuthLogin: 'auth:login',
   AuthRegister: 'auth:register',

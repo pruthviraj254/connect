@@ -3,7 +3,7 @@ import {
   IpcChannel,
   type ElectronAPI,
   type PrintJobRecord,
-  type UpdateStatus,
+  type UpdateGateState,
 } from '@rx-connect/shared';
 
 const allowed = new Set<string>(Object.values(IpcChannel));
@@ -51,13 +51,13 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.removeListener('fax-send-log:updated', listener);
     };
   },
-  onUpdateStatus: (handler: (status: UpdateStatus) => void) => {
-    const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus) => {
-      handler(status);
+  onUpdateGateChanged: (handler: (state: UpdateGateState) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, state: UpdateGateState) => {
+      handler(state);
     };
-    ipcRenderer.on('update:status', listener);
+    ipcRenderer.on('update:gateChanged', listener);
     return () => {
-      ipcRenderer.removeListener('update:status', listener);
+      ipcRenderer.removeListener('update:gateChanged', listener);
     };
   },
 };

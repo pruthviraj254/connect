@@ -7,22 +7,28 @@ const path = require('node:path');
 
 const owner = process.env.GH_OWNER || 'pruthviraj254';
 const repo = process.env.GH_REPO || 'connect';
+const token = process.env.GH_TOKEN?.trim();
 
 function writeAppUpdateYml(prepackagedDir) {
   const resourcesDir = path.join(prepackagedDir, 'resources');
   fs.mkdirSync(resourcesDir, { recursive: true });
 
-  const contents = [
+  const lines = [
     `owner: ${owner}`,
     `repo: ${repo}`,
     'provider: github',
     'updaterCacheDirName: rx-connect-updater',
-    '',
-  ].join('\n');
+  ];
+
+  if (token) {
+    lines.push(`token: ${token}`);
+  }
+
+  const contents = `${lines.join('\n')}\n`;
 
   const dest = path.join(resourcesDir, 'app-update.yml');
   fs.writeFileSync(dest, contents, 'utf8');
-  console.log('[write-app-update-yml] wrote', dest);
+  console.log('[write-app-update-yml] wrote', dest, token ? '(with token)' : '(no token)');
 }
 
 const target = process.argv[2];

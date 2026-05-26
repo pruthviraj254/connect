@@ -114,6 +114,15 @@ const config: ForgeConfig = {
       } catch {
         console.warn('[forge] Skipping renderer copy — run `pnpm run build:renderer` before packaging.');
       }
+
+      const policySrc = path.join(__dirname, 'update-policy.json');
+      const policyDest = path.join(buildPath, 'update-policy.json');
+      try {
+        await fs.access(policySrc);
+        await fs.copyFile(policySrc, policyDest);
+      } catch {
+        console.warn('[forge] update-policy.json not found — bundled policy fallback unavailable.');
+      }
     },
   },
 };

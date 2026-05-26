@@ -1,10 +1,15 @@
 import { ipcMain } from 'electron';
 import { IpcChannel } from '@rx-connect/shared';
-import { checkForUpdates, getUpdateCapabilities, quitAndInstallUpdate } from '../../auto-updater.js';
+import {
+  checkForUpdates,
+  getUpdateGate,
+  installPendingUpdateNow,
+  retryForcedUpdate,
+} from '../../update-service.js';
 
 export function registerUpdaterHandlers(): void {
-  ipcMain.handle(IpcChannel.UpdateGetCapabilities, async () => {
-    return { ok: true as const, data: getUpdateCapabilities() };
+  ipcMain.handle(IpcChannel.UpdateGetGate, async () => {
+    return { ok: true as const, data: getUpdateGate() };
   });
 
   ipcMain.handle(IpcChannel.UpdateCheck, async () => {
@@ -12,8 +17,13 @@ export function registerUpdaterHandlers(): void {
     return { ok: true as const, data: undefined };
   });
 
-  ipcMain.handle(IpcChannel.UpdateQuitAndInstall, async () => {
-    quitAndInstallUpdate();
+  ipcMain.handle(IpcChannel.UpdateRetry, async () => {
+    await retryForcedUpdate();
+    return { ok: true as const, data: undefined };
+  });
+
+  ipcMain.handle(IpcChannel.UpdateInstallPending, async () => {
+    installPendingUpdateNow();
     return { ok: true as const, data: undefined };
   });
 }
