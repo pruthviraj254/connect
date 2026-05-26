@@ -33,6 +33,19 @@ win:
   rfc3161TimeStampServer: http://timestamp.digicert.com
   verifyUpdateCodeSignature: true
 
+mac:
+  target:
+    - target: zip
+      arch:
+        - arm64
+        - x64
+  category: public.app-category.medical
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  # Signing / notarization at build time (CI secrets):
+  #   CSC_LINK, CSC_KEY_PASSWORD — Developer ID Application cert (.p12)
+  #   APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID — notarization
+
 nsis:
   oneClick: false
   perMachine: true
@@ -50,6 +63,6 @@ afterSign: scripts/after-sign.cjs
 
 publish:
   - provider: github
-    owner: pruthviraj254
-    repo: connect
+    owner: ${env.GH_OWNER}
+    repo: ${env.GH_REPO}
     releaseType: release

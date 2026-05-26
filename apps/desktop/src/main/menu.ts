@@ -1,5 +1,6 @@
 import { app, Menu } from 'electron';
 import type { MenuItemConstructorOptions } from 'electron';
+import { checkForUpdates } from './auto-updater.js';
 
 type MenuDeps = {
   onReload: () => void;
@@ -14,6 +15,13 @@ export function buildAppMenu(deps: MenuDeps): Menu {
             label: app.name,
             submenu: [
               { role: 'about' },
+              { type: 'separator' },
+              {
+                label: 'Check for Updates…',
+                click: () => {
+                  checkForUpdates();
+                },
+              },
               { type: 'separator' },
               { role: 'services' },
               { type: 'separator' },

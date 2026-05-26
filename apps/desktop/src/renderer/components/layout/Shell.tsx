@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Inbox,
   Globe,
+  PhoneCall,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'sonner';
 import { isElectronApp, logoutWithTempDb } from '@/lib/auth/auth-actions';
+import { UpdateBanner } from '@/components/features/settings/UpdateBanner';
 
 function getInitials(displayName: string | null, email: string | null): string {
   const name = (displayName ?? '').trim();
@@ -56,6 +58,7 @@ const nav = [
   { href: '/patients/', label: 'Tenants', icon: Users },
   { href: '/prescriptions/', label: 'Fax Center', icon: Send },
   { href: '/fax-inbox/', label: 'Fax Inbox', icon: Inbox },
+  { href: '/call-log/', label: 'Call Log', icon: PhoneCall },
   { href: '/website-builder/', label: 'Website', icon: Globe },
   { href: '/blacklist/', label: 'Blacklist', icon: Ban },
   { href: '/api-logs/', label: 'API Logs', icon: FileCode2 },
@@ -113,7 +116,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="leading-tight">
             <div className="text-sm font-semibold">OneRx Inc</div>
-            <div className="text-[11px] text-sidebar-foreground/60">Operator Portal</div>
+            <div className="text-[11px] text-sidebar-foreground/60">Operator Portal · Build 0.0.1</div>
           </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -207,6 +210,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
+        <UpdateBanner />
         <main className="flex-1 flex flex-col overflow-hidden min-h-0">
           {children}
         </main>

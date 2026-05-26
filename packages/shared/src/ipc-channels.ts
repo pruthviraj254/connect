@@ -12,6 +12,7 @@ export const IpcChannel = {
 
   UpdateCheck: 'update:check',
   UpdateQuitAndInstall: 'update:quit-and-install',
+  UpdateGetCapabilities: 'update:get-capabilities',
 
   AuthLogin: 'auth:login',
   AuthRegister: 'auth:register',

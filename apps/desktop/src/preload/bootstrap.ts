@@ -1,5 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IpcChannel, type ElectronAPI, type PrintJobRecord } from '@rx-connect/shared';
+import {
+  IpcChannel,
+  type ElectronAPI,
+  type PrintJobRecord,
+  type UpdateStatus,
+} from '@rx-connect/shared';
 
 const allowed = new Set<string>(Object.values(IpcChannel));
 
@@ -44,6 +49,15 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.on('fax-send-log:updated', listener);
     return () => {
       ipcRenderer.removeListener('fax-send-log:updated', listener);
+    };
+  },
+  onUpdateStatus: (handler: (status: UpdateStatus) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus) => {
+      handler(status);
+    };
+    ipcRenderer.on('update:status', listener);
+    return () => {
+      ipcRenderer.removeListener('update:status', listener);
     };
   },
 };

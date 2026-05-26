@@ -1,6 +1,7 @@
 export { IpcChannel } from './ipc-channels';
 export type { IpcResult } from './types/ipc';
 export type { ElectronAPI } from './types/electron-api';
+export type { UpdateStatus, UpdateCapabilities } from './types/update';
 export type {
   AuthLoginPayload,
   AuthLoginData,

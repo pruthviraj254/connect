@@ -1,9 +1,23 @@
-import { app, BrowserWindow, dialog } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
+import type { UpdateStatus } from '@rx-connect/shared';
 import { getMainWindow } from './lifecycle.js';
 
 const TAG = '[auto-updater]';
+
+const SUPPORTED_PLATFORMS = new Set(['win32', 'darwin']);
+
+let currentStatus: UpdateStatus = { phase: 'idle' };
+
+function isUpdaterSupported(): boolean {
+  return SUPPORTED_PLATFORMS.has(process.platform) && app.isPackaged;
+}
+
+function setStatus(status: UpdateStatus): void {
+  currentStatus = status;
+  notifyRenderer('update:status', status);
+}
 
 function notifyRenderer(channel: string, payload: unknown): void {
   const win = getMainWindow() ?? BrowserWindow.getAllWindows()[0];
@@ -12,11 +26,15 @@ function notifyRenderer(channel: string, payload: unknown): void {
   }
 }
 
+export function getUpdateCapabilities(): { supported: boolean; status: UpdateStatus } {
+  return {
+    supported: isUpdaterSupported(),
+    status: currentStatus,
+  };
+}
+
 export function initAutoUpdater(): void {
-  if (process.platform !== 'win32') {
-    return;
-  }
-  if (!app.isPackaged) {
+  if (!isUpdaterSupported()) {
     return;
   }
 
@@ -27,47 +45,32 @@ export function initAutoUpdater(): void {
 
   autoUpdater.on('checking-for-update', () => {
     log.info(`${TAG} checking-for-update`);
-    notifyRenderer('update:checking', null);
+    setStatus({ phase: 'checking' });
   });
 
   autoUpdater.on('update-available', (info) => {
     log.info(`${TAG} update-available`, info.version);
-    notifyRenderer('update:available', info);
+    setStatus({ phase: 'available', version: info.version });
   });
 
   autoUpdater.on('update-not-available', (info) => {
     log.info(`${TAG} update-not-available`, info?.version ?? 'current');
-    notifyRenderer('update:not-available', info);
+    setStatus({ phase: 'not-available', version: info?.version });
   });
 
   autoUpdater.on('download-progress', (progress) => {
     log.info(`${TAG} download-progress`, Math.round(progress.percent));
-    notifyRenderer('update:progress', progress);
+    setStatus({ phase: 'downloading', percent: Math.round(progress.percent) });
   });
 
   autoUpdater.on('error', (err) => {
     log.error(`${TAG} error`, err);
-    notifyRenderer('update:error', { message: err.message });
+    setStatus({ phase: 'error', message: err.message });
   });
 
-  autoUpdater.on('update-downloaded', async (info) => {
+  autoUpdater.on('update-downloaded', (info) => {
     log.info(`${TAG} update-downloaded`, info.version);
-    notifyRenderer('update:downloaded', info);
-
-    const { response } = await dialog.showMessageBox({
-      type: 'info',
-      title: 'Update ready',
-      message: `Rx-Connect ${info.version} has been downloaded.`,
-      detail:
-        'Restart now to apply the update, or it will be applied automatically when you quit the app.',
-      buttons: ['Restart now', 'Later'],
-      defaultId: 0,
-      cancelId: 1,
-    });
-
-    if (response === 0) {
-      autoUpdater.quitAndInstall(false, true);
-    }
+    setStatus({ phase: 'downloaded', version: info.version });
   });
 
   void autoUpdater.checkForUpdatesAndNotify().catch((err) => {
@@ -76,7 +79,7 @@ export function initAutoUpdater(): void {
 }
 
 export function checkForUpdates(): void {
-  if (process.platform !== 'win32' || !app.isPackaged) {
+  if (!isUpdaterSupported()) {
     return;
   }
   void autoUpdater.checkForUpdatesAndNotify().catch((err) => {
@@ -85,7 +88,7 @@ export function checkForUpdates(): void {
 }
 
 export function quitAndInstallUpdate(): void {
-  if (process.platform !== 'win32' || !app.isPackaged) {
+  if (!isUpdaterSupported()) {
     return;
   }
   autoUpdater.quitAndInstall(false, true);

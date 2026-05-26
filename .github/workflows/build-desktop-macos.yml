@@ -1,6 +1,7 @@
-# Builds the Windows NSIS installer + electron-updater metadata (cannot be produced on macOS).
-# Artifacts: Rx-Connect-Setup-*.exe, latest.yml, *.blockmap
-name: Build desktop (Windows)
+# Builds the macOS ZIP + electron-updater metadata for in-app updates.
+# Artifacts: Rx-Connect-Setup-*.zip, latest-mac.yml, *.blockmap
+# Note: Forge .pkg/.dmg makers remain for first-time install (virtual printer); ZIP is for auto-update.
+name: Build desktop (macOS)
 
 on:
   workflow_dispatch:
@@ -11,16 +12,16 @@ on:
       - 'apps/desktop/**'
       - 'packages/shared/**'
       - 'pnpm-lock.yaml'
-      - '.github/workflows/build-desktop-windows.yml'
+      - '.github/workflows/build-desktop-macos.yml'
   pull_request:
     paths:
       - 'apps/desktop/**'
       - 'packages/shared/**'
       - 'pnpm-lock.yaml'
-      - '.github/workflows/build-desktop-windows.yml'
+      - '.github/workflows/build-desktop-macos.yml'
 
 concurrency:
-  group: desktop-windows-${{ github.ref }}
+  group: desktop-macos-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -28,8 +29,8 @@ env:
   GH_REPO: ${{ vars.GH_REPO || 'connect' }}
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build-macos:
+    runs-on: macos-latest
     timeout-minutes: 45
 
     steps:
@@ -52,17 +53,14 @@ jobs:
         env:
           HUSKY: '0'
 
-      - name: Build shared package (fresh dist for CI)
+      - name: Build shared package
         run: pnpm --filter @rx-connect/shared run build
 
-      - name: Build renderer (includes pdf.js worker for preview)
+      - name: Build renderer
         run: pnpm --filter @rx-connect/desktop run build:renderer
 
-      - name: Vendor Ghostscript (Windows x64, bundled in installer)
-        run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
-
-      - name: Vendor Hugo (Windows x64, bundled for website preview)
-        run: node apps/desktop/scripts/download-hugo.cjs --platform=win32
+      - name: Vendor Hugo (macOS arm64)
+        run: node apps/desktop/scripts/download-hugo.cjs --platform=current
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -72,48 +70,48 @@ jobs:
       - name: Go mod tidy (print service)
         run: cd services/print-service && go mod tidy
 
-      - name: Build Windows print service
+      - name: Build macOS print service
         run: node apps/desktop/scripts/build-print-service.cjs
 
       - name: Warn when code signing is not configured
-        shell: pwsh
         run: |
-          if (-not $env:CSC_LINK) {
-            Write-Warning 'CSC_LINK is not set — installer will be unsigned and in-app updates will reject it until signing secrets are configured.'
-          }
+          if [ -z "$CSC_LINK" ]; then
+            echo "::warning::CSC_LINK is not set — macOS ZIP will be unsigned. Gatekeeper and in-app updates require a signed, notarized build."
+          fi
 
-      - name: Build Windows installer (NSIS)
-        run: pnpm --filter @rx-connect/desktop run dist:win
+      - name: Build macOS ZIP (auto-update artifact)
+        run: pnpm --filter @rx-connect/desktop run dist:mac
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          WIN_CSC_SUBJECT_NAME: ${{ secrets.WIN_CSC_SUBJECT_NAME }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Validate updater metadata
-        shell: pwsh
         run: |
-          if (-not (Test-Path apps/desktop/dist/latest.yml)) {
-            throw 'latest.yml was not generated — electron-builder publish metadata is missing.'
-          }
+          if [ ! -f apps/desktop/dist/latest-mac.yml ]; then
+            echo "latest-mac.yml was not generated — electron-builder publish metadata is missing."
+            exit 1
+          fi
 
       - name: List build output
-        shell: pwsh
-        run: Get-ChildItem -Recurse apps/desktop/dist | Select-Object FullName, Length
+        run: ls -laR apps/desktop/dist
 
-      - name: Upload installer artifact
+      - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rx-connect-windows-${{ github.run_number }}
+          name: rx-connect-macos-${{ github.run_number }}
           path: |
-            apps/desktop/dist/*.exe
-            apps/desktop/dist/*.exe.blockmap
-            apps/desktop/dist/latest.yml
+            apps/desktop/dist/*.zip
+            apps/desktop/dist/*.zip.blockmap
+            apps/desktop/dist/latest-mac.yml
           if-no-files-found: error
           retention-days: 30
 
-  publish-windows:
+  publish-macos:
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: windows-latest
+    runs-on: macos-latest
     timeout-minutes: 45
     permissions:
       contents: write
@@ -144,11 +142,8 @@ jobs:
       - name: Build renderer
         run: pnpm --filter @rx-connect/desktop run build:renderer
 
-      - name: Vendor Ghostscript
-        run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
-
-      - name: Vendor Hugo (Windows x64)
-        run: node apps/desktop/scripts/download-hugo.cjs --platform=win32
+      - name: Vendor Hugo (macOS arm64)
+        run: node apps/desktop/scripts/download-hugo.cjs --platform=current
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -158,27 +153,28 @@ jobs:
       - name: Go mod tidy (print service)
         run: cd services/print-service && go mod tidy
 
-      - name: Build Windows print service
+      - name: Build macOS print service
         run: node apps/desktop/scripts/build-print-service.cjs
 
       - name: Warn when code signing is not configured
-        shell: pwsh
         run: |
-          if (-not $env:CSC_LINK) {
-            Write-Warning 'CSC_LINK is not set — published installer will be unsigned. Clients with verifyUpdateCodeSignature enabled will not apply updates until signing is configured.'
-          }
+          if [ -z "$CSC_LINK" ]; then
+            echo "::warning::CSC_LINK is not set — published macOS ZIP will be unsigned until Apple signing secrets are configured."
+          fi
 
       - name: Build and publish to GitHub Releases
-        run: pnpm --filter @rx-connect/desktop run dist:win:publish
+        run: pnpm --filter @rx-connect/desktop run dist:mac:publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          WIN_CSC_SUBJECT_NAME: ${{ secrets.WIN_CSC_SUBJECT_NAME }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Validate updater metadata
-        shell: pwsh
         run: |
-          if (-not (Test-Path apps/desktop/dist/latest.yml)) {
-            throw 'latest.yml was not generated after publish.'
-          }
+          if [ ! -f apps/desktop/dist/latest-mac.yml ]; then
+            echo "latest-mac.yml was not generated after publish."
+            exit 1
+          fi

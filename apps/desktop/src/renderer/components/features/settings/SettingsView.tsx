@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { getAppSettings, setAppSettings } from '@/lib/settings';
+import { DesktopUpdatePanel } from '@/components/features/settings/DesktopUpdatePanel';
 import {
   Table,
   TableBody,
@@ -99,6 +100,8 @@ export function SettingsView() {
                 onCheckedChange={(v) => void onToggleStartup(v)}
               />
             </div>
+
+            <DesktopUpdatePanel />
           </CardContent>
         </Card>
 
