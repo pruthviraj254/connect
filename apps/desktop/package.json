@@ -1,7 +1,7 @@
 {
   "name": "@rx-connect/desktop",
   "productName": "Rx-Connect",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "OneRx Rx-Connect — Electron desktop application",
   "main": ".vite/build/main.js",
   "private": true,
