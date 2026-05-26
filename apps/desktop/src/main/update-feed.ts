@@ -19,6 +19,11 @@ function readAppUpdateYml(): { owner?: string; repo?: string; token?: string } {
     const owner = raw.match(/^owner:\s*(.+)$/m)?.[1]?.trim();
     const repo = raw.match(/^repo:\s*(.+)$/m)?.[1]?.trim();
     const token = raw.match(/^token:\s*(.+)$/m)?.[1]?.trim();
+    // CI GITHUB_TOKEN (ghs_*) expires when the workflow ends — do not send to GitHub API.
+    if (token?.startsWith('ghs_')) {
+      log.warn(`${TAG} ignoring expired CI token in app-update.yml`);
+      return { owner, repo };
+    }
     return { owner, repo, token };
   } catch {
     return {};

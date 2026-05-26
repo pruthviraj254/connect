@@ -12,7 +12,7 @@ Rx-Connect uses [`electron-updater`](https://www.electron.build/auto-update) wit
 Build flow:
 
 1. **Electron Forge** packages the app (`out/Rx-Connect-*`).
-2. **`write-app-update-yml.cjs`** writes `resources/app-update.yml` into the prepackaged app (Forge + `--prepackaged` does not always generate this). When `GH_TOKEN` is set at pack time, the token is embedded for private-repo updates.
+2. **`write-app-update-yml.cjs`** writes `resources/app-update.yml` into the prepackaged app (Forge + `--prepackaged` does not always generate this). For **private** repos only, set `UPDATER_GH_TOKEN` at pack time (long-lived read PAT — never the CI `GITHUB_TOKEN`).
 3. **electron-builder** wraps the prepackaged app into NSIS (Windows) or ZIP (macOS) and generates updater metadata.
 4. At runtime, **`configureUpdateFeed()`** also calls `autoUpdater.setFeedURL()` so updates work even if the yml file is missing.
 5. On `v*` tag push, CI publishes installers + metadata to GitHub Releases.
@@ -68,11 +68,12 @@ Policy fetch fails (timeout, 404, private repo without token) → **fail-open** 
 
 ## GitHub repository configuration
 
-| Variable   | Purpose                      | Default in CI             |
-| ---------- | ---------------------------- | ------------------------- |
-| `GH_OWNER` | GitHub org or user           | `github.repository_owner` |
-| `GH_REPO`  | Repository name              | `connect`                 |
-| `GH_TOKEN` | Pack-time + CI publish token | `secrets.GITHUB_TOKEN`    |
+| Variable           | Purpose                                                               | Default in CI                          |
+| ------------------ | --------------------------------------------------------------------- | -------------------------------------- |
+| `GH_OWNER`         | GitHub org or user                                                    | `github.repository_owner`              |
+| `GH_REPO`          | Repository name                                                       | `connect`                              |
+| `GH_TOKEN`         | CI publish only (electron-builder upload to Releases)                 | `secrets.GITHUB_TOKEN`                 |
+| `UPDATER_GH_TOKEN` | Optional long-lived read PAT embedded in client for **private** repos | repo secret (not set for public repos) |
 
 When the repo moves to the OneRx org, set GitHub repository variables:
 
@@ -92,9 +93,10 @@ pnpm --filter @rx-connect/desktop run dist:mac:publish
 
 ### Private repositories
 
-- `electron-builder.yml` sets `publish.private: true`
-- `write-app-update-yml.cjs` embeds `GH_TOKEN` into `resources/app-update.yml` at pack time (never commit the token)
-- Runtime `configureUpdateFeed()` and policy fetch use the embedded token for GitHub API access
+- Set `UPDATER_GH_TOKEN` in CI to a **long-lived** fine-grained or classic PAT with read access to releases
+- **Do not** embed `secrets.GITHUB_TOKEN` in the client — it expires when the workflow ends and causes `401 Bad credentials` on user machines
+- `write-app-update-yml.cjs` embeds `UPDATER_GH_TOKEN` into `resources/app-update.yml` at pack time (never commit the token)
+- Runtime `configureUpdateFeed()` reads that token; expired CI tokens (`ghs_*`) are ignored automatically
 
 ## Code signing (required for production updates)
 
@@ -149,14 +151,14 @@ Verify `apps/desktop/dist/latest.yml` (Windows) or `latest-mac.yml` (macOS) exis
 
 ## Troubleshooting
 
-| Symptom                                    | Likely cause                                                          |
-| ------------------------------------------ | --------------------------------------------------------------------- |
-| Update check silent in dev                 | Expected — only runs when `app.isPackaged`                            |
-| `ENOENT` for `app-update.yml`              | Fixed via runtime `setFeedURL` + `write-app-update-yml.cjs`           |
-| Download succeeds, install fails (Windows) | Installer not Authenticode-signed                                     |
-| macOS update blocked                       | App not signed/notarized                                              |
-| Wrong release feed                         | `GH_OWNER` / `GH_REPO` mismatch vs build-time publish config          |
-| Private releases 401/404                   | Rebuild with `GH_TOKEN` so `app-update.yml` includes token            |
-| Forced update not triggering               | Policy not on `main`, or `minimumVersion` not above installed version |
+| Symptom                                    | Likely cause                                                                         |
+| ------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Update check silent in dev                 | Expected — only runs when `app.isPackaged`                                           |
+| `ENOENT` for `app-update.yml`              | Fixed via runtime `setFeedURL` + `write-app-update-yml.cjs`                          |
+| Download succeeds, install fails (Windows) | Installer not Authenticode-signed                                                    |
+| macOS update blocked                       | App not signed/notarized                                                             |
+| Wrong release feed                         | `GH_OWNER` / `GH_REPO` mismatch vs build-time publish config                         |
+| Private releases 401/404                   | Do not embed CI `GITHUB_TOKEN` in client; use `UPDATER_GH_TOKEN` or keep repo public |
+| Forced update not triggering               | Policy not on `main`, or `minimumVersion` not above installed version                |
 
 Do **not** disable `verifyUpdateCodeSignature` in production builds.

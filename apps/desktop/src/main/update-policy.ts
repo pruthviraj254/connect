@@ -21,6 +21,11 @@ function readEmbeddedGitHubToken(): string | undefined {
     const raw = fs.readFileSync(ymlPath, 'utf8');
     const match = raw.match(/^token:\s*(.+)$/m);
     const token = match?.[1]?.trim();
+    // Ignore CI tokens accidentally baked into older builds (ghs_* expire after the workflow).
+    if (token && token.startsWith('ghs_')) {
+      log.warn(`${TAG} ignoring expired CI token in app-update.yml`);
+      return undefined;
+    }
     return token && token.length > 0 ? token : undefined;
   } catch {
     return undefined;

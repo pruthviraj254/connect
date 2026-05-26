@@ -7,7 +7,9 @@ const path = require('node:path');
 
 const owner = process.env.GH_OWNER || 'pruthviraj254';
 const repo = process.env.GH_REPO || 'connect';
-const token = process.env.GH_TOKEN?.trim();
+// Long-lived read token for private-repo clients only. Never use CI GITHUB_TOKEN here —
+// it expires when the workflow ends and causes 401 Bad credentials on user machines.
+const token = process.env.UPDATER_GH_TOKEN?.trim();
 
 function writeAppUpdateYml(prepackagedDir) {
   const resourcesDir = path.join(prepackagedDir, 'resources');
