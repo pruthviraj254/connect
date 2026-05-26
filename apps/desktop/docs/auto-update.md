@@ -12,8 +12,10 @@ Rx-Connect uses [`electron-updater`](https://www.electron.build/auto-update) wit
 Build flow:
 
 1. **Electron Forge** packages the app (`out/Rx-Connect-*`).
-2. **electron-builder** wraps the prepackaged app into NSIS (Windows) or ZIP (macOS) and generates updater metadata.
-3. On `v*` tag push, CI publishes installers + metadata to GitHub Releases.
+2. **`write-app-update-yml.cjs`** writes `resources/app-update.yml` into the prepackaged app (Forge + `--prepackaged` does not always generate this).
+3. **electron-builder** wraps the prepackaged app into NSIS (Windows) or ZIP (macOS) and generates updater metadata.
+4. At runtime, **`configureUpdateFeed()`** also calls `autoUpdater.setFeedURL()` so updates work even if the yml file is missing.
+5. On `v*` tag push, CI publishes installers + metadata to GitHub Releases.
 
 ## Cutting a release
 
@@ -111,6 +113,7 @@ Verify `apps/desktop/dist/latest.yml` (Windows) or `latest-mac.yml` (macOS) exis
 | Symptom                                    | Likely cause                                                                                                        |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
 | Update check silent in dev                 | Expected — only runs when `app.isPackaged`                                                                          |
+| `ENOENT` for `app-update.yml`              | Fixed in v0.0.3+ via runtime `setFeedURL` + `scripts/write-app-update-yml.cjs` before electron-builder              |
 | Download succeeds, install fails (Windows) | Installer not Authenticode-signed                                                                                   |
 | macOS update blocked                       | App not signed/notarized                                                                                            |
 | Wrong release feed                         | `GH_OWNER` / `GH_REPO` mismatch vs build-time publish config                                                        |

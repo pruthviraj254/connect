@@ -3,6 +3,7 @@ import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import type { UpdateStatus } from '@rx-connect/shared';
 import { getMainWindow } from './lifecycle.js';
+import { configureUpdateFeed } from './update-feed.js';
 
 const TAG = '[auto-updater]';
 
@@ -42,6 +43,8 @@ export function initAutoUpdater(): void {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.allowDowngrade = false;
+
+  configureUpdateFeed(autoUpdater);
 
   autoUpdater.on('checking-for-update', () => {
     log.info(`${TAG} checking-for-update`);
