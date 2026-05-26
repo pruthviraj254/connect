@@ -1,0 +1,154 @@
+# Publishes Windows + macOS installers to GitHub Releases on version tags.
+# Windows runs first so latest.yml exists before the release is used by auto-update.
+name: Release desktop
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GH_OWNER: ${{ vars.GH_OWNER || github.repository_owner }}
+  GH_REPO: ${{ vars.GH_REPO || 'connect' }}
+
+jobs:
+  publish-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+
+      - name: Build shared package
+        run: pnpm --filter @rx-connect/shared run build
+
+      - name: Build renderer
+        run: pnpm --filter @rx-connect/desktop run build:renderer
+
+      - name: Vendor Ghostscript
+        run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
+
+      - name: Vendor Hugo (Windows x64)
+        run: node apps/desktop/scripts/download-hugo.cjs --platform=win32
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+
+      - name: Go mod tidy (print service)
+        run: cd services/print-service && go mod tidy
+
+      - name: Build Windows print service
+        run: node apps/desktop/scripts/build-print-service.cjs
+
+      - name: Warn when code signing is not configured
+        shell: pwsh
+        run: |
+          if (-not $env:CSC_LINK) {
+            Write-Warning 'CSC_LINK is not set — published installer will be unsigned.'
+          }
+
+      - name: Build and publish Windows to GitHub Releases
+        run: pnpm --filter @rx-connect/desktop run dist:win:publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          WIN_CSC_SUBJECT_NAME: ${{ secrets.WIN_CSC_SUBJECT_NAME }}
+
+      - name: Validate Windows updater metadata
+        shell: pwsh
+        run: |
+          if (-not (Test-Path apps/desktop/dist/latest.yml)) {
+            throw 'latest.yml was not generated after publish.'
+          }
+          Write-Host 'latest.yml OK — Windows auto-update feed is ready.'
+
+  publish-macos:
+    needs: publish-windows
+    runs-on: macos-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+
+      - name: Build shared package
+        run: pnpm --filter @rx-connect/shared run build
+
+      - name: Build renderer
+        run: pnpm --filter @rx-connect/desktop run build:renderer
+
+      - name: Vendor Hugo (macOS arm64)
+        run: node apps/desktop/scripts/download-hugo.cjs --platform=current
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+
+      - name: Go mod tidy (print service)
+        run: cd services/print-service && go mod tidy
+
+      - name: Build macOS print service
+        run: node apps/desktop/scripts/build-print-service.cjs
+
+      - name: Build and publish macOS to GitHub Releases
+        run: pnpm --filter @rx-connect/desktop run dist:mac:publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Validate macOS updater metadata
+        run: |
+          if [ ! -f apps/desktop/dist/latest-mac.yml ]; then
+            echo "latest-mac.yml was not generated after publish."
+            exit 1
+          fi
+          echo "latest-mac.yml OK"

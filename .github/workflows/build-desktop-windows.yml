@@ -6,7 +6,6 @@ on:
   workflow_dispatch:
   push:
     branches: [main, master, develop]
-    tags: ['v*']
     paths:
       - 'apps/desktop/**'
       - 'packages/shared/**'
@@ -110,75 +109,3 @@ jobs:
             apps/desktop/dist/latest.yml
           if-no-files-found: error
           retention-days: 30
-
-  publish-windows:
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: windows-latest
-    timeout-minutes: 45
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        env:
-          HUSKY: '0'
-
-      - name: Build shared package
-        run: pnpm --filter @rx-connect/shared run build
-
-      - name: Build renderer
-        run: pnpm --filter @rx-connect/desktop run build:renderer
-
-      - name: Vendor Ghostscript
-        run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
-
-      - name: Vendor Hugo (Windows x64)
-        run: node apps/desktop/scripts/download-hugo.cjs --platform=win32
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22.x'
-
-      - name: Go mod tidy (print service)
-        run: cd services/print-service && go mod tidy
-
-      - name: Build Windows print service
-        run: node apps/desktop/scripts/build-print-service.cjs
-
-      - name: Warn when code signing is not configured
-        shell: pwsh
-        run: |
-          if (-not $env:CSC_LINK) {
-            Write-Warning 'CSC_LINK is not set — published installer will be unsigned. Clients with verifyUpdateCodeSignature enabled will not apply updates until signing is configured.'
-          }
-
-      - name: Build and publish to GitHub Releases
-        run: pnpm --filter @rx-connect/desktop run dist:win:publish
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          WIN_CSC_SUBJECT_NAME: ${{ secrets.WIN_CSC_SUBJECT_NAME }}
-
-      - name: Validate updater metadata
-        shell: pwsh
-        run: |
-          if (-not (Test-Path apps/desktop/dist/latest.yml)) {
-            throw 'latest.yml was not generated after publish.'
-          }

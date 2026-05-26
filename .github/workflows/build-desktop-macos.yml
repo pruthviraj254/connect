@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
   push:
     branches: [main, master, develop]
-    tags: ['v*']
     paths:
       - 'apps/desktop/**'
       - 'packages/shared/**'
@@ -108,73 +107,3 @@ jobs:
             apps/desktop/dist/latest-mac.yml
           if-no-files-found: error
           retention-days: 30
-
-  publish-macos:
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: macos-latest
-    timeout-minutes: 45
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        env:
-          HUSKY: '0'
-
-      - name: Build shared package
-        run: pnpm --filter @rx-connect/shared run build
-
-      - name: Build renderer
-        run: pnpm --filter @rx-connect/desktop run build:renderer
-
-      - name: Vendor Hugo (macOS arm64)
-        run: node apps/desktop/scripts/download-hugo.cjs --platform=current
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22.x'
-
-      - name: Go mod tidy (print service)
-        run: cd services/print-service && go mod tidy
-
-      - name: Build macOS print service
-        run: node apps/desktop/scripts/build-print-service.cjs
-
-      - name: Warn when code signing is not configured
-        run: |
-          if [ -z "$CSC_LINK" ]; then
-            echo "::warning::CSC_LINK is not set — published macOS ZIP will be unsigned until Apple signing secrets are configured."
-          fi
-
-      - name: Build and publish to GitHub Releases
-        run: pnpm --filter @rx-connect/desktop run dist:mac:publish
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-
-      - name: Validate updater metadata
-        run: |
-          if [ ! -f apps/desktop/dist/latest-mac.yml ]; then
-            echo "latest-mac.yml was not generated after publish."
-            exit 1
-          fi
