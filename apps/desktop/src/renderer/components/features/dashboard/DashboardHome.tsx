@@ -95,7 +95,7 @@ export function DashboardHome() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Real-time platform health and operations overview. (v0.0.3 — auto-update fix)"
+        description="Real-time platform health and operations overview. (v0.0.4 auto-update test)"
         actions={
           <>
             <Button asChild variant="outline">

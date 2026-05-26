@@ -21,6 +21,25 @@ export function applyFirstRunDefaults(): void {
   }
 }
 
+/** Windows: always launch at login (no Settings toggle — enforced every startup). */
+export function ensureOpenAtLoginEnabled(): void {
+  if (process.platform !== 'win32') {
+    return;
+  }
+  const store = getStore();
+  store.set('openAtLogin', true);
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      openAsHidden: true,
+      args: ['--hidden'],
+    });
+    log.info('[startup] openAtLogin enforced on Windows');
+  } catch (err) {
+    log.warn('[startup] setLoginItemSettings failed', err);
+  }
+}
+
 export function maybeShowTrayHint(): void {
   if (process.platform === 'darwin') return;
   const store = getStore();
