@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+      - 'v*'
 
 concurrency:
   group: desktop-release-${{ github.ref }}
@@ -20,6 +20,7 @@ env:
 
 jobs:
   publish-windows:
+    if: ${{ !contains(github.ref_name, '-staging') && !startsWith(github.ref_name, 'staging-') }}
     runs-on: windows-latest
     timeout-minutes: 45
     permissions:
@@ -92,6 +93,7 @@ jobs:
           Write-Host 'latest.yml OK — Windows auto-update feed is ready.'
 
   publish-macos:
+    if: ${{ !contains(github.ref_name, '-staging') && !startsWith(github.ref_name, 'staging-') }}
     needs: publish-windows
     runs-on: macos-latest
     timeout-minutes: 45

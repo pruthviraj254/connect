@@ -35,6 +35,21 @@ if (profile.updateChannel === 'staging') {
   renameIfNeeded('latest.yml', 'staging.yml');
   renameIfNeeded('latest-mac.yml', 'staging-mac.yml');
 
+  // electron-updater falls back to latest.yml when channel resolution fails — ship both.
+  const stagingWin = path.join(distDir, 'staging.yml');
+  const latestWin = path.join(distDir, 'latest.yml');
+  if (fs.existsSync(stagingWin) && !fs.existsSync(latestWin)) {
+    fs.copyFileSync(stagingWin, latestWin);
+    console.log('[finalize-update-metadata] copied staging.yml → latest.yml (updater fallback)');
+  }
+
+  const stagingMac = path.join(distDir, 'staging-mac.yml');
+  const latestMac = path.join(distDir, 'latest-mac.yml');
+  if (fs.existsSync(stagingMac) && !fs.existsSync(latestMac)) {
+    fs.copyFileSync(stagingMac, latestMac);
+    console.log('[finalize-update-metadata] copied staging-mac.yml → latest-mac.yml (updater fallback)');
+  }
+
   const ymlFiles = listDistYml();
   const hasStagingWin = fs.existsSync(path.join(distDir, 'staging.yml'));
   const hasStagingMac = fs.existsSync(path.join(distDir, 'staging-mac.yml'));

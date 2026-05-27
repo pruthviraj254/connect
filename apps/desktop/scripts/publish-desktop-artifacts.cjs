@@ -53,6 +53,11 @@ function collectPublishFiles() {
       }
 
       if (name.endsWith('.yml')) {
+        if (profile.updateChannel === 'staging') {
+          return name === winYml || name === macYml || name === 'latest.yml' || name === 'latest-mac.yml'
+            ? [full]
+            : [];
+        }
         return name === winYml || name === macYml ? [full] : [];
       }
 
@@ -172,6 +177,10 @@ if (verify.status === 0) {
   console.log('[publish-desktop-artifacts] release assets:', assetNames.join(', '));
   if (process.platform === 'win32' && !assetNames.some((n) => n.endsWith('.exe'))) {
     console.error('[publish-desktop-artifacts] GitHub release is missing Windows .exe');
+    process.exit(1);
+  }
+  if (stagingRelease && process.platform === 'win32' && !assetNames.includes('staging.yml')) {
+    console.error('[publish-desktop-artifacts] GitHub release is missing staging.yml');
     process.exit(1);
   }
   if (stagingRelease && !payload.isPrerelease) {
