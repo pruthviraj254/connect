@@ -1,5 +1,5 @@
 # Builds the staging Windows NSIS installer on dev (artifact only — no GitHub Release).
-# Publish to Releases: tag staging-v* → release-desktop-staging.yml
+# Publish to Releases: tag v*.*.*-staging → release-desktop-staging.yml
 name: Build desktop (Windows, staging)
 
 on:

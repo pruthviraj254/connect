@@ -29,7 +29,7 @@ function resolveReleaseTag() {
 }
 
 function isStagingReleaseTag(tag) {
-  return tag.startsWith('staging-v') || tag.endsWith('-staging');
+  return /-staging$/i.test(tag) || tag.startsWith('staging-v');
 }
 
 function collectPublishFiles() {

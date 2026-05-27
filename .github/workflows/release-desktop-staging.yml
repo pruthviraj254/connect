@@ -1,11 +1,12 @@
-# Publishes staging Windows + macOS installers to GitHub Releases on staging-v* tags.
+# Publishes staging Windows + macOS installers to GitHub Releases on v*.*.*-staging tags.
+# Tag must use semver prerelease suffix (v0.0.13-staging) — electron-updater ignores staging-v0.0.13.
 # Windows runs first so staging.yml exists before auto-update clients poll the feed.
 name: Release desktop (staging)
 
 on:
   workflow_dispatch:
   push:
-    tags: ['staging-v*']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+-staging']
 
 concurrency:
   group: desktop-release-staging-${{ github.ref }}

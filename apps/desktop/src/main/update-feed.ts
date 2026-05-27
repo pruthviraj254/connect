@@ -98,6 +98,8 @@ export function configureUpdateFeed(autoUpdater: AppUpdater): GitHubReleaseTarge
   const target = resolveGitHubReleaseTarget();
 
   // Staging GitHub releases are prereleases; prod must ignore them on the "latest" channel.
+  // Staging release tags must be semver prerelease form (v0.0.13-staging), not staging-v0.0.13,
+  // or electron-updater will never match autoUpdater.channel === "staging".
   autoUpdater.allowPrerelease = target.channel === 'staging';
 
   if (target.channel) {

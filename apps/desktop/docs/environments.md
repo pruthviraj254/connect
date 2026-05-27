@@ -8,7 +8,7 @@ Rx-Connect ships as **two separate installers** that can run side-by-side on the
 | `appId`             | `health.onerx.rxconnect` | `health.onerx.rxconnect.staging` |
 | API (default)       | `https://api.onerx.com`  | `https://api.staging.onerx.com`  |
 | Auto-update channel | `latest`                 | `staging`                        |
-| Git tag             | `v0.0.8`                 | `staging-v0.0.8`                 |
+| Git tag             | `v0.0.13`                | `v0.0.13-staging`                |
 | Updater metadata    | `latest.yml`             | `staging.yml`                    |
 | Branch convention   | `main`                   | `dev`                            |
 
@@ -41,16 +41,18 @@ NEXT_PUBLIC_API_BASE_URL=https://api.staging.onerx.com
 
 ## CI workflows
 
-| Workflow                                 | Trigger                   | Builds         | Publishes to Releases?    |
-| ---------------------------------------- | ------------------------- | -------------- | ------------------------- |
-| Build desktop (Windows / macOS)          | Push/PR to **`main`**     | **Production** | No — artifact only        |
-| Build desktop (Windows / macOS, staging) | Push/PR to **`dev`**      | **Staging**    | No — artifact only        |
-| **Release desktop**                      | Tag **`v*.*.*`** only     | Production     | **Yes** → GitHub Releases |
-| **Release desktop (staging)**            | Tag **`staging-v*`** only | Staging        | **Yes** → GitHub Releases |
+| Workflow                                 | Trigger                       | Builds         | Publishes to Releases?    |
+| ---------------------------------------- | ----------------------------- | -------------- | ------------------------- |
+| Build desktop (Windows / macOS)          | Push/PR to **`main`**         | **Production** | No — artifact only        |
+| Build desktop (Windows / macOS, staging) | Push/PR to **`dev`**          | **Staging**    | No — artifact only        |
+| **Release desktop**                      | Tag **`v*.*.*`** only         | Production     | **Yes** → GitHub Releases |
+| **Release desktop (staging)**            | Tag **`v*.*.*-staging`** only | Staging        | **Yes** → GitHub Releases |
 
 **No tag → no GitHub Release.** Branch pushes only verify the build and store artifacts in Actions.
 
-**Tag → publish only the matching app** (`v0.0.8` = prod, `staging-v0.0.8` = staging).
+**Tag → publish only the matching app** (`v0.0.13` = prod, `v0.0.13-staging` = staging).
+
+Staging tags **must** use semver prerelease suffix (`v0.0.13-staging`). The old `staging-v0.0.13` format is not visible to electron-updater’s staging channel.
 
 ---
 
@@ -59,8 +61,8 @@ NEXT_PUBLIC_API_BASE_URL=https://api.staging.onerx.com
 ```bash
 git checkout dev
 # merge features, bump version in apps/desktop/package.json if needed
-git tag staging-v0.0.8
-git push origin staging-v0.0.8
+git tag v0.0.13-staging
+git push origin v0.0.13-staging
 ```
 
 Install `Rx-Connect-Staging-Setup-0.0.8-x64.exe` from GitHub Releases. Staging clients auto-update only within the staging channel.
