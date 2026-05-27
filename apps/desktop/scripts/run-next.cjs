@@ -5,6 +5,9 @@ require('./load-env.cjs');
 
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
+const { applyChannelEnv, getBuildChannel } = require('./build-channel.cjs');
+
+applyChannelEnv(getBuildChannel());
 
 const rendererDir = path.join(__dirname, '..', 'src', 'renderer');
 const nextBin = require.resolve('next/dist/bin/next');

@@ -36,6 +36,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'sonner';
 import { isElectronApp, logoutWithTempDb } from '@/lib/auth/auth-actions';
 import { AppVersionBadge } from '@/components/features/settings/UpdateGate';
+import { isStagingApp } from '@/lib/app-env';
 
 function getInitials(displayName: string | null, email: string | null): string {
   const name = (displayName ?? '').trim();
@@ -176,6 +177,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </ul>
             </PopoverContent>
           </Popover>
+          {isStagingApp() ? (
+            <span className="hidden rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-800 md:inline">
+              Staging
+            </span>
+          ) : null}
           <AppVersionBadge />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

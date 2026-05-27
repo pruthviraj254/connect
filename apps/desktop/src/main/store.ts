@@ -13,7 +13,7 @@ type AppStoreSchema = {
 };
 
 const defaults: AppStoreSchema = {
-  theme: 'system',
+  theme: 'light',
   openAtLogin: false,
   firstRunCompleted: false,
   trayHintShown: false,

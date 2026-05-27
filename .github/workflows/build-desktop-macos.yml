@@ -6,7 +6,7 @@ name: Build desktop (macOS)
 on:
   workflow_dispatch:
   push:
-    branches: [main, master, develop]
+    branches: [main, master, dev, develop]
     paths:
       - 'apps/desktop/**'
       - 'packages/shared/**'

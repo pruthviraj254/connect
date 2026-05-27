@@ -11,7 +11,7 @@ export async function getAppSettings(): Promise<AppSettings> {
   const result = await ipcInvoke<IpcResult<Record<string, unknown>>>(IpcChannel.SettingsGet);
   const data = unwrapIpc(result);
   return {
-    theme: (data.theme as AppSettings['theme']) ?? 'system',
+    theme: (data.theme as AppSettings['theme']) ?? 'light',
     openAtLogin: Boolean(data.openAtLogin),
   };
 }

@@ -4,15 +4,19 @@ import path from 'node:path';
 import log from 'electron-log';
 import semver from 'semver';
 import type { UpdatePolicy } from '@rx-connect/shared';
+import { getBuildMetadata } from './build-metadata.js';
 import { resolveGitHubReleaseTarget } from './update-feed.js';
 
 const TAG = '[update-policy]';
 const POLICY_TIMEOUT_MS = 10_000;
-const POLICY_PATH = 'apps/desktop/update-policy.json';
+
+function policyRemotePath(): string {
+  return getBuildMetadata().policyRemotePath;
+}
 
 function policyRawUrl(owner: string, repo: string): string {
   const branch = process.env.RX_CONNECT_POLICY_BRANCH?.trim() || 'main';
-  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${POLICY_PATH}`;
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${policyRemotePath()}`;
 }
 
 function readEmbeddedGitHubToken(): string | undefined {
@@ -48,7 +52,7 @@ async function fetchPolicyViaContentsApi(
   token: string,
 ): Promise<UpdatePolicy | null> {
   const branch = process.env.RX_CONNECT_POLICY_BRANCH?.trim() || 'main';
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${POLICY_PATH}?ref=${branch}`;
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${policyRemotePath()}?ref=${branch}`;
   const res = await fetchWithTimeout(url, {
     headers: {
       Accept: 'application/vnd.github+json',
@@ -121,7 +125,7 @@ export function defaultForcedMessage(): string {
 
 export function bundledPolicyFallback(): UpdatePolicy | null {
   try {
-    const bundled = path.join(app.getAppPath(), 'update-policy.json');
+    const bundled = path.join(app.getAppPath(), getBuildMetadata().policyFileName);
     if (fs.existsSync(bundled)) {
       return JSON.parse(fs.readFileSync(bundled, 'utf8')) as UpdatePolicy;
     }

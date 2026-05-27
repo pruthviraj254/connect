@@ -21,6 +21,7 @@ import { flushSpoolScan } from './virtual-printer/watcher.js';
 import { destroyTray, setupTray } from './tray.js';
 import { startPrintPipeline, stopPrintPipeline } from './virtual-printer/pipeline.js';
 import { registerPdfPreviewProtocol, wirePdfPreviewProtocol } from './pdf-preview-protocol.js';
+import { getProtocolScheme } from './build-metadata.js';
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -174,10 +175,11 @@ async function createWindow(): Promise<void> {
 }
 
 function registerDeepLinkProtocol(): void {
+  const scheme = getProtocolScheme();
   if (process.defaultApp && process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient('rxconnect', process.execPath, [path.resolve(process.argv[1])]);
+    app.setAsDefaultProtocolClient(scheme, process.execPath, [path.resolve(process.argv[1])]);
   } else {
-    app.setAsDefaultProtocolClient('rxconnect');
+    app.setAsDefaultProtocolClient(scheme);
   }
 }
 
@@ -239,7 +241,9 @@ if (!gotLock) {
   app.quit();
 } else {
   app.on('second-instance', (_event, argv) => {
-    const deepLink = argv.find((a) => a.startsWith('rxconnect://'));
+    const scheme = getProtocolScheme();
+    const deepLinkPrefix = `${scheme}://`;
+    const deepLink = argv.find((a) => a.startsWith(deepLinkPrefix));
     if (deepLink) {
       getMainWindow()?.webContents.send('app:deep-link', deepLink);
     }

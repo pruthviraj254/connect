@@ -7,12 +7,29 @@ import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import MakerRxPKG from './forge-makers/maker-rx-pkg';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
+const { getBuildChannel } = require('./scripts/build-channel.cjs') as {
+  getBuildChannel: () => {
+    packagerName: string;
+    executableName: string;
+    protocolScheme: string;
+    protocolName: string;
+    policyFileName: string;
+    id: string;
+    updateChannel: string;
+    appEnv: string;
+    policyRemotePath: string;
+  };
+};
+
+const channelProfile = getBuildChannel();
 
 const virtualPrinterPkgScripts = path.join(
   __dirname,
@@ -44,15 +61,14 @@ if (fsSync.existsSync(path.join(ghostscriptWinResource, 'bin', 'gswin64c.exe')))
 
 const config: ForgeConfig = {
   packagerConfig: {
-    // Stable folder name for electron-builder --prepackaged (out/Rx-Connect-win32-x64).
-    name: 'Rx-Connect',
+    name: channelProfile.packagerName,
     asar: true,
-    executableName: 'rx-connect',
+    executableName: channelProfile.executableName,
     extraResource: extraResources,
     protocols: [
       {
-        name: 'Rx Connect',
-        schemes: ['rxconnect'],
+        name: channelProfile.protocolName,
+        schemes: [channelProfile.protocolScheme],
       },
     ],
   },
@@ -115,14 +131,29 @@ const config: ForgeConfig = {
         console.warn('[forge] Skipping renderer copy — run `pnpm run build:renderer` before packaging.');
       }
 
-      const policySrc = path.join(__dirname, 'update-policy.json');
-      const policyDest = path.join(buildPath, 'update-policy.json');
+      const profile = getBuildChannel();
+      const policySrc = path.join(__dirname, profile.policyFileName);
+      const policyDest = path.join(buildPath, profile.policyFileName);
       try {
         await fs.access(policySrc);
         await fs.copyFile(policySrc, policyDest);
       } catch {
-        console.warn('[forge] update-policy.json not found — bundled policy fallback unavailable.');
+        console.warn(`[forge] ${profile.policyFileName} not found — bundled policy fallback unavailable.`);
       }
+
+      const metadata = {
+        channel: profile.id,
+        updateChannel: profile.updateChannel,
+        protocolScheme: profile.protocolScheme,
+        policyFileName: profile.policyFileName,
+        policyRemotePath: profile.policyRemotePath,
+        appEnv: profile.appEnv,
+      };
+      await fs.writeFile(
+        path.join(buildPath, 'build-metadata.json'),
+        `${JSON.stringify(metadata, null, 2)}\n`,
+        'utf8',
+      );
     },
   },
 };
