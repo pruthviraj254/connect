@@ -1,5 +1,7 @@
 extends: electron-builder.yml
 
+detectUpdateChannel: false
+
 appId: health.onerx.rxconnect.staging
 productName: Rx-Connect Staging
 artifactName: ${productName}-Setup-${version}-${arch}.${ext}
