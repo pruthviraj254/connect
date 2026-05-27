@@ -4,6 +4,4 @@ export function isStagingApp(): boolean {
 }
 
 /** Baked API base URL (production or staging). */
-export function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.onerx.com';
-}
+export { getApiBaseUrl } from '@/lib/call-log/constants';

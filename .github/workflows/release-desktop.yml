@@ -16,7 +16,8 @@ env:
   GH_OWNER: ${{ vars.GH_OWNER || github.repository_owner }}
   GH_REPO: ${{ vars.GH_REPO || 'connect' }}
   RX_CONNECT_CHANNEL: production
-  NEXT_PUBLIC_API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL || 'https://api.onerx.com' }}
+  NEXT_PUBLIC_API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL || 'https://portal-api.myonerx.com/api' }}
+  NEXT_PUBLIC_RX_CONNECT_INGEST_SECRET: ${{ secrets.RX_CONNECT_INGEST_SECRET }}
 
 jobs:
   publish-windows:

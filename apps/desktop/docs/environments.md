@@ -1,5 +1,7 @@
 # Rx-Connect desktop environments (staging vs production)
 
+> **Team overview:** [Desktop auto-update & dual-channel flow](../../docs/desktop-auto-update-dual-channel.md) — workflows, tags, flowcharts, and release checklist.
+
 Rx-Connect ships as **two separate installers** that can run side-by-side on the same PC:
 
 |                     | Production               | Staging                          |

@@ -94,16 +94,24 @@ export function resolveGitHubReleaseTarget(): GitHubReleaseTarget {
 }
 
 /** Configure electron-updater feed (avoids missing resources/app-update.yml with Forge prepackaged builds). */
-export function configureUpdateFeed(autoUpdater: AppUpdater): GitHubReleaseTarget {
+export async function configureUpdateFeed(autoUpdater: AppUpdater): Promise<GitHubReleaseTarget> {
   const target = resolveGitHubReleaseTarget();
 
   // Staging GitHub releases are prereleases; prod must ignore them on the "latest" channel.
-  // Staging release tags must be semver prerelease form (v0.0.13-staging), not staging-v0.0.13,
-  // or electron-updater will never match autoUpdater.channel === "staging".
   autoUpdater.allowPrerelease = target.channel === 'staging';
 
   if (target.channel) {
     autoUpdater.channel = target.channel;
+  }
+
+  if (target.channel === 'staging') {
+    const genericUrl = await resolveStagingFeedUrl(target);
+    if (genericUrl) {
+      autoUpdater.setFeedURL({ provider: 'generic', url: genericUrl });
+      log.info(`${TAG} staging generic feed configured`, { url: genericUrl });
+      return target;
+    }
+    log.warn(`${TAG} no staging.yml found via GitHub API — falling back to github provider`);
   }
 
   autoUpdater.setFeedURL({
@@ -120,4 +128,52 @@ export function configureUpdateFeed(autoUpdater: AppUpdater): GitHubReleaseTarge
     hasToken: Boolean(target.token),
   });
   return target;
+}
+
+function isStagingReleaseTag(tag: string): boolean {
+  return tag.endsWith('-staging') || tag.startsWith('staging-v');
+}
+
+/** Resolve staging.yml URL from GitHub Releases (supports staging-v* and v*-staging tags). */
+async function resolveStagingFeedUrl(target: GitHubReleaseTarget): Promise<string | null> {
+  const apiUrl = `https://api.github.com/repos/${target.owner}/${target.repo}/releases?per_page=50`;
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'rx-connect-desktop-updater',
+  };
+  if (target.token) {
+    headers.Authorization = `Bearer ${target.token}`;
+  }
+
+  try {
+    const response = await fetch(apiUrl, { headers });
+    if (!response.ok) {
+      log.warn(`${TAG} staging releases API HTTP ${response.status}`);
+      return null;
+    }
+
+    const releases = (await response.json()) as Array<{
+      tag_name: string;
+      prerelease: boolean;
+      assets?: Array<{ name: string; browser_download_url: string }>;
+    }>;
+
+    for (const release of releases) {
+      if (!isStagingReleaseTag(release.tag_name) && !release.prerelease) {
+        continue;
+      }
+      const stagingYml = release.assets?.find((asset) => asset.name === 'staging.yml');
+      if (stagingYml?.browser_download_url) {
+        log.info(`${TAG} resolved staging feed`, {
+          tag: release.tag_name,
+          url: stagingYml.browser_download_url,
+        });
+        return stagingYml.browser_download_url;
+      }
+    }
+  } catch (err) {
+    log.warn(`${TAG} staging releases API failed`, err);
+  }
+
+  return null;
 }

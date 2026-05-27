@@ -245,7 +245,7 @@ export async function initializeUpdateService(): Promise<void> {
   autoUpdater.allowDowngrade = false;
   autoUpdater.disableDifferentialDownload = true;
 
-  configureUpdateFeed(autoUpdater);
+  await configureUpdateFeed(autoUpdater);
   bindUpdaterListeners();
 
   policy = await fetchUpdatePolicy();

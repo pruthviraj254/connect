@@ -1,9 +1,8 @@
 import axios from 'axios';
-
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.onerx.com';
+import { getApiBaseUrl } from '@/lib/call-log/constants';
 
 export const apiClient = axios.create({
-  baseURL,
+  baseURL: getApiBaseUrl(),
   headers: { 'Content-Type': 'application/json' },
 });
 
