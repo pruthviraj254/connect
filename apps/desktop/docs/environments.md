@@ -41,13 +41,16 @@ NEXT_PUBLIC_API_BASE_URL=https://api.staging.onerx.com
 
 ## CI workflows
 
-| Workflow                        | Trigger                    | Publishes?                        |
-| ------------------------------- | -------------------------- | --------------------------------- |
-| Build desktop (Windows / macOS) | Push/PR to `dev` or `main` | No — compile check only           |
-| **Release desktop (staging)**   | Tag `staging-v*`           | Yes — staging EXE + `staging.yml` |
-| **Release desktop**             | Tag `v*.*.*` (semver)      | Yes — prod EXE + `latest.yml`     |
+| Workflow                                 | Trigger                   | Builds         | Publishes to Releases?    |
+| ---------------------------------------- | ------------------------- | -------------- | ------------------------- |
+| Build desktop (Windows / macOS)          | Push/PR to **`main`**     | **Production** | No — artifact only        |
+| Build desktop (Windows / macOS, staging) | Push/PR to **`dev`**      | **Staging**    | No — artifact only        |
+| **Release desktop**                      | Tag **`v*.*.*`** only     | Production     | **Yes** → GitHub Releases |
+| **Release desktop (staging)**            | Tag **`staging-v*`** only | Staging        | **Yes** → GitHub Releases |
 
-**No tag → no GitHub Release.** Pushing to `dev` or `main` only runs build workflows.
+**No tag → no GitHub Release.** Branch pushes only verify the build and store artifacts in Actions.
+
+**Tag → publish only the matching app** (`v0.0.8` = prod, `staging-v0.0.8` = staging).
 
 ---
 
