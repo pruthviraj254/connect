@@ -9,6 +9,7 @@ export type BuildMetadata = {
   policyFileName: string;
   policyRemotePath: string;
   appEnv: string;
+  appUserModelId: string;
 };
 
 const PRODUCTION_DEFAULTS: BuildMetadata = {
@@ -18,6 +19,7 @@ const PRODUCTION_DEFAULTS: BuildMetadata = {
   policyFileName: 'update-policy.json',
   policyRemotePath: 'apps/desktop/update-policy.json',
   appEnv: 'production',
+  appUserModelId: 'health.onerx.rxconnect',
 };
 
 const STAGING_DEFAULTS: BuildMetadata = {
@@ -27,6 +29,7 @@ const STAGING_DEFAULTS: BuildMetadata = {
   policyFileName: 'update-policy.staging.json',
   policyRemotePath: 'apps/desktop/update-policy.staging.json',
   appEnv: 'staging',
+  appUserModelId: 'health.onerx.rxconnect.staging',
 };
 
 let cached: BuildMetadata | null = null;
@@ -53,4 +56,8 @@ export function getBuildMetadata(): BuildMetadata {
 
 export function getProtocolScheme(): string {
   return getBuildMetadata().protocolScheme;
+}
+
+export function getAppUserModelId(): string {
+  return getBuildMetadata().appUserModelId;
 }

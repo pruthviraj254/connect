@@ -28,6 +28,14 @@ function isUpdaterSupported(): boolean {
   return SUPPORTED_PLATFORMS.has(process.platform) && app.isPackaged;
 }
 
+function isBenignOptionalUpdateError(message: string): boolean {
+  return /no published versions/i.test(message) || /could not find.*release/i.test(message);
+}
+
+function optionalUpdateError(message: string): string | null {
+  return isBenignOptionalUpdateError(message) ? null : message;
+}
+
 function createInitialGateState(): UpdateGateState {
   return {
     status: 'idle',
@@ -127,7 +135,7 @@ function bindUpdaterListeners(): void {
     } else {
       publishGate({
         status: 'ok',
-        lastUpdateError: err.message,
+        lastUpdateError: optionalUpdateError(err.message),
         updateReady: false,
       });
     }
@@ -215,7 +223,7 @@ async function startOptionalUpdateFlow(): Promise<void> {
     const message = err instanceof Error ? err.message : 'Update check failed';
     publishGate({
       status: 'ok',
-      lastUpdateError: message,
+      lastUpdateError: optionalUpdateError(message),
     });
   });
 }
@@ -260,9 +268,10 @@ export function checkForUpdates(): void {
   void autoUpdater.checkForUpdates().catch((err) => {
     log.error(`${TAG} manual check failed`, err);
     if (!forceUpdateActive) {
+      const message = err instanceof Error ? err.message : 'Update check failed';
       publishGate({
         status: 'ok',
-        lastUpdateError: err instanceof Error ? err.message : 'Update check failed',
+        lastUpdateError: optionalUpdateError(message),
       });
     }
   });

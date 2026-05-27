@@ -21,7 +21,7 @@ import { flushSpoolScan } from './virtual-printer/watcher.js';
 import { destroyTray, setupTray } from './tray.js';
 import { startPrintPipeline, stopPrintPipeline } from './virtual-printer/pipeline.js';
 import { registerPdfPreviewProtocol, wirePdfPreviewProtocol } from './pdf-preview-protocol.js';
-import { getProtocolScheme } from './build-metadata.js';
+import { getProtocolScheme, getAppUserModelId } from './build-metadata.js';
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -234,6 +234,10 @@ function wireCsp(): void {
       });
     });
   });
+}
+
+if (process.platform === 'win32') {
+  app.setAppUserModelId(getAppUserModelId());
 }
 
 const gotLock = app.requestSingleInstanceLock();

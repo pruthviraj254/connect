@@ -1,6 +1,7 @@
 !macro customInstall
-  ; Stop running app so port 19101 / files are not locked during service install.
+  ; Stop running apps so port 19101 / files are not locked during service install.
   nsExec::ExecToLog 'taskkill /IM rx-connect.exe /F /T'
+  nsExec::ExecToLog 'taskkill /IM rx-connect-staging.exe /F /T'
   Sleep 1000
 
   ; Elevated NSIS context — install virtual printer without a separate UAC prompt.

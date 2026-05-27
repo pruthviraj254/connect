@@ -15,6 +15,8 @@ files:
 asar: true
 
 win:
+  # Must match forge packager executableName — shortcuts/NSIS target the wrong file otherwise.
+  executableName: rx-connect
   target:
     - target: nsis
       arch:
@@ -52,6 +54,7 @@ nsis:
   allowElevation: true
   allowToChangeInstallationDirectory: true
   shortcutName: Rx-Connect
+  uninstallDisplayName: Rx-Connect
   createDesktopShortcut: true
   createStartMenuShortcut: true
   menuCategory: OneRx

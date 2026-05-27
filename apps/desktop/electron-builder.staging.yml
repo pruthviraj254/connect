@@ -7,6 +7,14 @@ productName: Rx-Connect Staging
 # No spaces — gh release upload and NSIS paths break on "Rx-Connect Staging-Setup-....exe"
 artifactName: Rx-Connect-Staging-Setup-${version}-${arch}.${ext}
 
+win:
+  executableName: rx-connect-staging
+
+nsis:
+  shortcutName: Rx-Connect Staging
+  menuCategory: OneRx Staging
+  uninstallDisplayName: Rx-Connect Staging
+
 publish:
   - provider: github
     owner: ${env.GH_OWNER}

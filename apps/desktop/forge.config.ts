@@ -148,6 +148,7 @@ const config: ForgeConfig = {
         policyFileName: profile.policyFileName,
         policyRemotePath: profile.policyRemotePath,
         appEnv: profile.appEnv,
+        appUserModelId: profile.appId,
       };
       await fs.writeFile(
         path.join(buildPath, 'build-metadata.json'),
