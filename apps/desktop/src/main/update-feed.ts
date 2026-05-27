@@ -97,6 +97,9 @@ export function resolveGitHubReleaseTarget(): GitHubReleaseTarget {
 export function configureUpdateFeed(autoUpdater: AppUpdater): GitHubReleaseTarget {
   const target = resolveGitHubReleaseTarget();
 
+  // Staging GitHub releases are prereleases; prod must ignore them on the "latest" channel.
+  autoUpdater.allowPrerelease = target.channel === 'staging';
+
   if (target.channel) {
     autoUpdater.channel = target.channel;
   }

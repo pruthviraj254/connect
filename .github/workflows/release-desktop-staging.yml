@@ -81,7 +81,11 @@ jobs:
           if (-not (Test-Path apps/desktop/dist/staging.yml)) {
             throw 'staging.yml was not generated after publish.'
           }
-          Write-Host 'staging.yml OK — staging auto-update feed is ready.'
+          $exe = Get-ChildItem apps/desktop/dist/Rx-Connect-Staging-Setup-*.exe -ErrorAction SilentlyContinue
+          if (-not $exe) {
+            throw 'Rx-Connect-Staging-Setup-*.exe was not found in dist after publish.'
+          }
+          Write-Host 'staging.yml OK — Windows staging auto-update feed is ready.'
 
   publish-macos:
     needs: publish-windows
