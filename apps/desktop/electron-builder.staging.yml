@@ -9,6 +9,3 @@ publish:
     owner: ${env.GH_OWNER}
     repo: ${env.GH_REPO}
     releaseType: release
-
-# electron-updater channel → staging.yml / staging-mac.yml
-channel: staging
