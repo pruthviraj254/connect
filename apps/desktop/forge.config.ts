@@ -23,6 +23,7 @@ const { getBuildChannel } = require('./scripts/build-channel.cjs') as {
     protocolName: string;
     policyFileName: string;
     id: string;
+    productName: string;
     updateChannel: string;
     appEnv: string;
     policyRemotePath: string;
@@ -155,6 +156,15 @@ const config: ForgeConfig = {
         `${JSON.stringify(metadata, null, 2)}\n`,
         'utf8',
       );
+
+      const pkgPath = path.join(buildPath, 'package.json');
+      try {
+        const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf8')) as { productName?: string };
+        pkg.productName = profile.productName;
+        await fs.writeFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`, 'utf8');
+      } catch (err) {
+        console.warn('[forge] could not patch package.json productName', err);
+      }
     },
   },
 };

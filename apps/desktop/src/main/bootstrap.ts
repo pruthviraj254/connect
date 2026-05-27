@@ -21,7 +21,8 @@ import { flushSpoolScan } from './virtual-printer/watcher.js';
 import { destroyTray, setupTray } from './tray.js';
 import { startPrintPipeline, stopPrintPipeline } from './virtual-printer/pipeline.js';
 import { registerPdfPreviewProtocol, wirePdfPreviewProtocol } from './pdf-preview-protocol.js';
-import { getProtocolScheme, getAppUserModelId } from './build-metadata.js';
+import { getProtocolScheme } from './build-metadata.js';
+import { getBakedAppUserModelId, getBakedProductName } from './build-constants.js';
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -237,7 +238,8 @@ function wireCsp(): void {
 }
 
 if (process.platform === 'win32') {
-  app.setAppUserModelId(getAppUserModelId());
+  app.setAppUserModelId(getBakedAppUserModelId());
+  app.setName(getBakedProductName());
 }
 
 const gotLock = app.requestSingleInstanceLock();
