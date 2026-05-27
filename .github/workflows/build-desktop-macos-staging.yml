@@ -1,36 +1,36 @@
-# Builds the production macOS ZIP on main (artifact only — no GitHub Release).
-# Publish to Releases: tag v* → release-desktop.yml
-name: Build desktop (macOS)
+# Builds the staging macOS ZIP on dev (artifact only — no GitHub Release).
+# Publish to Releases: tag staging-v* → release-desktop-staging.yml
+name: Build desktop (macOS, staging)
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, master]
+    branches: [dev, develop]
     paths:
       - 'apps/desktop/**'
       - 'packages/shared/**'
       - 'pnpm-lock.yaml'
-      - '.github/workflows/build-desktop-macos.yml'
+      - '.github/workflows/build-desktop-macos-staging.yml'
   pull_request:
-    branches: [main, master]
+    branches: [dev, develop]
     paths:
       - 'apps/desktop/**'
       - 'packages/shared/**'
       - 'pnpm-lock.yaml'
-      - '.github/workflows/build-desktop-macos.yml'
+      - '.github/workflows/build-desktop-macos-staging.yml'
 
 concurrency:
-  group: desktop-macos-prod-${{ github.ref }}
+  group: desktop-macos-staging-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   GH_OWNER: ${{ vars.GH_OWNER || github.repository_owner }}
   GH_REPO: ${{ vars.GH_REPO || 'connect' }}
-  RX_CONNECT_CHANNEL: production
-  NEXT_PUBLIC_API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL || 'https://api.onerx.com' }}
+  RX_CONNECT_CHANNEL: staging
+  NEXT_PUBLIC_API_BASE_URL: ${{ vars.STAGING_API_BASE_URL || 'https://api.staging.onerx.com' }}
 
 jobs:
-  build-macos:
+  build-macos-staging:
     runs-on: macos-latest
     timeout-minutes: 45
 
@@ -57,8 +57,8 @@ jobs:
       - name: Build shared package
         run: pnpm --filter @rx-connect/shared run build
 
-      - name: Build renderer (production)
-        run: pnpm --filter @rx-connect/desktop run build:renderer
+      - name: Build renderer (staging)
+        run: pnpm --filter @rx-connect/desktop run build:renderer:staging
 
       - name: Vendor Hugo (macOS arm64)
         run: node apps/desktop/scripts/download-hugo.cjs --platform=current
@@ -74,8 +74,8 @@ jobs:
       - name: Build macOS print service
         run: node apps/desktop/scripts/build-print-service.cjs
 
-      - name: Build production macOS ZIP
-        run: pnpm --filter @rx-connect/desktop run dist:mac
+      - name: Build staging macOS ZIP
+        run: pnpm --filter @rx-connect/desktop run dist:mac:staging
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
@@ -83,23 +83,23 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
-      - name: Validate production updater metadata
+      - name: Validate staging updater metadata
         run: |
-          if [ ! -f apps/desktop/dist/latest-mac.yml ]; then
-            echo "latest-mac.yml was not generated."
+          if [ ! -f apps/desktop/dist/staging-mac.yml ]; then
+            echo "staging-mac.yml was not generated."
             exit 1
           fi
 
       - name: List build output
         run: ls -laR apps/desktop/dist
 
-      - name: Upload production macOS artifact
+      - name: Upload staging macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rx-connect-macos-prod-${{ github.run_number }}
+          name: rx-connect-macos-staging-${{ github.run_number }}
           path: |
             apps/desktop/dist/*.zip
             apps/desktop/dist/*.zip.blockmap
-            apps/desktop/dist/latest-mac.yml
+            apps/desktop/dist/staging-mac.yml
           if-no-files-found: error
           retention-days: 30

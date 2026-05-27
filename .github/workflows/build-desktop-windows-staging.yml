@@ -1,36 +1,36 @@
-# Builds the production Windows NSIS installer on main (artifact only — no GitHub Release).
-# Publish to Releases: tag v* → release-desktop.yml
-name: Build desktop (Windows)
+# Builds the staging Windows NSIS installer on dev (artifact only — no GitHub Release).
+# Publish to Releases: tag staging-v* → release-desktop-staging.yml
+name: Build desktop (Windows, staging)
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, master]
+    branches: [dev, develop]
     paths:
       - 'apps/desktop/**'
       - 'packages/shared/**'
       - 'pnpm-lock.yaml'
-      - '.github/workflows/build-desktop-windows.yml'
+      - '.github/workflows/build-desktop-windows-staging.yml'
   pull_request:
-    branches: [main, master]
+    branches: [dev, develop]
     paths:
       - 'apps/desktop/**'
       - 'packages/shared/**'
       - 'pnpm-lock.yaml'
-      - '.github/workflows/build-desktop-windows.yml'
+      - '.github/workflows/build-desktop-windows-staging.yml'
 
 concurrency:
-  group: desktop-windows-prod-${{ github.ref }}
+  group: desktop-windows-staging-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   GH_OWNER: ${{ vars.GH_OWNER || github.repository_owner }}
   GH_REPO: ${{ vars.GH_REPO || 'connect' }}
-  RX_CONNECT_CHANNEL: production
-  NEXT_PUBLIC_API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL || 'https://api.onerx.com' }}
+  RX_CONNECT_CHANNEL: staging
+  NEXT_PUBLIC_API_BASE_URL: ${{ vars.STAGING_API_BASE_URL || 'https://api.staging.onerx.com' }}
 
 jobs:
-  build-windows:
+  build-windows-staging:
     runs-on: windows-latest
     timeout-minutes: 45
 
@@ -54,16 +54,16 @@ jobs:
         env:
           HUSKY: '0'
 
-      - name: Build shared package (fresh dist for CI)
+      - name: Build shared package
         run: pnpm --filter @rx-connect/shared run build
 
-      - name: Build renderer (production)
-        run: pnpm --filter @rx-connect/desktop run build:renderer
+      - name: Build renderer (staging)
+        run: pnpm --filter @rx-connect/desktop run build:renderer:staging
 
-      - name: Vendor Ghostscript (Windows x64, bundled in installer)
+      - name: Vendor Ghostscript (Windows x64)
         run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
 
-      - name: Vendor Hugo (Windows x64, bundled for website preview)
+      - name: Vendor Hugo (Windows x64)
         run: node apps/desktop/scripts/download-hugo.cjs --platform=win32
 
       - name: Setup Go
@@ -77,38 +77,31 @@ jobs:
       - name: Build Windows print service
         run: node apps/desktop/scripts/build-print-service.cjs
 
-      - name: Warn when code signing is not configured
-        shell: pwsh
-        run: |
-          if (-not $env:CSC_LINK) {
-            Write-Warning 'CSC_LINK is not set — installer will be unsigned and in-app updates will reject it until signing secrets are configured.'
-          }
-
-      - name: Build production Windows installer (NSIS)
-        run: pnpm --filter @rx-connect/desktop run dist:win
+      - name: Build staging Windows installer (NSIS)
+        run: pnpm --filter @rx-connect/desktop run dist:win:staging
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           WIN_CSC_SUBJECT_NAME: ${{ secrets.WIN_CSC_SUBJECT_NAME }}
 
-      - name: Validate production updater metadata
+      - name: Validate staging updater metadata
         shell: pwsh
         run: |
-          if (-not (Test-Path apps/desktop/dist/latest.yml)) {
-            throw 'latest.yml was not generated.'
+          if (-not (Test-Path apps/desktop/dist/staging.yml)) {
+            throw 'staging.yml was not generated.'
           }
 
       - name: List build output
         shell: pwsh
         run: Get-ChildItem -Recurse apps/desktop/dist | Select-Object FullName, Length
 
-      - name: Upload production installer artifact
+      - name: Upload staging installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rx-connect-windows-prod-${{ github.run_number }}
+          name: rx-connect-windows-staging-${{ github.run_number }}
           path: |
-            apps/desktop/dist/Rx-Connect-Setup-*.exe
+            apps/desktop/dist/Rx-Connect-Staging-Setup-*.exe
             apps/desktop/dist/*.exe.blockmap
-            apps/desktop/dist/latest.yml
+            apps/desktop/dist/staging.yml
           if-no-files-found: error
           retention-days: 30
