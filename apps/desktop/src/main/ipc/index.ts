@@ -15,6 +15,7 @@ import { registerWebsiteBuilderHandlers } from './handlers/website-builder.js';
 import { registerUpdaterHandlers } from './handlers/updater.js';
 import { registerContactsHandlers } from './handlers/contacts.js';
 import { registerFaxPopupHandlers } from './handlers/fax-popup.js';
+import { registerCdrHandlers } from './handlers/cdr.js';
 
 export function registerIpcHandlers(): void {
   registerAppHandlers();
@@ -34,4 +35,5 @@ export function registerIpcHandlers(): void {
   registerUpdaterHandlers();
   registerContactsHandlers();
   registerFaxPopupHandlers();
+  registerCdrHandlers();
 }

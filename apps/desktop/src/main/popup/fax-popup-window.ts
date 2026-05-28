@@ -3,6 +3,7 @@ import { BrowserWindow } from 'electron';
 import log from 'electron-log';
 import type { PrintJobRecord } from '@rx-connect/shared';
 import { captureMainUiBeforePopup, restoreMainUiAfterPopup } from '../lifecycle.js';
+import { getRendererLoadUrl } from '../renderer-url.js';
 
 const popupJobs = new Map<number, PrintJobRecord>();
 let activePopup: BrowserWindow | null = null;
@@ -101,10 +102,7 @@ export async function openFaxPopup(job: PrintJobRecord): Promise<void> {
     log.info('[fax-popup] closed', job.id);
   });
 
-  const devUrl = process.env.ELECTRON_RENDERER_URL;
-  const url = devUrl
-    ? `${devUrl.replace(/\/$/, '')}/fax-popup/?jobId=${encodeURIComponent(job.id)}`
-    : `app://rxconnect/fax-popup/?jobId=${encodeURIComponent(job.id)}`;
+  const url = getRendererLoadUrl(`/fax-popup/?jobId=${encodeURIComponent(job.id)}`);
 
   log.info('[fax-popup] opening', { jobId: job.id, pdfPath: job.pdfPath, url });
   await win.loadURL(url);

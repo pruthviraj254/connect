@@ -2,8 +2,23 @@ import { ipcMain, Notification, app, dialog, net } from 'electron';
 import { IpcChannel } from '@rx-connect/shared';
 import log from 'electron-log';
 import { getMainWindow } from '../../lifecycle.js';
+import { getMachineId } from '../../services/machineId.js';
+import { registerHandler } from '../registry.js';
+import { schemas } from '../schemas.js';
 
 export function registerAppHandlers(): void {
+  registerHandler({
+    channel: IpcChannel.AppGetMachineId,
+    schema: schemas.appGetMachineId,
+    handler: async () => getMachineId(),
+  });
+
+  registerHandler({
+    channel: IpcChannel.AppGetPlatform,
+    schema: schemas.appGetPlatform,
+    handler: async () => process.platform,
+  });
+
   ipcMain.handle(IpcChannel.AppGetVersion, async () => app.getVersion());
 
   ipcMain.handle(IpcChannel.AppGetPath, async (_e, name: 'home' | 'userData' | 'sessionData' | 'temp') =>

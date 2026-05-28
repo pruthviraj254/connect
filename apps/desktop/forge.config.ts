@@ -32,6 +32,12 @@ const { getBuildChannel } = require('./scripts/build-channel.cjs') as {
 
 const channelProfile = getBuildChannel();
 
+/** ASAR integrity fuses require a signed/notarized app; unsigned local .pkg builds crash on launch. */
+const enableAsarIntegrity =
+  process.env.RX_CONNECT_ENABLE_ASAR_INTEGRITY === '1' ||
+  Boolean(process.env.CSC_LINK?.trim()) ||
+  Boolean(process.env.APPLE_SIGNING_IDENTITY?.trim());
+
 const virtualPrinterPkgScripts = path.join(
   __dirname,
   'resources',
@@ -117,8 +123,8 @@ const config: ForgeConfig = {
       [FuseV1Options.EnableCookieEncryption]: true,
       [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
       [FuseV1Options.EnableNodeCliInspectArguments]: false,
-      [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
-      [FuseV1Options.OnlyLoadAppFromAsar]: true,
+      [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: enableAsarIntegrity,
+      [FuseV1Options.OnlyLoadAppFromAsar]: enableAsarIntegrity,
     }),
   ],
   hooks: {

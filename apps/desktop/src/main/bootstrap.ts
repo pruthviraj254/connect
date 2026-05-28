@@ -1,7 +1,6 @@
 import { app, BrowserWindow, nativeTheme, net, protocol, shell } from 'electron';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { stat } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import log from 'electron-log';
 import { initializeUpdateService } from './update-service.js';
 import { promptWindowsPrinterInstallIfMissing } from './windows-runtime.js';
@@ -17,12 +16,20 @@ import {
   setQuitting,
   showMainWindow,
 } from './lifecycle.js';
+import { clearMainWebContentsId, setMainWebContentsId } from './lib/mainWindow.js';
 import { flushSpoolScan } from './virtual-printer/watcher.js';
 import { destroyTray, setupTray } from './tray.js';
 import { startPrintPipeline, stopPrintPipeline } from './virtual-printer/pipeline.js';
 import { registerPdfPreviewProtocol, wirePdfPreviewProtocol } from './pdf-preview-protocol.js';
 import { getProtocolScheme } from './build-metadata.js';
 import { getBakedAppUserModelId, getBakedProductName } from './build-constants.js';
+import { config } from './config.js';
+import { getRendererLoadUrl } from './renderer-url.js';
+
+// Unsigned macOS builds often crash in the GPU helper without this switch.
+if (process.platform === 'darwin' && app.isPackaged) {
+  app.commandLine.appendSwitch('disable-gpu-sandbox');
+}
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -32,6 +39,7 @@ protocol.registerSchemesAsPrivileged([
       secure: true,
       supportFetchAPI: true,
       stream: true,
+      corsEnabled: true,
     },
   },
 ]);
@@ -100,16 +108,17 @@ function registerAppProtocol(): void {
       return new Response('Forbidden', { status: 403 });
     }
 
-    const upstream = await net.fetch(pathToFileURL(resolved).href);
+    // fs.readFile works for paths inside app.asar; net.fetch(file://…) does not.
+    const body = await readFile(resolved);
     const ext = path.extname(resolved).toLowerCase();
     const contentType = MIME_TYPES[ext] ?? 'application/octet-stream';
-    const headers = new Headers(upstream.headers);
-    headers.set('Content-Type', contentType);
 
-    return new Response(upstream.body, {
-      status: upstream.status,
-      statusText: upstream.statusText,
-      headers,
+    return new Response(body, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Content-Length': String(body.length),
+      },
     });
   });
 }
@@ -119,7 +128,6 @@ function shouldStartHidden(): boolean {
 }
 
 async function createWindow(): Promise<void> {
-  const devUrl = process.env.ELECTRON_RENDERER_URL;
   const startHidden = shouldStartHidden();
 
   const mainWindow = new BrowserWindow({
@@ -139,6 +147,10 @@ async function createWindow(): Promise<void> {
   });
 
   setMainWindow(mainWindow);
+  setMainWebContentsId(mainWindow.webContents.id);
+  mainWindow.on('closed', () => {
+    clearMainWebContentsId();
+  });
 
   const menu = buildAppMenu({
     onReload: () => mainWindow.reload(),
@@ -160,11 +172,25 @@ async function createWindow(): Promise<void> {
     }
   });
 
-  if (devUrl) {
-    await mainWindow.loadURL(devUrl);
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
-  } else {
-    await mainWindow.loadURL('app://rxconnect/');
+  mainWindow.webContents.on('did-fail-load', (_event, code, description, url) => {
+    log.error('[window] did-fail-load', { code, description, url });
+    if (!startHidden && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+    }
+  });
+
+  const loadUrl = getRendererLoadUrl('/');
+  try {
+    await mainWindow.loadURL(loadUrl);
+    if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) {
+      mainWindow.webContents.openDevTools({ mode: 'detach' });
+    }
+  } catch (err) {
+    log.error('[window] loadURL failed', loadUrl, err);
+    if (!startHidden && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+    }
+    throw err;
   }
 
   mainWindow.webContents.setWindowOpenHandler(({ url: linkUrl }) => {
@@ -200,7 +226,7 @@ function wireNetworkStatus(): void {
 }
 
 function wireCsp(): void {
-  const isDev = Boolean(process.env.ELECTRON_RENDERER_URL);
+  const isDev = !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL);
 
   app.on('web-contents-created', (_event, contents) => {
     contents.session.webRequest.onHeadersReceived((details, callback) => {
@@ -242,10 +268,16 @@ if (process.platform === 'win32') {
   app.setName(getBakedProductName());
 }
 
-const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) { 
+/** Packaged builds only — dev may relaunch while a zombie Electron is still running. */
+const useSingleInstanceLock = app.isPackaged;
+const gotLock = !useSingleInstanceLock || app.requestSingleInstanceLock();
+if (!gotLock) {
+  log.warn(
+    '[app] Another Rx-Connect instance is already running — exiting. Quit the other app or kill stale Electron processes.',
+  );
   app.quit();
 } else {
+  if (useSingleInstanceLock) {
   app.on('second-instance', (_event, argv) => {
     const scheme = getProtocolScheme();
     const deepLinkPrefix = `${scheme}://`;
@@ -260,6 +292,7 @@ if (!gotLock) {
     }
     showMainWindow();
   });
+  }
 
   app.whenReady().then(async () => {
     initStore();

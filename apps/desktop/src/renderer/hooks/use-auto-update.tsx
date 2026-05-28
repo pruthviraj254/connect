@@ -14,7 +14,7 @@ import {
   type UpdateGateState,
   type UpdateGateStatus,
 } from '@rx-connect/shared';
-import { isElectronApp } from '@/lib/auth/auth-actions';
+import { isElectronApp } from '@/lib/electron';
 import {
   checkForUpdates as checkForUpdatesIpc,
   getUpdateGate,

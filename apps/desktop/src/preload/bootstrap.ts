@@ -6,6 +6,8 @@ import {
   type UpdateGateState,
 } from '@rx-connect/shared';
 
+import { buildBridge } from './bridge.js';
+
 const allowed = new Set<string>(Object.values(IpcChannel));
 
 function invoke<T>(channel: IpcChannel, ...args: unknown[]): Promise<T> {
@@ -62,4 +64,5 @@ const electronAPI: ElectronAPI = {
   },
 };
 
+contextBridge.exposeInMainWorld('api', buildBridge(ipcRenderer));
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

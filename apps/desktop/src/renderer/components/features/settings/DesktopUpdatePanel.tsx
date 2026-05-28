@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { gateStatusLabel, useUpdateGate } from '@/hooks/use-auto-update';
-import { isElectronApp } from '@/lib/auth/auth-actions';
+import { isElectronApp } from '@/lib/electron';
 
 function StatusIcon({ gate }: { gate: ReturnType<typeof useUpdateGate>['gate'] }) {
   if (gate.updateReady) return <CheckCircle2 className="h-5 w-5 text-emerald-600" />;

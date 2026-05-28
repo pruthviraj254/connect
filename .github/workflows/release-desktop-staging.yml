@@ -92,6 +92,15 @@ jobs:
           }
           Write-Host 'staging.yml OK — Windows staging auto-update feed is ready.'
 
+      - name: Upload Windows installer to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ca-west-1
+          RX_CONNECT_S3_BUCKET: ${{ secrets.RX_CONNECT_S3_BUCKET }}
+          RX_CONNECT_S3_CHANNEL: staging
+        run: node apps/desktop/scripts/ci/upload-windows-installer-s3.cjs
+
   publish-macos:
     if: ${{ contains(github.ref_name, '-staging') || startsWith(github.ref_name, 'staging-') }}
     needs: publish-windows

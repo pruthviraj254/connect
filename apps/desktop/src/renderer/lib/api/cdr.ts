@@ -1,4 +1,3 @@
-import { apiClient } from './client';
 import {
   directionToApiValue,
   dispositionToApiStatus,
@@ -6,7 +5,8 @@ import {
   type RxConnectCdrRow,
 } from '@/lib/call-log/map-cdr';
 import type { CallLogRecord, CdrListFilters } from '@/lib/call-log/types';
-import { getRxConnectIngestSecret } from '@/lib/call-log/constants';
+import { isSerializedSessionExpired, stripIpcErrorPrefix } from '@/lib/ipcError';
+import { useAuthStore } from '@/store/authStore';
 
 export type CdrListResult = {
   items: CallLogRecord[];
@@ -21,10 +21,6 @@ type CdrListPayload = {
   page: number;
   limit: number;
 };
-
-function getIngestSecret(): string {
-  return getRxConnectIngestSecret();
-}
 
 function unwrapListPayload(body: unknown): CdrListPayload {
   if (!body || typeof body !== 'object') {
@@ -51,6 +47,13 @@ function unwrapListPayload(body: unknown): CdrListPayload {
   throw new Error('Could not parse CDR list from API response');
 }
 
+function assertApi(): NonNullable<typeof window.api> {
+  if (!window.api?.cdr) {
+    throw new Error('CDR API is only available in the Rx-Connect desktop app.');
+  }
+  return window.api;
+}
+
 export async function fetchPharmacyCdrs(
   pharmacyId: string,
   filters: CdrListFilters = {},
@@ -68,22 +71,23 @@ export async function fetchPharmacyCdrs(
   if (status) params.status = status;
   if (search) params.search = search;
 
-  const { data } = await apiClient.get<unknown>(
-    `/admin/pharmacies/${encodeURIComponent(pharmacyId)}/rx-connect/cdrs`,
-    {
-      params,
-      headers: {
-        'x-rx-connect-ingest-key': getIngestSecret(),
-      },
-    },
-  );
+  try {
+    const data = await assertApi().cdr.fetchList({ pharmacyId, params });
+    const payload = unwrapListPayload(data);
 
-  const payload = unwrapListPayload(data);
-
-  return {
-    items: payload.items.map(mapCdrRowToCallLogRecord),
-    total: payload.total,
-    page: payload.page,
-    limit: payload.limit,
-  };
+    return {
+      items: payload.items.map(mapCdrRowToCallLogRecord),
+      total: payload.total,
+      page: payload.page,
+      limit: payload.limit,
+    };
+  } catch (error) {
+    const message = stripIpcErrorPrefix(
+      error instanceof Error ? error.message : 'Failed to load call records.',
+    );
+    if (isSerializedSessionExpired(message)) {
+      await useAuthStore.getState().expireSession();
+    }
+    throw new Error(message);
+  }
 }

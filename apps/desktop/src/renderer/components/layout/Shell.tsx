@@ -32,9 +32,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { isElectronApp, logoutWithTempDb } from '@/lib/auth/auth-actions';
 import { AppVersionBadge } from '@/components/features/settings/UpdateGate';
 import { isStagingApp } from '@/lib/app-env';
 
@@ -87,21 +86,20 @@ const alerts = [
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const token = useAuthStore((s) => s.token);
-  const email = useAuthStore((s) => s.email);
-  const displayName = useAuthStore((s) => s.displayName);
-  const clearSession = useAuthStore((s) => s.clearSession);
+  const { session, logout } = useAuth();
+  const email = session?.user.email ?? null;
+  const displayName =
+    session?.user.licenseeFirstName && session?.user.licenseeLastName
+      ? `${session.user.licenseeFirstName} ${session.user.licenseeLastName}`.trim()
+      : session?.user.pharmacyName ?? null;
 
   const handleLogout = async () => {
     try {
-      if (isElectronApp() && token) {
-        await logoutWithTempDb(token);
-      }
+      await logout();
+      toast.success('Signed out');
     } catch {
       toast.error('Signed out locally (could not notify the app process).');
     }
-    clearSession();
-    toast.success('Signed out');
     void router.replace('/login/');
   };
 

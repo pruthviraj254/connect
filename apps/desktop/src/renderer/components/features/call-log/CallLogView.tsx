@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { fetchPharmacyCdrs } from '@/lib/api/cdr';
 import { DEV_PHARMACY_ID } from '@/lib/call-log/constants';
+import { useAuthStore } from '@/store/authStore';
 import type { CallDisposition, CallLogRecord } from '@/lib/call-log/types';
 import { cn } from '@/lib/utils';
 
@@ -79,6 +80,7 @@ function CallDetailPanel({ call }: { call: CallLogRecord }) {
 }
 
 export function CallLogView() {
+  const pharmacyId = useAuthStore((s) => s.session?.user.pharmacyId) ?? DEV_PHARMACY_ID;
   const [q, setQ] = useState('');
   const [direction, setDirection] = useState<string>('all');
   const [disposition, setDisposition] = useState<string>('all');
@@ -87,9 +89,9 @@ export function CallLogView() {
   const deferredSearch = useDeferredValue(q.trim());
 
   const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: ['call-log', DEV_PHARMACY_ID, direction, disposition, deferredSearch],
+    queryKey: ['call-log', pharmacyId, direction, disposition, deferredSearch],
     queryFn: () =>
-      fetchPharmacyCdrs(DEV_PHARMACY_ID, {
+      fetchPharmacyCdrs(pharmacyId, {
         direction: direction as 'in' | 'out' | 'all',
         disposition: disposition as CallDisposition | 'all',
         search: deferredSearch || undefined,
@@ -117,7 +119,7 @@ export function CallLogView() {
     <>
       <PageHeader
         title="Call Log"
-        description={`VoIP call detail records for pharmacy ${DEV_PHARMACY_ID}.`}
+        description={`VoIP call detail records for pharmacy ${pharmacyId}.`}
       />
 
       <div className="grid grid-cols-3 gap-3 mb-4">

@@ -2,8 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+@import './login.css';
+
 @layer base {
   :root {
+    --color-terra-50: #fdf5f2;
+    --color-terra-100: #f7eae4;
+    --color-terra-200: #edcdbf;
+    --color-terra-300: #e5b49f;
+    --color-terra-400: #d9967e;
+    --color-terra-500: #cc785c;
+    --color-terra-600: #b05a35;
+    --color-terra-700: #9e4d2a;
+    --color-terra-800: #8b3e20;
+    --color-warm-50: #fdf5f2;
+    --color-warm-100: #f0eae6;
+    --color-warm-200: #e0d5d0;
+    --color-warm-300: #c4b5ae;
+    --color-warm-400: #9e8e85;
+    --color-warm-500: #c4b5ae;
+    --color-warm-600: #6b5c54;
+    --color-warm-700: #554a43;
+    --color-warm-800: #2e2520;
+    --color-warm-900: #1a1512;
+    --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --background: 40 20% 97%;
     --foreground: 25 12% 22%;
     --card: 40 30% 99%;

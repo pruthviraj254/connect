@@ -77,6 +77,12 @@ export default class MakerRxPKG extends MakerBase<MakerRxPkgConfig> {
         '[forge:rx-pkg] Built UNSIGNED .pkg (no Developer ID Installer in Keychain). ' +
           'Fine for local printer-flow testing; use a signed .pkg for production distribution.',
       );
+      console.warn(
+        '[forge:rx-pkg] Before installing locally, remove both copies of the app:\n' +
+          '  sudo rm -rf /Applications/Rx-Connect.app\n' +
+          '  rm -rf out/Rx-Connect-darwin-arm64/Rx-Connect.app\n' +
+          'Otherwise macOS may relocate the install and leave /Applications with broken symlinks.',
+      );
     }
 
     return [outPath];

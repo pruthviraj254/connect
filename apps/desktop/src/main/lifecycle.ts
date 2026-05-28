@@ -1,4 +1,5 @@
 import type { BrowserWindow } from 'electron';
+import { getRendererLoadUrl } from './renderer-url.js';
 
 let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
@@ -74,8 +75,7 @@ async function ensureMainContentLoaded(win: BrowserWindow): Promise<void> {
   if (url && url !== 'about:blank' && !win.webContents.isLoadingMainFrame()) {
     return;
   }
-  const devUrl = process.env.ELECTRON_RENDERER_URL;
-  await win.loadURL(devUrl ?? 'app://rxconnect/');
+  await win.loadURL(getRendererLoadUrl('/'));
 }
 
 export function showMainWindow(): void {

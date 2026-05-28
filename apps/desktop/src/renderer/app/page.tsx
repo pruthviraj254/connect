@@ -2,22 +2,20 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthPersistReady } from '@/lib/auth/use-auth-persist-ready';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function RootPage() {
   const router = useRouter();
-  const token = useAuthStore((s) => s.token);
-  const ready = useAuthPersistReady();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!ready) return;
-    void router.replace(token ? '/home/' : '/login/');
-  }, [ready, token, router]);
+    if (isLoading) return;
+    void router.replace(isAuthenticated ? '/home/' : '/login/');
+  }, [isAuthenticated, isLoading, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 text-muted-foreground text-sm">
-      {ready ? 'Redirecting…' : 'Loading…'}
+      {isLoading ? 'Loading…' : 'Redirecting…'}
     </div>
   );
 }

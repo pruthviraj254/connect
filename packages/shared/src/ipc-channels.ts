@@ -16,10 +16,13 @@ export const IpcChannel = {
   UpdateInstallPending: 'update:install-pending',
 
   AuthLogin: 'auth:login',
-  AuthRegister: 'auth:register',
   AuthLogout: 'auth:logout',
-  AuthRefresh: 'auth:refresh',
-  AuthRequestPasswordReset: 'auth:request-password-reset',
+  AuthGetSession: 'auth:getSession',
+  AuthGetAccessToken: 'auth:getAccessToken',
+  AuthDevSkip: 'auth:devSkip',
+
+  AppGetMachineId: 'app:getMachineId',
+  AppGetPlatform: 'app:getPlatform',
 
   UserGetProfile: 'user:get-profile',
 
@@ -56,6 +59,8 @@ export const IpcChannel = {
   BlacklistAdd: 'blacklist:add',
 
   ApiLogsList: 'api-logs:list',
+
+  CdrFetchList: 'cdr:fetch-list',
 
   SettingsGet: 'settings:get',
   SettingsSet: 'settings:set',

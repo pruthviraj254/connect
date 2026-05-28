@@ -1,0 +1,678 @@
+/* =========================================================
+   Auth / login — light brand hero (terra + warm)
+   ========================================================= */
+.login-page {
+  isolation: isolate;
+  background: var(--color-warm-50);
+}
+.login-ambient {
+  z-index: 1;
+}
+.login-particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-terra-400) 35%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-terra-300) 25%, transparent);
+  animation: loginParticleFloat 16s ease-in-out infinite;
+  opacity: 0.35;
+}
+.login-particle--hero {
+  width: 3px;
+  height: 3px;
+  animation-duration: 13s;
+  opacity: 0.4;
+}
+.login-bridge-glow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-terra-300) 45%, transparent) 35%,
+    color-mix(in srgb, var(--color-terra-400) 55%, transparent) 50%,
+    color-mix(in srgb, var(--color-terra-300) 45%, transparent) 65%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--color-terra-300) 20%, transparent),
+    0 0 48px color-mix(in srgb, var(--color-terra-200) 12%, transparent);
+}
+.login-bridge-track {
+  position: absolute;
+  inset: 0;
+}
+.login-data-pulse {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-terra-400);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-terra-500) 50%, transparent);
+  transform: translate(-50%, -50%);
+}
+@keyframes loginParticleFloat {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.22;
+  }
+  50% {
+    transform: translate(5px, -9px);
+    opacity: 0.42;
+  }
+}
+@keyframes loginShineDrift {
+  0%,
+  100% {
+    opacity: 0.32;
+    transform: translateX(-6%);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateX(6%);
+  }
+}
+@keyframes loginEdgePulse {
+  0%,
+  100% {
+    opacity: 0.22;
+  }
+  50% {
+    opacity: 0.58;
+  }
+}
+@keyframes loginSubmitDot {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+.login-media-frame--connected::after {
+  content: '';
+  position: absolute;
+  top: 18%;
+  right: -1px;
+  bottom: 18%;
+  width: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--color-terra-400) 55%, transparent),
+    transparent
+  );
+  animation: loginEdgePulse 4.2s ease-in-out infinite;
+}
+.login-submit-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    color-mix(in srgb, white 22%, transparent) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.65s ease;
+}
+.login-submit-btn:hover:not(:disabled) .login-submit-shine {
+  transform: translateX(120%);
+}
+.login-submit-btn:hover:not(:disabled) {
+  background-color: var(--color-terra-600);
+}
+.login-submit-btn:focus-visible {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--color-terra-200) 90%, transparent),
+    0 4px 18px -4px rgba(176, 90, 53, 0.45);
+}
+.login-submit-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: loginSubmitDot 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-particle,
+  .login-media-shine--drift,
+  .login-media-frame--connected::after,
+  .login-submit-dot {
+    animation: none;
+  }
+}
+.login-hero-panel {
+  background: linear-gradient(
+    168deg,
+    var(--color-warm-50) 0%,
+    color-mix(in srgb, var(--color-terra-50) 55%, white) 45%,
+    var(--color-warm-50) 100%
+  );
+}
+.login-hero-glow {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(80px);
+  opacity: 0.85;
+}
+.login-hero-glow-a {
+  width: min(480px, 80vw);
+  height: min(480px, 80vw);
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-terra-200) 45%, transparent),
+    transparent 68%
+  );
+}
+.login-hero-glow-b {
+  width: min(360px, 60vw);
+  height: min(360px, 60vw);
+  right: -6%;
+  bottom: 6%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-terra-100) 55%, transparent),
+    transparent 70%
+  );
+}
+.login-hero-visual {
+  width: 100%;
+}
+.login-hero-image {
+  filter: drop-shadow(0 24px 48px rgba(46, 37, 32, 0.08));
+}
+.login-hero-glow-c {
+  width: min(280px, 45vw);
+  height: min(280px, 45vw);
+  left: 8%;
+  top: 18%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-terra-300) 35%, transparent),
+    transparent 72%
+  );
+}
+.login-hero-glow-bridge {
+  width: min(200px, 28vw);
+  height: min(420px, 70vh);
+  right: -4%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: radial-gradient(
+    ellipse at left center,
+    color-mix(in srgb, var(--color-terra-300) 40%, transparent),
+    transparent 72%
+  );
+}
+.login-hero-data-edge {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  z-index: 15;
+}
+.login-hero-data-dot {
+  position: absolute;
+  right: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--color-terra-400);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-terra-500) 45%, transparent);
+}
+.login-hero-caption {
+  font-size: var(--text-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-warm-500);
+}
+.login-anim-export-edge {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  overflow: hidden;
+  z-index: 12;
+}
+.login-anim-export-dot {
+  position: absolute;
+  right: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--color-terra-500);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-terra-400) 60%, transparent);
+}
+.login-hero-grid {
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--color-warm-300) 18%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-warm-300) 18%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, black 15%, transparent 72%);
+}
+.login-media-frame {
+  aspect-ratio: 16 / 11;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-terra-200) 70%, white),
+    color-mix(in srgb, var(--color-warm-200) 50%, white)
+  );
+  box-shadow:
+    0 28px 64px -28px rgba(46, 37, 32, 0.18),
+    0 0 0 1px color-mix(in srgb, var(--color-warm-200) 80%, white);
+}
+.login-media-frame--connected {
+  box-shadow:
+    0 28px 64px -28px rgba(46, 37, 32, 0.18),
+    0 0 0 1px color-mix(in srgb, var(--color-warm-200) 80%, white),
+    12px 0 40px -16px color-mix(in srgb, var(--color-terra-300) 25%, transparent);
+}
+.login-media-inner {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 11px;
+  background: linear-gradient(
+    168deg,
+    var(--color-warm-50) 0%,
+    color-mix(in srgb, var(--color-terra-50) 80%, white) 50%,
+    var(--color-warm-100) 100%
+  );
+}
+.login-media-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    color-mix(in srgb, white 35%, transparent) 50%,
+    transparent 60%
+  );
+  opacity: 0.45;
+}
+.login-media-shine--drift {
+  animation: loginShineDrift 12s ease-in-out infinite;
+}
+.login-hero-placeholder {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--color-terra-50) 90%, white),
+    var(--color-warm-50)
+  );
+}
+.login-hero-ring {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--color-terra-300) 45%, transparent);
+  pointer-events: none;
+}
+.login-hero-ring-a {
+  inset: 12%;
+}
+.login-hero-ring-b {
+  inset: 22%;
+  border-color: color-mix(in srgb, var(--color-terra-200) 35%, transparent);
+}
+.login-media-inner--anim {
+  min-height: 320px;
+}
+.login-hero-animation {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-terra-50) 70%, white) 0%,
+    var(--color-warm-50) 55%,
+    color-mix(in srgb, var(--color-warm-100) 80%, white) 100%
+  );
+}
+.login-anim-scene {
+  min-height: 280px;
+}
+.login-anim-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(56px);
+  pointer-events: none;
+}
+.login-anim-orb-a {
+  width: 140px;
+  height: 140px;
+  left: 4%;
+  top: 12%;
+  background: color-mix(in srgb, var(--color-terra-300) 40%, transparent);
+}
+.login-anim-orb-b {
+  width: 120px;
+  height: 120px;
+  right: 6%;
+  bottom: 14%;
+  background: color-mix(in srgb, var(--color-terra-200) 50%, transparent);
+}
+.login-anim-flow-card {
+  box-shadow: 0 8px 24px -10px rgba(46, 37, 32, 0.18);
+}
+.login-anim-progress {
+  box-shadow: 0 0 12px -2px color-mix(in srgb, var(--color-terra-500) 50%, transparent);
+}
+.login-anim-connectors {
+  z-index: 5;
+}
+.login-panel {
+  background: linear-gradient(
+    165deg,
+    var(--color-warm-50) 0%,
+    #ffffff 38%,
+    color-mix(in srgb, var(--color-terra-50) 48%, white) 100%
+  );
+}
+.login-panel-radial {
+  background: radial-gradient(
+    ellipse 85% 70% at 72% 42%,
+    color-mix(in srgb, var(--color-terra-100) 55%, transparent),
+    transparent 68%
+  );
+}
+.login-panel-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(72px);
+  pointer-events: none;
+}
+.login-panel-orb-a {
+  width: min(420px, 70vw);
+  height: min(420px, 70vw);
+  right: -8%;
+  top: 8%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-terra-200) 50%, transparent),
+    transparent 68%
+  );
+}
+.login-panel-orb-b {
+  width: min(320px, 55vw);
+  height: min(320px, 55vw);
+  left: -6%;
+  bottom: 10%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-terra-100) 60%, transparent),
+    transparent 70%
+  );
+}
+.login-glass-card {
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, white 78%, var(--color-warm-200));
+  background: linear-gradient(
+    158deg,
+    color-mix(in srgb, white 96%, transparent) 0%,
+    color-mix(in srgb, white 88%, var(--color-warm-50)) 48%,
+    color-mix(in srgb, var(--color-terra-50) 35%, white) 100%
+  );
+  backdrop-filter: blur(24px) saturate(1.05);
+  -webkit-backdrop-filter: blur(24px) saturate(1.05);
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, white 92%, transparent) inset,
+    0 32px 72px -28px rgba(46, 37, 32, 0.16),
+    0 12px 32px -16px rgba(204, 120, 92, 0.09),
+    -8px 0 32px -20px color-mix(in srgb, var(--color-terra-200) 18%, transparent);
+}
+.login-glass-card--premium {
+  transition:
+    box-shadow 0.45s ease,
+    transform 0.45s ease;
+}
+.login-glass-card--premium:hover {
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, white 92%, transparent) inset,
+    0 36px 80px -30px rgba(46, 37, 32, 0.17),
+    0 14px 36px -14px rgba(204, 120, 92, 0.11),
+    -10px 0 36px -18px color-mix(in srgb, var(--color-terra-300) 22%, transparent);
+}
+.login-card-inner-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 90% 55% at 50% -8%,
+    color-mix(in srgb, var(--color-terra-100) 40%, transparent),
+    transparent 58%
+  );
+  opacity: 0.85;
+}
+.login-card-edge-light {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 0 color-mix(in srgb, white 85%, transparent);
+  pointer-events: none;
+}
+.login-title {
+  text-wrap: balance;
+}
+.login-subtitle {
+  text-wrap: pretty;
+}
+.login-field-wrap {
+  border-radius: 8px;
+  transition: transform 0.25s ease;
+}
+.login-field-wrap--focus {
+  transform: translateY(-1px);
+}
+.login-input {
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.3s ease,
+    background-color 0.25s ease;
+}
+.login-input:hover:not(:disabled):not(:focus) {
+  border-color: var(--color-warm-300);
+  background-color: color-mix(in srgb, white 98%, var(--color-warm-50));
+}
+.login-input:focus {
+  border-color: var(--color-terra-500);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--color-terra-100) 90%, transparent),
+    0 4px 20px -6px color-mix(in srgb, var(--color-terra-400) 32%, transparent);
+}
+.login-secure-note {
+  transition: opacity 0.3s ease;
+}
+.login-secure-icon {
+  box-shadow: 0 2px 8px -4px color-mix(in srgb, var(--color-terra-400) 35%, transparent);
+}
+.login-password-toggle {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.login-password-toggle:hover {
+  background-color: var(--color-warm-100);
+  color: var(--color-warm-800);
+}
+.login-password-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-terra-100);
+}
+.login-forgot-link {
+  position: relative;
+  transition: color 0.2s ease;
+}
+.login-forgot-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+.login-forgot-link:hover {
+  color: var(--color-terra-700);
+}
+.login-forgot-link:hover::after {
+  transform: scaleX(1);
+}
+.login-forgot-link:focus-visible {
+  outline: none;
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px var(--color-terra-100);
+}
+.login-submit-btn {
+  box-shadow: 0 4px 16px -4px rgba(176, 90, 53, 0.42);
+}
+.login-submit-glow-ring {
+  border-radius: inherit;
+}
+.auth-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+}
+.auth-orb-a {
+  width: 420px;
+  height: 420px;
+  left: -80px;
+  top: 10%;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.35), transparent 70%);
+  animation: authOrbDrift 14s ease-in-out infinite;
+}
+.auth-orb-b {
+  width: 360px;
+  height: 360px;
+  right: -40px;
+  bottom: 8%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.4), transparent 70%);
+  animation: authOrbDrift 18s ease-in-out infinite reverse;
+}
+.auth-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+}
+.auth-particles::before,
+.auth-particles::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.35) 1px, transparent 1px);
+  background-size: 120px 120px;
+  opacity: 0.15;
+  animation: authParticles 40s linear infinite;
+}
+.auth-particles::after {
+  animation-duration: 55s;
+  animation-direction: reverse;
+  opacity: 0.1;
+}
+.auth-glass {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(16px);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.auth-card {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.92), rgba(11, 18, 36, 0.88));
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  padding: 2rem 1.75rem;
+}
+.auth-spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 2px solid var(--color-warm-200);
+  border-top-color: var(--color-terra-500);
+  animation: authSpin 0.8s linear infinite;
+}
+@keyframes authOrbDrift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(24px, -16px) scale(1.05);
+  }
+}
+@keyframes authParticles {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-120px);
+  }
+}
+@keyframes authSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-privacy-link {
+  position: relative;
+  transition: color 0.18s ease;
+}
+.login-privacy-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.22s ease;
+  opacity: 0.55;
+}
+.login-privacy-link:hover {
+  color: var(--color-warm-800);
+}
+.login-privacy-link:hover::after {
+  transform: scaleX(1);
+}
+.login-privacy-link:focus-visible {
+  outline: none;
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px var(--color-terra-100);
+}

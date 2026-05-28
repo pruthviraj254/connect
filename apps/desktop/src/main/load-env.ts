@@ -1,3 +1,4 @@
+import { app } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,5 +19,8 @@ function loadEnvFrom(startDir: string): boolean {
   return false;
 }
 
-const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-loadEnvFrom(process.cwd()) || loadEnvFrom(moduleDir);
+// Packaged apps must not load a repo .env from the user's cwd (e.g. opening from the dev tree).
+if (!app.isPackaged) {
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+  loadEnvFrom(process.cwd()) || loadEnvFrom(moduleDir);
+}

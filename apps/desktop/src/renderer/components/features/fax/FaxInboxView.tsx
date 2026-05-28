@@ -23,7 +23,7 @@ import {
   sendFaxFromPdf,
 } from '@/lib/fax-print';
 import { PdfPreviewPanel } from '@/components/features/fax/PdfPreviewPanel';
-import { isElectronApp } from '@/lib/auth/auth-actions';
+import { isElectronApp } from '@/lib/electron';
 
 const faxSchema = z.object({
   to: z.string().min(8, 'Enter a fax destination number'),

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PharmacyWebsiteData } from '@rx-connect/shared';
 import { ChevronLeft, ChevronRight, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { isElectronApp } from '@/lib/auth/auth-actions';
+import { isElectronApp } from '@/lib/electron';
 import {
   defaultWebsiteData,
   initWebsiteSite,
@@ -15,7 +15,7 @@ import {
   startWebsitePreview,
   stopWebsitePreview,
 } from '@/lib/website-builder';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
 import { BuilderStepNav, type BuilderStep } from './BuilderStepNav';
 import { PreviewPanel } from './PreviewPanel';
@@ -43,7 +43,7 @@ function pharmacyIdFromEmail(email: string | null): string {
 }
 
 export function WebsiteBuilderView() {
-  const email = useAuthStore((s) => s.email);
+  const email = useAuthStore((s) => s.session?.user.email ?? null);
   const pharmacyId = pharmacyIdFromEmail(email);
 
   const [step, setStep] = useState<StepId>('info');
