@@ -31,6 +31,7 @@ env:
   NEXT_PUBLIC_RX_CONNECT_INGEST_SECRET: ${{ secrets.RX_CONNECT_INGEST_SECRET }}
   NEXT_PUBLIC_RX_CONNECT_DEV_SKIP_AUTH: 'true'
   RX_CONNECT_DEV_SKIP_AUTH: 'true'
+  UPDATER_GH_TOKEN: ${{ secrets.UPDATER_GH_TOKEN }}
 
 jobs:
   build-windows-staging:

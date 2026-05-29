@@ -100,18 +100,20 @@ export async function configureUpdateFeed(autoUpdater: AppUpdater): Promise<GitH
   // Staging GitHub releases are prereleases; prod must ignore them on the "latest" channel.
   autoUpdater.allowPrerelease = target.channel === 'staging';
 
-  if (target.channel) {
-    autoUpdater.channel = target.channel;
-  }
-
   if (target.channel === 'staging') {
     const genericUrl = await resolveStagingFeedUrl(target);
     if (genericUrl) {
+      // `genericUrl` is the full staging.yml asset URL. Do not set `autoUpdater.channel`
+      // here — electron-updater would append staging.yml again (.../staging.yml/staging.yml).
       autoUpdater.setFeedURL({ provider: 'generic', url: genericUrl });
       log.info(`${TAG} staging generic feed configured`, { url: genericUrl });
       return target;
     }
     log.warn(`${TAG} no staging.yml found via GitHub API — falling back to github provider`);
+  }
+
+  if (target.channel) {
+    autoUpdater.channel = target.channel;
   }
 
   autoUpdater.setFeedURL({
