@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { app } from 'electron';
 
+import { getBakedChannel } from './build-constants.js';
+
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(moduleDir, '../../../..');
 
@@ -25,7 +27,7 @@ if (!app.isPackaged) {
   }
 }
 
-const DEFAULT_API_BASE_URL = 'https://portal-api.myonerx.com/api';
+const DEFAULT_API_BASE_URL = 'https://portal-api.myonerx.ca/api';
 const DEFAULT_PORTAL_API_BASE_URL = 'https://portal-api.myonerx.ca';
 const DEFAULT_HTTP_TIMEOUT_MS = 15_000;
 const DEFAULT_AUTH_REFRESH_SKEW_MS = 60_000;
@@ -48,6 +50,7 @@ function readBooleanEnv(name: string, defaultWhenUnset: boolean): boolean {
 
 declare const __RX_API_BASE_URL__: string | undefined;
 declare const __RX_INGEST_SECRET__: string | undefined;
+declare const __RX_DEV_SKIP_AUTH__: boolean | undefined;
 
 function bakedApiBaseUrl(): string | undefined {
   try {
@@ -69,6 +72,23 @@ function bakedIngestSecret(): string | undefined {
   }
 }
 
+/** True when staging CI/local build baked skip-auth at compile time (never on production channel). */
+function bakedDevSkipAuth(): boolean {
+  try {
+    return __RX_DEV_SKIP_AUTH__ === true;
+  } catch {
+    return false;
+  }
+}
+
+function isDevSkipAuthEnabled(): boolean {
+  if (!app.isPackaged) {
+    return readBooleanEnv('RX_CONNECT_DEV_SKIP_AUTH', false);
+  }
+  // Packaged installers: skip only on staging channel builds with env set at compile time.
+  return bakedDevSkipAuth() && getBakedChannel() === 'staging';
+}
+
 const isDev = !app.isPackaged && process.env.NODE_ENV !== 'production';
 
 export const config = Object.freeze({
@@ -88,7 +108,7 @@ export const config = Object.freeze({
     process.env.RX_CONNECT_INGEST_SECRET?.trim() ||
     bakedIngestSecret() ||
     DEFAULT_INGEST_SECRET,
-  devSkipAuth: readBooleanEnv('RX_CONNECT_DEV_SKIP_AUTH', false) && !app.isPackaged,
+  devSkipAuth: isDevSkipAuthEnabled(),
 });
 
 export type AppConfig = typeof config;

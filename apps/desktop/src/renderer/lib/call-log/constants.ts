@@ -1,8 +1,8 @@
-/** Temporary until auth provides the logged-in user's pharmacy id. */
+/** @deprecated Dev skip auth uses authService dev pharmacy; call log requires login session. */
 export const DEV_PHARMACY_ID = 'BC_00022';
 
 /** Production API (env override: NEXT_PUBLIC_API_BASE_URL). */
-export const DEFAULT_API_BASE_URL = 'https://portal-api.myonerx.com/api';
+export const DEFAULT_API_BASE_URL = 'https://portal-api.myonerx.ca/api';
 
 /** CDR ingest key (env override: NEXT_PUBLIC_RX_CONNECT_INGEST_SECRET). */
 export const DEFAULT_RX_CONNECT_INGEST_SECRET =

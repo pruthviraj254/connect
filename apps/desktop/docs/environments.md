@@ -32,12 +32,25 @@ pnpm --filter @rx-connect/desktop run dev
 RX_CONNECT_CHANNEL=staging pnpm --filter @rx-connect/desktop run dev
 ```
 
-Or set in repo-root `.env`:
+Or set in repo-root `.env` (copy from `.env.example`; `.env` is gitignored):
 
 ```env
 NEXT_PUBLIC_APP_ENV=staging
 NEXT_PUBLIC_API_BASE_URL=https://api.staging.onerx.com
 ```
+
+**Local vs CI env:**
+
+| Context             | Source                               | Notes                                                                                |
+| ------------------- | ------------------------------------ | ------------------------------------------------------------------------------------ |
+| Local dev           | Repo-root `.env`                     | Loaded by `scripts/load-env.cjs` (renderer) and `main/config.ts` (main)              |
+| CI / release builds | GitHub Actions `env:` + vars/secrets | No `.env` file — URLs and secrets injected before `build:renderer` and `dist:*`      |
+| Packaged main       | Vite `define` (`__RX_*__`)           | API base + ingest secret baked at compile time from `NEXT_PUBLIC_*` / `RX_CONNECT_*` |
+| Packaged renderer   | Next build inlines `NEXT_PUBLIC_*`   | Set in workflow `env:` block                                                         |
+
+Ingest secret naming: set `RX_CONNECT_INGEST_SECRET` in local `.env`. CI maps the GitHub secret `RX_CONNECT_INGEST_SECRET` → `NEXT_PUBLIC_RX_CONNECT_INGEST_SECRET` in workflows; main accepts either name.
+
+**Staging skip login:** staging workflows set `NEXT_PUBLIC_RX_CONNECT_DEV_SKIP_AUTH=true` and `RX_CONNECT_DEV_SKIP_AUTH=true` so QA can use **Continue without sign-in** on the installed Rx-Connect Staging app. Production workflows must not set these.
 
 ---
 

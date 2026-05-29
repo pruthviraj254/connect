@@ -33,6 +33,26 @@ export type HttpBase = 'api' | 'portal';
 
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
 
+/** Join API base URL with a path without dropping a trailing `/api` segment. */
+export function resolveRequestUrl(baseUrl: string, path: string): string {
+  const trimmedBase = baseUrl.trim().replace(/\/+$/, '');
+  const questionIndex = path.indexOf('?');
+  const pathOnly = questionIndex >= 0 ? path.slice(0, questionIndex) : path;
+  const query = questionIndex >= 0 ? path.slice(questionIndex) : '';
+  const normalizedPath = pathOnly.startsWith('/') ? pathOnly : `/${pathOnly}`;
+  const origin = new URL(trimmedBase).origin;
+
+  if (normalizedPath === '/api' || normalizedPath.startsWith('/api/')) {
+    return `${origin}${normalizedPath}${query}`;
+  }
+
+  if (trimmedBase.endsWith('/api')) {
+    return `${trimmedBase}${normalizedPath}${query}`;
+  }
+
+  return `${trimmedBase}/api${normalizedPath}${query}`;
+}
+
 function isRetryable(status: number | null): boolean {
   if (status === null) return true;
   return RETRYABLE_STATUSES.has(status);
@@ -117,7 +137,7 @@ async function executeRequest<T>(
   authRetried: boolean,
 ): Promise<T> {
   const baseUrl = base === 'portal' ? config.portalApiBaseUrl : config.apiBaseUrl;
-  const url = new URL(path, baseUrl).toString();
+  const url = resolveRequestUrl(baseUrl, path);
   const method = options.method ?? 'GET';
   const timeoutMs = options.timeoutMs ?? config.httpTimeoutMs;
   const maxRetries = options.maxRetries ?? 2;

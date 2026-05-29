@@ -45,6 +45,32 @@ const virtualPrinterPkgScripts = path.join(
   'pkg',
 );
 
+/** Copy hoisted keytar into the Forge package when pnpm did not place it under buildPath/node_modules. */
+async function ensureKeytarInPackage(buildPath: string): Promise<void> {
+  const destDir = path.join(buildPath, 'node_modules', 'keytar');
+  const destPkg = path.join(destDir, 'package.json');
+  if (fsSync.existsSync(destPkg)) {
+    console.log('[forge] keytar already present in package');
+    return;
+  }
+
+  const candidates = [
+    path.join(__dirname, 'node_modules', 'keytar'),
+    path.join(__dirname, '..', '..', 'node_modules', 'keytar'),
+  ];
+  const src = candidates.find((candidate) => fsSync.existsSync(path.join(candidate, 'package.json')));
+  if (!src) {
+    console.warn(
+      '[forge] keytar source not found in node_modules — packaged app may crash at startup with "Cannot find module keytar"',
+    );
+    return;
+  }
+
+  await fs.mkdir(path.dirname(destDir), { recursive: true });
+  await fs.cp(src, destDir, { recursive: true });
+  console.log('[forge] copied keytar into package from', src);
+}
+
 const virtualPrinterResource = path.join(__dirname, 'resources', 'virtual-printer');
 const ghostscriptWinResource = path.join(__dirname, 'resources', 'ghostscript-win');
 const hugoTemplateResource = path.join(__dirname, 'resources', 'hugo-template');
@@ -171,6 +197,8 @@ const config: ForgeConfig = {
       } catch (err) {
         console.warn('[forge] could not patch package.json productName', err);
       }
+
+      await ensureKeytarInPackage(buildPath);
     },
   },
 };

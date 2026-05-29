@@ -19,6 +19,12 @@ const ingestSecret =
   process.env.NEXT_PUBLIC_RX_CONNECT_INGEST_SECRET?.trim() ||
   '166be1ad06e5c1e9990ccf573143e1ebf1f47301ce45b7bb463b75be5c2a2638';
 
+/** Staging CI/local dist only — never baked into production channel builds. */
+const devSkipAuthAtBuild =
+  channelProfile.id === 'staging' &&
+  (process.env.RX_CONNECT_DEV_SKIP_AUTH?.trim() === 'true' ||
+    process.env.RX_CONNECT_DEV_SKIP_AUTH === '1');
+
 /** Match @electron-forge/plugin-vite defaults + native addons (keytar `.node` must not be bundled). */
 const mainExternals = [
   'electron',
@@ -52,6 +58,7 @@ export default defineConfig({
     __RX_BUILD_CHANNEL__: JSON.stringify(channelProfile.id),
     __RX_API_BASE_URL__: JSON.stringify(apiBaseUrl),
     __RX_INGEST_SECRET__: JSON.stringify(ingestSecret),
+    __RX_DEV_SKIP_AUTH__: JSON.stringify(devSkipAuthAtBuild),
   },
   resolve: {
     alias: {

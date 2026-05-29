@@ -29,6 +29,8 @@ env:
   RX_CONNECT_CHANNEL: staging
   NEXT_PUBLIC_API_BASE_URL: ${{ vars.STAGING_API_BASE_URL || 'https://api.staging.onerx.com/api' }}
   NEXT_PUBLIC_RX_CONNECT_INGEST_SECRET: ${{ secrets.RX_CONNECT_INGEST_SECRET }}
+  NEXT_PUBLIC_RX_CONNECT_DEV_SKIP_AUTH: 'true'
+  RX_CONNECT_DEV_SKIP_AUTH: 'true'
 
 jobs:
   build-windows-staging:
@@ -54,6 +56,10 @@ jobs:
         run: pnpm install --frozen-lockfile
         env:
           HUSKY: '0'
+
+      - name: Rebuild native modules for Electron
+        run: pnpm exec electron-rebuild -f -w keytar
+        working-directory: apps/desktop
 
       - name: Build shared package
         run: pnpm --filter @rx-connect/shared run build

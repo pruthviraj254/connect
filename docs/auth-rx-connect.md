@@ -28,13 +28,14 @@ Confirm with backend that `rx-connect` accepts `deviceId` without breaking login
 
 ## Environment (main)
 
-| Variable                         | Purpose                                       |
-| -------------------------------- | --------------------------------------------- |
-| `RX_CONNECT_PORTAL_API_BASE_URL` | `POST /api/auth/login`, refresh, logout       |
-| `RX_CONNECT_API_BASE_URL`        | Product API (CDR, etc.)                       |
-| `RX_CONNECT_HTTP_TIMEOUT_MS`     | Request timeout                               |
-| `RX_CONNECT_INGEST_SECRET`       | CDR ingest header (main only)                 |
-| `RX_CONNECT_DEV_SKIP_AUTH`       | Dev-only skip login (`true` + unpackaged app) |
+| Variable                               | Purpose                                                                                              |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `RX_CONNECT_PORTAL_API_BASE_URL`       | `POST /api/auth/login`, refresh, logout                                                              |
+| `RX_CONNECT_API_BASE_URL`              | Product API (CDR, etc.)                                                                              |
+| `RX_CONNECT_HTTP_TIMEOUT_MS`           | Request timeout                                                                                      |
+| `RX_CONNECT_INGEST_SECRET`             | CDR ingest header (main only)                                                                        |
+| `NEXT_PUBLIC_RX_CONNECT_INGEST_SECRET` | Same ingest key baked into renderer at build (CI sets this from `RX_CONNECT_INGEST_SECRET` secret)   |
+| `RX_CONNECT_DEV_SKIP_AUTH`             | Skip login: local unpackaged dev, or **staging CI builds** (baked at compile time; never production) |
 
 ## Renderer (non-secret)
 
@@ -47,11 +48,16 @@ Confirm with backend that `rx-connect` accepts `deviceId` without breaking login
 
 Until portal login for `rx-connect` is live:
 
-1. Set `RX_CONNECT_DEV_SKIP_AUTH=true` in repo-root `.env`.
-2. Set `NEXT_PUBLIC_RX_CONNECT_DEV_SKIP_AUTH=true` for the login button.
-3. Use **Developer: Continue without sign-in** on `/login/`.
+**Local dev:** set in repo-root `.env`:
 
-**Remove before production release:** grep for `devSkip`, `DEV_SKIP`, and `RX_CONNECT_DEV_SKIP_AUTH`.
+1. `RX_CONNECT_DEV_SKIP_AUTH=true`
+2. `NEXT_PUBLIC_RX_CONNECT_DEV_SKIP_AUTH=true`
+
+**Staging installer (CI):** staging workflows set both vars to `'true'`. Main bakes `__RX_DEV_SKIP_AUTH__` only when `RX_CONNECT_CHANNEL=staging` — production builds ignore skip even if env is mis-set.
+
+Use **Developer: Continue without sign-in** on `/login/`.
+
+**Never enable skip on production** (`main` workflows / `v*` tags without `-staging`).
 
 ## Session expiry
 

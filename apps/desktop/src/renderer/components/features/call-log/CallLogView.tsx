@@ -22,7 +22,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { fetchPharmacyCdrs } from '@/lib/api/cdr';
-import { DEV_PHARMACY_ID } from '@/lib/call-log/constants';
 import { useAuthStore } from '@/store/authStore';
 import type { CallDisposition, CallLogRecord } from '@/lib/call-log/types';
 import { cn } from '@/lib/utils';
@@ -80,7 +79,7 @@ function CallDetailPanel({ call }: { call: CallLogRecord }) {
 }
 
 export function CallLogView() {
-  const pharmacyId = useAuthStore((s) => s.session?.user.pharmacyId) ?? DEV_PHARMACY_ID;
+  const pharmacyId = useAuthStore((s) => s.session?.user.pharmacyId);
   const [q, setQ] = useState('');
   const [direction, setDirection] = useState<string>('all');
   const [disposition, setDisposition] = useState<string>('all');
@@ -91,13 +90,14 @@ export function CallLogView() {
   const { data, isLoading, isError, error, isFetching } = useQuery({
     queryKey: ['call-log', pharmacyId, direction, disposition, deferredSearch],
     queryFn: () =>
-      fetchPharmacyCdrs(pharmacyId, {
+      fetchPharmacyCdrs(pharmacyId!, {
         direction: direction as 'in' | 'out' | 'all',
         disposition: disposition as CallDisposition | 'all',
         search: deferredSearch || undefined,
         page: 1,
         limit: 50,
       }),
+    enabled: Boolean(pharmacyId),
   });
 
   const calls = useMemo(() => data?.items ?? [], [data?.items]);
@@ -115,11 +115,25 @@ export function CallLogView() {
   const errorMessage =
     error instanceof Error ? error.message : isError ? 'Failed to load call records.' : null;
 
+  if (!pharmacyId) {
+    return (
+      <>
+        <PageHeader
+          title="Call Log"
+          description="Sign in to view call detail records for your pharmacy."
+        />
+        <Card className="p-8 text-center text-muted-foreground">
+          No pharmacy is linked to this session. Sign in again to load call records.
+        </Card>
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader
         title="Call Log"
-        description={`VoIP call detail records for pharmacy ${pharmacyId}.`}
+        description={`VoIP call detail records for ${pharmacyId}.`}
       />
 
       <div className="grid grid-cols-3 gap-3 mb-4">

@@ -11,7 +11,7 @@ export function registerCdrHandlers(): void {
     channel: IpcChannel.CdrFetchList,
     schema: schemas.cdrFetchList,
     handler: async (payload) => {
-      const path = `/admin/pharmacies/${encodeURIComponent(payload.pharmacyId)}/rx-connect/cdrs`;
+      const path = `/api/admin/pharmacies/${encodeURIComponent(payload.pharmacyId)}/rx-connect/cdrs`;
       const search = new URLSearchParams();
       for (const [key, value] of Object.entries(payload.params)) {
         search.set(key, String(value));

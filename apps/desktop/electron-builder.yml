@@ -13,6 +13,9 @@ files:
   - '**/*'
 
 asar: true
+asarUnpack:
+  - '**/keytar/**'
+npmRebuild: true
 
 win:
   # Must match forge packager executableName — shortcuts/NSIS target the wrong file otherwise.

@@ -55,6 +55,10 @@ jobs:
         env:
           HUSKY: '0'
 
+      - name: Rebuild native modules for Electron
+        run: pnpm exec electron-rebuild -f -w keytar
+        working-directory: apps/desktop
+
       - name: Build shared package
         run: pnpm --filter @rx-connect/shared run build
 
