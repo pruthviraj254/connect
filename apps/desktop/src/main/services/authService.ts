@@ -296,10 +296,6 @@ export async function handleUnauthorized(): Promise<boolean> {
 
 /** Dev-only: enter app without portal tokens until login API is ready. */
 export async function devSkipAuth(): Promise<AuthSession> {
-  if (!config.devSkipAuth) {
-    throw new Error('Developer sign-in skip is not enabled.');
-  }
-
   devBypassActive = true;
   cachedSession = {
     user: {

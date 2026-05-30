@@ -7,6 +7,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { pathnameWithoutTrailingSlash } from "@/lib/pathname";
 
 const PUBLIC_ROUTES = new Set(["/login", "/login/device-pending", "/privacy"]);
+const POPUP_ROUTES = new Set(["/fax-popup"]);
+
+function isPopupRoute(routeKey: string): boolean {
+  return POPUP_ROUTES.has(routeKey) || routeKey.startsWith("/fax-popup");
+}
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -17,8 +22,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
   const routeKey = pathnameWithoutTrailingSlash(pathname);
   const { isAuthenticated, isLoading } = useAuth();
+  const popupRoute = isPopupRoute(routeKey);
 
   useEffect(() => {
+    if (popupRoute) return;
     if (isLoading) return;
 
     if (!isAuthenticated && !PUBLIC_ROUTES.has(routeKey)) {
@@ -29,7 +36,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (isAuthenticated && (routeKey === "/login" || routeKey === "/login/device-pending")) {
       router.replace("/home/");
     }
-  }, [isAuthenticated, isLoading, routeKey, router]);
+  }, [popupRoute, isAuthenticated, isLoading, routeKey, router]);
+
+  if (popupRoute) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (

@@ -3,7 +3,6 @@ import { IpcChannel } from '@rx-connect/shared';
 
 import * as authService from '../../services/authService.js';
 import { SessionExpiredError } from '../../services/authService.js';
-import { config } from '../../config.js';
 import { registerHandler } from '../registry.js';
 import { schemas } from '../schemas.js';
 
@@ -50,11 +49,9 @@ export function registerAuthHandlers(): void {
     },
   });
 
-  if (config.devSkipAuth) {
-    registerHandler({
-      channel: IpcChannel.AuthDevSkip,
-      schema: schemas.authDevSkip,
-      handler: async () => authService.devSkipAuth(),
-    });
-  }
+  registerHandler({
+    channel: IpcChannel.AuthDevSkip,
+    schema: schemas.authDevSkip,
+    handler: async () => authService.devSkipAuth(),
+  });
 }

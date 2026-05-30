@@ -8,6 +8,7 @@ export function useAuth() {
   const error = useAuthStore((s) => s.error);
   const login = useAuthStore((s) => s.login);
   const devSkip = useAuthStore((s) => s.devSkip);
+  const skipLogin = useAuthStore((s) => s.skipLogin);
   const logout = useAuthStore((s) => s.logout);
   const clearError = useAuthStore((s) => s.clearError);
   const expireSession = useAuthStore((s) => s.expireSession);
@@ -20,6 +21,7 @@ export function useAuth() {
     isLoading: status === 'idle' || status === 'loading',
     login,
     devSkip,
+    skipLogin,
     logout,
     clearError,
     expireSession,

@@ -18,7 +18,6 @@ import { formatAuthError, isDeviceApprovalPending, loginSuccessMessage } from '@
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ease = [0.22, 1, 0.36, 1] as const;
-const devSkipEnabled = process.env.NEXT_PUBLIC_RX_CONNECT_DEV_SKIP_AUTH === 'true';
 
 const container = {
   hidden: { opacity: 0 },
@@ -39,7 +38,7 @@ const item = {
 
 export function LoginForm() {
   const router = useRouter();
-  const { login, devSkip, clearError, isLoading } = useAuth();
+  const { login, skipLogin, clearError, isLoading } = useAuth();
   const sessionExpiredMessage = useAuthStore((s) => s.error);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -83,15 +82,14 @@ export function LoginForm() {
     }
   }
 
-  async function handleDevSkip() {
-    if (!window.api?.auth?.devSkip) return;
+  async function handleSkipLogin() {
     setSubmitting(true);
     try {
-      const session = await devSkip();
+      const session = await skipLogin();
       toast.success(loginSuccessMessage(session));
       router.replace('/home/');
     } catch (err) {
-      toast.error(formatAuthError(err, 'Could not enter developer mode.'));
+      toast.error(formatAuthError(err, 'Could not continue without sign-in.'));
     } finally {
       setSubmitting(false);
     }
@@ -230,18 +228,16 @@ export function LoginForm() {
             <LoginSubmitButton busy={busy} />
           </motion.div>
 
-          {devSkipEnabled && typeof window !== 'undefined' && window.api?.auth?.devSkip ? (
-            <motion.div variants={item} className="pt-2">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void handleDevSkip()}
-                className="w-full rounded-md border border-dashed border-warm-300 px-4 py-2 text-xs font-medium text-warm-600 transition-colors hover:border-terra-400 hover:text-terra-700 disabled:opacity-50"
-              >
-                Developer: Continue without sign-in
-              </button>
-            </motion.div>
-          ) : null}
+          <motion.div variants={item} className="pt-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void handleSkipLogin()}
+              className="w-full rounded-md border border-dashed border-warm-300 px-4 py-2 text-xs font-medium text-warm-600 transition-colors hover:border-terra-400 hover:text-terra-700 disabled:opacity-50"
+            >
+              Continue without sign-in
+            </button>
+          </motion.div>
         </form>
 
         <motion.footer
