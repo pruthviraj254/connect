@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { dialog, ipcMain } from 'electron';
 import log from 'electron-log';
-import { IpcChannel, type IpcResult, type PrintJobRecord } from '@rx-connect/shared';
+import { IpcChannel, type IpcResult, type PrintJobRecord } from '@rx-manager/shared';
 import {
   deletePrintJob,
   getPrintJobAbsolutePdfPath,

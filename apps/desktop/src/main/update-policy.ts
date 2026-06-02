@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import log from 'electron-log';
 import semver from 'semver';
-import type { UpdatePolicy } from '@rx-connect/shared';
+import type { UpdatePolicy } from '@rx-manager/shared';
 import { getBuildMetadata } from './build-metadata.js';
 import { resolveGitHubReleaseTarget } from './update-feed.js';
 
@@ -57,7 +57,7 @@ async function fetchPolicyViaContentsApi(
     headers: {
       Accept: 'application/vnd.github+json',
       Authorization: `Bearer ${token}`,
-      'User-Agent': 'Rx-Connect-Updater',
+      'User-Agent': 'Rx-Manager-Updater',
     },
   });
   if (!res.ok) {
@@ -78,7 +78,7 @@ export async function fetchUpdatePolicy(): Promise<UpdatePolicy | null> {
 
   try {
     const res = await fetchWithTimeout(rawUrl, {
-      headers: { 'User-Agent': 'Rx-Connect-Updater' },
+      headers: { 'User-Agent': 'Rx-Manager-Updater' },
     });
     if (res.ok) {
       const policy = (await res.json()) as UpdatePolicy;
@@ -120,7 +120,7 @@ export function isBelowMinimumVersion(current: string, minimum: string): boolean
 }
 
 export function defaultForcedMessage(): string {
-  return 'A required update is available. Rx-Connect will restart after the update finishes.';
+  return 'A required update is available. Rx-Manager will restart after the update finishes.';
 }
 
 export function bundledPolicyFallback(): UpdatePolicy | null {

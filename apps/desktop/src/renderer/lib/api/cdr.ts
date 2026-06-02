@@ -49,7 +49,7 @@ function unwrapListPayload(body: unknown): CdrListPayload {
 
 function assertApi(): NonNullable<typeof window.api> {
   if (!window.api?.cdr) {
-    throw new Error('CDR API is only available in the Rx-Connect desktop app.');
+    throw new Error('CDR API is only available in the Rx-Manager desktop app.');
   }
   return window.api;
 }

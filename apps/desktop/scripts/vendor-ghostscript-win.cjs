@@ -256,7 +256,7 @@ async function main() {
 
   fs.writeFileSync(
     path.join(DEST_ROOT, 'VENDOR.txt'),
-    `Ghostscript ${GS_TAG} (Windows x64) bundled for Rx-Connect print preview.\n` +
+    `Ghostscript ${GS_TAG} (Windows x64) bundled for Rx-Manager print preview.\n` +
       `Source: ${GS_URL}\n` +
       `License: AGPL — see COPYING in this folder.\n`,
     'utf8',

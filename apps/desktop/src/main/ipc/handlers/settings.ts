@@ -1,5 +1,5 @@
 import { ipcMain, app, nativeTheme } from 'electron';
-import { IpcChannel, type IpcResult } from '@rx-connect/shared';
+import { IpcChannel, type IpcResult } from '@rx-manager/shared';
 import { getStore } from '../../store.js';
 
 export function registerSettingsHandlers(): void {

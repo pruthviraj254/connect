@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-for candidate in "/Applications/Rx-Connect.app" "/Applications/Rx Connect.app"; do
+for candidate in "/Applications/Rx-Manager.app" "/Applications/Rx Manager.app"; do
   vp="${candidate}/Contents/Resources/virtual-printer/uninstall-macos.sh"
   if [[ -f "$vp" ]]; then
     exec bash "$vp"

@@ -845,11 +845,11 @@ gantt
 | Pattern                  | Use for                                                                                   |
 | ------------------------ | ----------------------------------------------------------------------------------------- |
 | **IPC → API proxy**      | Renderer calls main; main calls OneRx API with user auth token (not Vercel token)         |
-| **Shared types package** | Already `@rx-connect/shared` — add `PharmacySite`, `PublishJob`, `DomainStatus`           |
+| **Shared types package** | Already `@rx-manager/shared` — add `PharmacySite`, `PublishJob`, `DomainStatus`           |
 | **Optimistic UI**        | Save draft locally (electron-store), sync API in background                               |
 | **Preview iframe**       | `stagingUrl` from API; CSP `frame-src` allow `*.vercel.app` + `*.onerx.com`               |
 | **Forge packaging**      | Do **not** bundle Vercel token in ASAR; optional: bundle Hugo only for offline preview    |
-| **Next.js web admin**    | Extract wizard to `apps/web-admin` sharing `@rx-connect/shared` — same forms, no Electron |
+| **Next.js web admin**    | Extract wizard to `apps/web-admin` sharing `@rx-manager/shared` — same forms, no Electron |
 | **CI build**             | `pnpm build:site --pharmacyId=x` script invoked in Actions from API payload               |
 
 **Auth:** Use existing Rx-Connect login JWT for `POST /publish`; backend checks pharmacy role.

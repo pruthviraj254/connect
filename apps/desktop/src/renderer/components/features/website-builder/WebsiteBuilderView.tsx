@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { PharmacyWebsiteData } from '@rx-connect/shared';
+import type { PharmacyWebsiteData } from '@rx-manager/shared';
 import { ChevronLeft, ChevronRight, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { isElectronApp } from '@/lib/electron';
@@ -196,7 +196,7 @@ export function WebsiteBuilderView() {
           <Globe className="h-12 w-12 text-teal mx-auto" />
           <h1 className="text-xl font-semibold text-navy">Website Builder</h1>
           <p className="text-sm text-muted-foreground">
-            Open Rx-Connect on desktop to create and publish your pharmacy website.
+            Open Rx-Manager on desktop to create and publish your pharmacy website.
           </p>
         </div>
       </div>

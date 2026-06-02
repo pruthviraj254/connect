@@ -123,10 +123,10 @@ export function LoginForm() {
           <OneRxLogo size="md" />
           <motion.div className="space-y-2.5">
             <h1 className="login-title font-display text-[1.8125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-warm-900">
-              Rx-Connect
+              Rx-Manager
             </h1>
             <p className="login-subtitle max-w-[36ch] text-[15px] leading-[1.55] text-warm-600">
-              Operator portal for OneRx pharmacy VoIP and fax management.
+              Operator portal for OneRx pharmacy management — Rx-Connect fax, VoIP, and more.
             </p>
           </motion.div>
         </motion.header>

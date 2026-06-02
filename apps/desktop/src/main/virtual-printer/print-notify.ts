@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import type { PrintJobRecord } from '@rx-connect/shared';
+import type { PrintJobRecord } from '@rx-manager/shared';
 import { hideMainForPrintPopupIfNeeded } from '../lifecycle.js';
 import { openFaxPopup } from '../popup/fax-popup-window.js';
 import { refreshTrayMenu } from '../tray.js';

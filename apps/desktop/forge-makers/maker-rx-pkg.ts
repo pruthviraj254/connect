@@ -79,8 +79,8 @@ export default class MakerRxPKG extends MakerBase<MakerRxPkgConfig> {
       );
       console.warn(
         '[forge:rx-pkg] Before installing locally, remove both copies of the app:\n' +
-          '  sudo rm -rf /Applications/Rx-Connect.app\n' +
-          '  rm -rf out/Rx-Connect-darwin-arm64/Rx-Connect.app\n' +
+          '  sudo rm -rf /Applications/Rx-Manager.app\n' +
+          '  rm -rf out/Rx-Manager-darwin-arm64/Rx-Manager.app\n' +
           'Otherwise macOS may relocate the install and leave /Applications with broken symlinks.',
       );
     }

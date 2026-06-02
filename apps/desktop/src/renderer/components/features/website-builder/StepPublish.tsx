@@ -1,6 +1,6 @@
 'use client';
 
-import type { PharmacyWebsiteData } from '@rx-connect/shared';
+import type { PharmacyWebsiteData } from '@rx-manager/shared';
 import { ExternalLink, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

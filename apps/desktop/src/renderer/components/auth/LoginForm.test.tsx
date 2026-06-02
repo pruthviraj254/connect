@@ -38,9 +38,9 @@ vi.mock('@/store/authStore', () => ({
 }));
 
 describe('LoginForm', () => {
-  it('renders Rx-Connect branding', () => {
+  it('renders Rx-Manager branding', () => {
     render(<LoginForm />);
-    expect(screen.getByRole('heading', { name: /Rx-Connect/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Rx-Manager/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter your password/i)).toBeInTheDocument();
   });

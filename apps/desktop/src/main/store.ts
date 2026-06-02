@@ -1,7 +1,7 @@
 import { app } from 'electron';
 import Store from 'electron-store';
 
-import type { PharmacyWebsiteData } from '@rx-connect/shared';
+import type { PharmacyWebsiteData } from '@rx-manager/shared';
 
 type AppStoreSchema = {
   theme: 'system' | 'light' | 'dark';
@@ -27,7 +27,7 @@ let store: Store<AppStoreSchema> | null = null;
 export function initStore(): void {
   if (store) return;
   store = new Store<AppStoreSchema>({
-    name: 'rx-connect-config',
+    name: 'rx-manager-config',
     defaults,
   });
 }

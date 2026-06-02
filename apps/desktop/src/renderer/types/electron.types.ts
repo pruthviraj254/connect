@@ -1,4 +1,4 @@
-import type { ElectronAPI } from '@rx-connect/shared';
+import type { ElectronAPI } from '@rx-manager/shared';
 
 declare global {
   interface Window {

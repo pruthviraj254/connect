@@ -2,7 +2,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { BrowserWindow, dialog, ipcMain } from 'electron';
-import { IpcChannel, type IpcResult, type PrintJobRecord } from '@rx-connect/shared';
+import { IpcChannel, type IpcResult, type PrintJobRecord } from '@rx-manager/shared';
 import log from 'electron-log';
 import {
   closePopupForSender,

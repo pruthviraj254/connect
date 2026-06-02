@@ -1,1 +1,1 @@
-export const APP_NAME = 'Rx-Connect';
+export const APP_NAME = 'Rx-Manager';

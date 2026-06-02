@@ -1,8 +1,8 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import type { ZodType } from 'zod';
 
-import { IpcChannel } from '@rx-connect/shared';
-import type { IpcContracts, IpcRequest, IpcResponse } from '@rx-connect/shared';
+import { IpcChannel } from '@rx-manager/shared';
+import type { IpcContracts, IpcRequest, IpcResponse } from '@rx-manager/shared';
 
 import { isMainWebContents } from '../lib/mainWindow.js';
 import { serializeErrorForIpc } from '../lib/ipcErrors.js';

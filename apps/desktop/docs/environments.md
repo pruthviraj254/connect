@@ -23,13 +23,13 @@ Build switch: `RX_CONNECT_CHANNEL=production` (default) or `staging`.
 **Production-like (default):**
 
 ```bash
-pnpm --filter @rx-connect/desktop run dev
+pnpm --filter @rx-manager/desktop run dev
 ```
 
 **Staging-like:**
 
 ```bash
-RX_CONNECT_CHANNEL=staging pnpm --filter @rx-connect/desktop run dev
+RX_CONNECT_CHANNEL=staging pnpm --filter @rx-manager/desktop run dev
 ```
 
 Or set in repo-root `.env` (copy from `.env.example`; `.env` is gitignored):

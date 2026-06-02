@@ -24,7 +24,7 @@ async function readBundleMeta(appPath: string): Promise<{ identifier: string; ve
     CFBundleVersion?: string;
   };
   return {
-    identifier: info.CFBundleIdentifier ?? 'com.electron.rx-connect',
+    identifier: info.CFBundleIdentifier ?? 'com.electron.rx-manager',
     version: info.CFBundleShortVersionString ?? info.CFBundleVersion ?? '1.0.0',
   };
 }
@@ -62,7 +62,7 @@ export async function assertSelfContainedAppBundle(appPath: string): Promise<voi
     if (resolved !== appRoot && !resolved.startsWith(`${appRoot}${path.sep}`)) {
       throw new Error(
         `App bundle has external symlink: ${linkPath} -> ${linkTarget}. ` +
-          'Remove /Applications/Rx-Connect.app and out/Rx-Connect-darwin-arm64/Rx-Connect.app, ' +
+          'Remove /Applications/Rx-Manager.app and out/Rx-Manager-darwin-arm64/Rx-Manager.app, ' +
           'then rebuild with "pnpm run build:electron && pnpm run make:pkg".',
       );
     }

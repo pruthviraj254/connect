@@ -3,7 +3,7 @@
 set -euo pipefail
 
 APP_ROOT=""
-for candidate in "/Applications/Rx-Connect.app" "/Applications/Rx Connect.app"; do
+for candidate in "/Applications/Rx-Manager.app" "/Applications/Rx Manager.app"; do
   if [[ -d "$candidate/Contents/Resources/virtual-printer" ]]; then
     APP_ROOT="$candidate/Contents/Resources/virtual-printer"
     break
@@ -11,7 +11,7 @@ for candidate in "/Applications/Rx-Connect.app" "/Applications/Rx Connect.app"; 
 done
 
 if [[ -z "$APP_ROOT" ]]; then
-  echo "pkg postinstall: Rx-Connect.app not found in /Applications" >&2
+  echo "pkg postinstall: Rx-Manager.app not found in /Applications" >&2
   exit 0
 fi
 

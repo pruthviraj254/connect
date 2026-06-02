@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import type { PrintJobRecord } from '@rx-connect/shared';
+import type { PrintJobRecord } from '@rx-manager/shared';
 import log from 'electron-log';
 import { getWritableSpoolDir, RAW_PRINT_PORT } from './spool-paths.js';
 import { convertRawFileToPdf } from './gs-convert.js';

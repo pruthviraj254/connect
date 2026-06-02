@@ -1,11 +1,11 @@
 import { createRequire } from 'node:module';
 
-import type { AuthSession } from '@rx-connect/shared';
+import type { AuthSession } from '@rx-manager/shared';
 
 /** Runtime require so Vite does not statically bundle keytar's native `.node` addon. */
 const keytar = createRequire(import.meta.url)('keytar') as typeof import('keytar');
 
-const SERVICE_NAME = 'rx-connect-desktop';
+const SERVICE_NAME = 'rx-manager-desktop';
 const ACCESS_ACCOUNT = 'access_token';
 const REFRESH_ACCOUNT = 'refresh_token';
 const REMEMBER_ACCOUNT = 'remember_session';

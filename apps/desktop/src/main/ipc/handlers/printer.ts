@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { IpcChannel, type IpcResult, type PrinterInstallResult, type PrinterStatus } from '@rx-connect/shared';
+import { IpcChannel, type IpcResult, type PrinterInstallResult, type PrinterStatus } from '@rx-manager/shared';
 import {
   getInstalledPrinterDriver,
   installWindowsPrinterElevated,

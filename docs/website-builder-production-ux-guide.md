@@ -291,7 +291,7 @@ Electron calls these with **user JWT** — not `VERCEL_API_TOKEN`.
 | **React Query / SWR**  | Poll `jobId` during publish; show real steps                             |
 | **Optimistic save**    | Update UI immediately; rollback on API error                             |
 | **Zustand or context** | `siteDraft`, `publishJob`, `deploySettings`                              |
-| **Shared types**       | `@rx-connect/shared` — already has `PharmacyWebsiteData`                 |
+| **Shared types**       | `@rx-manager/shared` — already has `PharmacyWebsiteData`                 |
 | **toasts**             | Success/error (you use `sonner`) — add persistent banner for DNS pending |
 
 ### 8.4 IPC evolution

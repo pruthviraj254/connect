@@ -13,7 +13,7 @@ import {
   UPDATE_GATE_BLOCKING_STATUSES,
   type UpdateGateState,
   type UpdateGateStatus,
-} from '@rx-connect/shared';
+} from '@rx-manager/shared';
 import { isElectronApp } from '@/lib/electron';
 import {
   checkForUpdates as checkForUpdatesIpc,

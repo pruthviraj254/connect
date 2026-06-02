@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
-import type { FaxSendLogEntry } from '@rx-connect/shared';
+import type { FaxSendLogEntry } from '@rx-manager/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import type { PrintJobRecord } from '@rx-connect/shared';
+import type { PrintJobRecord } from '@rx-manager/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -242,7 +242,7 @@ export function FaxInboxView() {
           {inboxTab === 'jobs' ? (
             jobs.length === 0 ? (
               <p className="p-4 text-sm text-muted-foreground">
-                Print to <span className="font-mono">{printerName}</span> with Rx-Connect running. A fax popup opens
+                Print to <span className="font-mono">{printerName}</span> with Rx-Manager running. A fax popup opens
                 automatically — the main window stays in the background.
               </p>
             ) : (
@@ -313,7 +313,7 @@ export function FaxInboxView() {
       <Card>
         <CardHeader>
           <CardTitle>Fax inbox</CardTitle>
-          <CardDescription>Open this page from the Rx-Connect desktop app to manage print jobs.</CardDescription>
+          <CardDescription>Open this page from the Rx-Manager desktop app to manage print jobs.</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -327,7 +327,7 @@ export function FaxInboxView() {
           <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
             <p>
               <span className="font-medium">{printerName}</span> is not installed. Accept the Windows admin prompt to
-              add it. Keep Rx-Connect open while printing.
+              add it. Keep Rx-Manager open while printing.
             </p>
             <Button
               type="button"

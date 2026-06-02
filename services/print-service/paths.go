@@ -40,5 +40,5 @@ func appExecutablePath() string {
 	if root == "" {
 		return ""
 	}
-	return filepath.Join(root, "rx-connect.exe")
+	return filepath.Join(root, "rx-manager.exe")
 }

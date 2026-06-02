@@ -273,7 +273,7 @@ const useSingleInstanceLock = app.isPackaged;
 const gotLock = !useSingleInstanceLock || app.requestSingleInstanceLock();
 if (!gotLock) {
   log.warn(
-    '[app] Another Rx-Connect instance is already running — exiting. Quit the other app or kill stale Electron processes.',
+    '[app] Another Rx-Manager instance is already running — exiting. Quit the other app or kill stale Electron processes.',
   );
   app.quit();
 } else {

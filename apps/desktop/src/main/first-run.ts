@@ -48,8 +48,8 @@ export function maybeShowTrayHint(): void {
   try {
     if (Notification.isSupported()) {
       const n = new Notification({
-        title: 'Rx-Connect',
-        body: 'Rx-Connect keeps running in the system tray after you close the window. Right-click the tray icon to quit.',
+        title: 'Rx-Manager',
+        body: 'Rx-Manager keeps running in the system tray after you close the window. Right-click the tray icon to quit.',
       });
       n.show();
     }

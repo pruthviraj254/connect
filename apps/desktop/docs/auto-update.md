@@ -87,8 +87,8 @@ Local publish:
 export GH_OWNER=onerx
 export GH_REPO=rx-connect
 export GH_TOKEN=<token with repo scope>
-pnpm --filter @rx-connect/desktop run dist:win:publish
-pnpm --filter @rx-connect/desktop run dist:mac:publish
+pnpm --filter @rx-manager/desktop run dist:win:publish
+pnpm --filter @rx-manager/desktop run dist:mac:publish
 ```
 
 ### Private repositories
@@ -124,10 +124,10 @@ pnpm --filter @rx-connect/desktop run dist:mac:publish
 
 ```bash
 # Windows (run on Windows)
-pnpm --filter @rx-connect/desktop run dist:win
+pnpm --filter @rx-manager/desktop run dist:win
 
 # macOS arm64
-pnpm --filter @rx-connect/desktop run dist:mac
+pnpm --filter @rx-manager/desktop run dist:mac
 ```
 
 Verify `apps/desktop/dist/latest.yml` (Windows) or `latest-mac.yml` (macOS) exists after the build.

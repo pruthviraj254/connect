@@ -1,4 +1,4 @@
-import { IpcChannel } from '@rx-connect/shared';
+import { IpcChannel } from '@rx-manager/shared';
 
 export async function ipcInvoke<T>(channel: IpcChannel, ...args: unknown[]): Promise<T> {
   if (typeof window === 'undefined' || !window.electronAPI) {

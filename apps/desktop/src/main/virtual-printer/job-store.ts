@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { IpcResult, PrintJobRecord } from '@rx-connect/shared';
+import type { IpcResult, PrintJobRecord } from '@rx-manager/shared';
 import { ensureJobPdf, extractEmbeddedPdfIfAny } from './ensure-job-pdf.js';
 import { isGhostscriptAvailable, renderPdfToPngs } from './gs-convert.js';
 import { getWritableSpoolDir, isAllowedSpoolPath, resolveSpoolDir } from './spool-paths.js';

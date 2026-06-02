@@ -1,6 +1,6 @@
 'use client';
 
-import type { ThemeConfig, ThemeId } from '@rx-connect/shared';
+import type { ThemeConfig, ThemeId } from '@rx-manager/shared';
 import { cn } from '@/lib/utils';
 
 type Props = {

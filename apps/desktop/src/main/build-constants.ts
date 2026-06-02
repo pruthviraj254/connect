@@ -3,8 +3,8 @@ declare const __RX_BUILD_APP_USER_MODEL_ID__: string;
 declare const __RX_BUILD_PRODUCT_NAME__: string;
 declare const __RX_BUILD_CHANNEL__: 'production' | 'staging';
 
-const PRODUCTION_APP_USER_MODEL_ID = 'health.onerx.rxconnect';
-const STAGING_APP_USER_MODEL_ID = 'health.onerx.rxconnect.staging';
+const PRODUCTION_APP_USER_MODEL_ID = 'health.onerx.rxmanager';
+const STAGING_APP_USER_MODEL_ID = 'health.onerx.rxmanager.staging';
 
 export function getBakedAppUserModelId(): string {
   if (typeof __RX_BUILD_APP_USER_MODEL_ID__ === 'string' && __RX_BUILD_APP_USER_MODEL_ID__) {
@@ -17,7 +17,7 @@ export function getBakedProductName(): string {
   if (typeof __RX_BUILD_PRODUCT_NAME__ === 'string' && __RX_BUILD_PRODUCT_NAME__) {
     return __RX_BUILD_PRODUCT_NAME__;
   }
-  return 'Rx-Connect';
+  return 'Rx-Manager';
 }
 
 export function getBakedChannel(): 'production' | 'staging' {
@@ -32,11 +32,11 @@ export function getBakedDefaultsForChannel(channel: 'production' | 'staging') {
     ? {
         channel: 'staging' as const,
         appUserModelId: STAGING_APP_USER_MODEL_ID,
-        productName: 'Rx-Connect Staging',
+        productName: 'Rx-Manager Staging',
       }
     : {
         channel: 'production' as const,
         appUserModelId: PRODUCTION_APP_USER_MODEL_ID,
-        productName: 'Rx-Connect',
+        productName: 'Rx-Manager',
       };
 }

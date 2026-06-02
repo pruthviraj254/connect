@@ -64,7 +64,7 @@ async function rebuildTrayMenu(): Promise<void> {
 
   const template: Electron.MenuItemConstructorOptions[] = [
     {
-      label: 'Open Rx-Connect',
+      label: 'Open Rx-Manager',
       click: () => showMainWindow(),
     },
     {
@@ -109,7 +109,7 @@ async function rebuildTrayMenu(): Promise<void> {
     },
     { type: 'separator' },
     {
-      label: 'Quit Rx-Connect',
+      label: 'Quit Rx-Manager',
       click: () => {
         setQuitting(true);
         app.quit();
@@ -128,7 +128,7 @@ export function setupTray(): void {
 
   const icon = loadTrayIcon();
   tray = new Tray(icon);
-  tray.setToolTip('Rx-Connect');
+  tray.setToolTip('Rx-Manager');
 
   tray.on('double-click', () => {
     showMainWindow();

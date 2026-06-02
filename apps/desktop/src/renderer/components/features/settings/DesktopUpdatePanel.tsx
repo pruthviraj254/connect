@@ -44,7 +44,7 @@ export function DesktopUpdatePanel() {
         <div className="space-y-0.5">
           <Label>Software updates</Label>
           <p className="text-xs text-muted-foreground">
-            Rx-Connect checks GitHub Releases for new versions automatically.
+            Rx-Manager checks GitHub Releases for new versions automatically.
           </p>
         </div>
         <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 font-mono text-xs">

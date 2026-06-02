@@ -1,5 +1,5 @@
 import { ipcMain, safeStorage } from 'electron';
-import { IpcChannel, type IpcResult } from '@rx-connect/shared';
+import { IpcChannel, type IpcResult } from '@rx-manager/shared';
 import log from 'electron-log';
 
 /** Secrets IPC — keytar can be wired here once native rebuild is standardized for all targets. */

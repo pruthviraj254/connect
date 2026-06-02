@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import log from 'electron-log';
-import type { FaxContact, FaxContactCreate } from '@rx-connect/shared';
+import type { FaxContact, FaxContactCreate } from '@rx-manager/shared';
 import { getStore } from '../store.js';
 
 const STORE_KEY = 'fax-contacts';

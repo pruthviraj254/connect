@@ -38,13 +38,13 @@ export async function promptWindowsPrinterInstallIfMissing(): Promise<void> {
     title: isUpgradeFix ? 'Update virtual printer' : 'Install virtual printer',
     message: isUpgradeFix
       ? `"${WINDOWS_PRINTER_NAME}" is using an outdated driver that produces blank PDFs.`
-      : `Rx-Connect needs to add the "${WINDOWS_PRINTER_NAME}" printer.`,
+      : `Rx-Manager needs to add the "${WINDOWS_PRINTER_NAME}" printer.`,
     detail: isUpgradeFix
       ? `Current driver: "${currentDriver ?? 'unknown'}".\n\n` +
         'Click "Reinstall printer" to upgrade to a PostScript driver. ' +
         'Windows will ask for administrator permission (UAC).\n\n' +
         'After upgrading, all newly printed jobs will render correctly in Fax Inbox.'
-      : 'Windows will ask for administrator permission (UAC). Accept to print from any app into Fax Inbox.\n\nKeep Rx-Connect running while you print.',
+      : 'Windows will ask for administrator permission (UAC). Accept to print from any app into Fax Inbox.\n\nKeep Rx-Manager running while you print.',
     buttons: [isUpgradeFix ? 'Reinstall printer' : 'Install printer', 'Not now'],
     defaultId: 0,
     cancelId: 1,
@@ -61,7 +61,7 @@ export async function promptWindowsPrinterInstallIfMissing(): Promise<void> {
       type: 'info',
       title: 'Printer installed',
       message: `"${WINDOWS_PRINTER_NAME}" is ready.`,
-      detail: 'Choose it in any app’s Print dialog. Keep Rx-Connect open while printing.',
+      detail: 'Choose it in any app’s Print dialog. Keep Rx-Manager open while printing.',
       buttons: ['OK'],
     });
     return;

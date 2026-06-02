@@ -1,6 +1,6 @@
 'use client';
 
-import { THEMES, type PharmacyWebsiteData, type ThemeId } from '@rx-connect/shared';
+import { THEMES, type PharmacyWebsiteData, type ThemeId } from '@rx-manager/shared';
 import { ThemeCard } from './ThemeCard';
 
 type Props = {

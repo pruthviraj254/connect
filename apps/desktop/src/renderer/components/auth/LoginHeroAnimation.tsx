@@ -143,7 +143,7 @@ export function LoginHeroAnimation() {
             <span className="h-2 w-2 rounded-full bg-warm-300" />
             <span className="h-2 w-2 rounded-full bg-warm-300" />
             <span className="ml-auto text-[10px] font-medium tracking-wide text-warm-500">
-              Rx-Connect
+              Rx-Manager
             </span>
           </motion.div>
 

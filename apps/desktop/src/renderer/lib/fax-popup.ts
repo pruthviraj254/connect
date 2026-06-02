@@ -7,7 +7,7 @@ import {
   type FaxSendResult,
   type IpcResult,
   type PrintJobRecord,
-} from '@rx-connect/shared';
+} from '@rx-manager/shared';
 import { ipcInvoke } from '@/lib/ipc';
 import { unwrapIpc } from '@/lib/ipc/unwrap';
 

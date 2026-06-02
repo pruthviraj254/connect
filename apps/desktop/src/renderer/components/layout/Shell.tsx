@@ -115,7 +115,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="leading-tight">
             <div className="text-sm font-semibold">OneRx Inc</div>
-            <div className="text-[11px] text-sidebar-foreground/60">Operator Portal · Build 0.0.4</div>
+            <div className="text-[11px] text-sidebar-foreground/60">Rx-Manager</div>
           </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">

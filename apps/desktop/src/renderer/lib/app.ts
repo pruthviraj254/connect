@@ -1,4 +1,4 @@
-import { IpcChannel, type IpcResult, type UpdateGateState } from '@rx-connect/shared';
+import { IpcChannel, type IpcResult, type UpdateGateState } from '@rx-manager/shared';
 import { ipcInvoke } from '@/lib/ipc';
 import { unwrapIpc } from '@/lib/ipc/unwrap';
 

@@ -9,7 +9,7 @@ import {
   type PortalLoginData,
   type PortalLoginResponseData,
   unwrapPortalApiBody,
-} from '@rx-connect/shared';
+} from '@rx-manager/shared';
 
 import { config } from '../config.js';
 import { HttpError, portalRequest } from './httpClient.js';

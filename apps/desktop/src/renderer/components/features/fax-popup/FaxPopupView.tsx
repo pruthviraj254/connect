@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight, Plus, Search } from 'lucide-react';
-import type { FaxContact, PrintJobRecord } from '@rx-connect/shared';
+import type { FaxContact, PrintJobRecord } from '@rx-manager/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

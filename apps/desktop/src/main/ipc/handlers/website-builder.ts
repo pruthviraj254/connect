@@ -7,7 +7,7 @@ import {
   type WebBuilderBuildResult,
   type WebBuilderPreviewResult,
   type WebBuilderPublishResult,
-} from '@rx-connect/shared';
+} from '@rx-manager/shared';
 import { getStore } from '../../store.js';
 import {
   canonicalLiveUrl,

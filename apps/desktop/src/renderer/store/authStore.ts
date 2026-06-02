@@ -6,8 +6,8 @@ import type {
   DeviceApprovalPending,
   LoginCredentials,
   LoginResult,
-} from '@rx-connect/shared';
-import { isDeviceApprovalPending } from '@rx-connect/shared';
+} from '@rx-manager/shared';
+import { isDeviceApprovalPending } from '@rx-manager/shared';
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 

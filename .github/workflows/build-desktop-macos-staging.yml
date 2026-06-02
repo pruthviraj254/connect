@@ -62,10 +62,10 @@ jobs:
         working-directory: apps/desktop
 
       - name: Build shared package
-        run: pnpm --filter @rx-connect/shared run build
+        run: pnpm --filter @rx-manager/shared run build
 
       - name: Build renderer (staging)
-        run: pnpm --filter @rx-connect/desktop run build:renderer:staging
+        run: pnpm --filter @rx-manager/desktop run build:renderer:staging
 
       - name: Vendor Hugo (macOS arm64)
         run: node apps/desktop/scripts/download-hugo.cjs --platform=current
@@ -82,7 +82,7 @@ jobs:
         run: node apps/desktop/scripts/build-print-service.cjs
 
       - name: Build staging macOS ZIP
-        run: pnpm --filter @rx-connect/desktop run dist:mac:staging
+        run: pnpm --filter @rx-manager/desktop run dist:mac:staging
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
@@ -103,7 +103,7 @@ jobs:
       - name: Upload staging macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rx-connect-macos-staging-${{ github.run_number }}
+          name: rx-manager-macos-staging-${{ github.run_number }}
           path: |
             apps/desktop/dist/*.zip
             apps/desktop/dist/*.zip.blockmap

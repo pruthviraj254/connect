@@ -19,14 +19,14 @@ function errorMessage(code: string): { title: string; detail: string } {
       return {
         title: 'Preview engine missing',
         detail:
-          'Ghostscript is required to render the preview. Reinstall Rx-Connect from the latest installer to bundle it automatically.',
+          'Ghostscript is required to render the preview. Reinstall Rx-Manager from the latest installer to bundle it automatically.',
       };
     case 'not_pdf':
     case 'conversion_failed':
       return {
         title: 'Could not show PDF preview',
         detail:
-          'The print data could not be converted to a viewable PDF. Try printing again with Rx-Connect open, or reinstall from the latest installer.',
+          'The print data could not be converted to a viewable PDF. Try printing again with Rx-Manager open, or reinstall from the latest installer.',
       };
     case 'render_failed':
       return {

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { BrowserWindow } from 'electron';
 import log from 'electron-log';
-import type { PrintJobRecord } from '@rx-connect/shared';
+import type { PrintJobRecord } from '@rx-manager/shared';
 import { captureMainUiBeforePopup, restoreMainUiAfterPopup } from '../lifecycle.js';
 import { getRendererLoadUrl } from '../renderer-url.js';
 

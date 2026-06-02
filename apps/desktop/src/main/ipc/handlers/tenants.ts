@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { IpcChannel, type IpcResult } from '@rx-connect/shared';
+import { IpcChannel, type IpcResult } from '@rx-manager/shared';
 
 export function registerTenantsHandlers(): void {
   ipcMain.handle(IpcChannel.TenantsList, async (): Promise<IpcResult<unknown[]>> => ({ ok: true, data: [] }));

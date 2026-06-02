@@ -4,7 +4,7 @@ import {
   type ElectronAPI,
   type PrintJobRecord,
   type UpdateGateState,
-} from '@rx-connect/shared';
+} from '@rx-manager/shared';
 
 import { buildBridge } from './bridge.js';
 

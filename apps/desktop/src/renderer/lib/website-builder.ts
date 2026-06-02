@@ -9,7 +9,7 @@ import {
   type WebBuilderBuildResult,
   type WebBuilderPreviewResult,
   type WebBuilderPublishResult,
-} from '@rx-connect/shared';
+} from '@rx-manager/shared';
 import { ipcInvoke } from '@/lib/ipc';
 import { unwrapIpc } from '@/lib/ipc/unwrap';
 

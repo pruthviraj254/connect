@@ -7,7 +7,7 @@ import {
   type PrintJobRecord,
   type PrinterInstallResult,
   type PrinterStatus,
-} from '@rx-connect/shared';
+} from '@rx-manager/shared';
 import { ipcInvoke } from '@/lib/ipc';
 import { unwrapIpc } from '@/lib/ipc/unwrap';
 

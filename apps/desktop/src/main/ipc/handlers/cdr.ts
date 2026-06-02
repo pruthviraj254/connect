@@ -1,4 +1,4 @@
-import { IpcChannel } from '@rx-connect/shared';
+import { IpcChannel } from '@rx-manager/shared';
 
 import { config } from '../../config.js';
 import * as authService from '../../services/authService.js';

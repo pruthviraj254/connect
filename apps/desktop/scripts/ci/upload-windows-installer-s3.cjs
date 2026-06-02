@@ -76,10 +76,10 @@ function findInstallerExe() {
 
   let matches;
   if (channel === 'prod') {
-    matches = exes.filter((name) => /^Rx-Connect-Setup-.+\.exe$/i.test(name));
+    matches = exes.filter((name) => /^Rx-Manager-Setup-.+\.exe$/i.test(name));
   } else {
     matches = exes.filter((name) =>
-      /^Rx-Connect-Staging-Setup-.+\.exe$/i.test(name),
+      /^Rx-Manager-Staging-Setup-.+\.exe$/i.test(name),
     );
   }
 

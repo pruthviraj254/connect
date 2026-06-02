@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { BrowserWindow } from 'electron';
 import log from 'electron-log';
-import type { FaxSendLogEntry, FaxSendPayload, FaxSendResult } from '@rx-connect/shared';
+import type { FaxSendLogEntry, FaxSendPayload, FaxSendResult } from '@rx-manager/shared';
 import { getStore } from '../store.js';
 
 const STORE_KEY = 'fax-send-log';

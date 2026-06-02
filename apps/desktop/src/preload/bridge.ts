@@ -8,7 +8,7 @@ import {
   type IpcResponse,
   type LoginRequest,
   type LoginResult,
-} from '@rx-connect/shared';
+} from '@rx-manager/shared';
 
 export interface ConnectApi {
   app: {

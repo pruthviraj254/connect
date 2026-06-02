@@ -3,7 +3,7 @@ import AppProviders from './providers';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Rx-Connect — OneRx Inc',
+  title: 'Rx-Manager — OneRx Inc',
   description: 'Operator portal for OneRx pharmacy VoIP and fax management.',
 };
 

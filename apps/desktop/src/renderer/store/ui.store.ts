@@ -13,7 +13,7 @@ export const useUiStore = create<UiState>()(
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
     }),
     {
-      name: 'rx-connect-ui',
+      name: 'rx-manager-ui',
       storage: createJSONStorage(() => localStorage),
     },
   ),

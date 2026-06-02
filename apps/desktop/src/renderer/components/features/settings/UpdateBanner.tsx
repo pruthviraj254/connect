@@ -24,7 +24,7 @@ export function UpdateBanner() {
               Update {gate.pendingVersion} is ready (you have {gate.currentVersion}).
             </p>
             <p className="text-xs text-muted-foreground">
-              Or close Rx-Connect completely to install automatically.
+              Or close Rx-Manager completely to install automatically.
             </p>
           </div>
           <Button
@@ -52,7 +52,7 @@ export function UpdateBanner() {
           <p className="font-medium text-destructive">Auto-update check failed</p>
           <p className="mt-1 text-xs text-destructive/80">{gate.lastUpdateError}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Download and run the latest Rx-Connect Setup installer from GitHub Releases if this
+            Download and run the latest Rx-Manager Setup installer from GitHub Releases if this
             persists.
           </p>
         </div>

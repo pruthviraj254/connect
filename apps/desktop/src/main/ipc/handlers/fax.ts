@@ -7,7 +7,7 @@ import {
   type FaxSendLogEntry,
   type IpcResult,
   type PrintJobRecord,
-} from '@rx-connect/shared';
+} from '@rx-manager/shared';
 import { sendFaxWithConfiguredProvider } from '../../fax/send-fax.js';
 import { appendSendLog, clearSendLog, listSendLog } from '../../fax/send-log-store.js';
 import { isAllowedSpoolPath, listPrintJobs } from '../../virtual-printer/job-store.js';

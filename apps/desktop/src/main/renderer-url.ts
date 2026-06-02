@@ -9,5 +9,5 @@ export function getRendererLoadUrl(pathSuffix = '/'): string {
     return `${base}${path}`;
   }
   const suffix = pathSuffix.startsWith('/') ? pathSuffix : `/${pathSuffix}`;
-  return `app://rxconnect${suffix === '/' ? '/' : suffix}`;
+  return `app://rxmanager${suffix === '/' ? '/' : suffix}`;
 }

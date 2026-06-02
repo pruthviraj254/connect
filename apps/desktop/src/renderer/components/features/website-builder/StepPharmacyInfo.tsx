@@ -1,6 +1,6 @@
 'use client';
 
-import type { PharmacyWebsiteData } from '@rx-connect/shared';
+import type { PharmacyWebsiteData } from '@rx-manager/shared';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';

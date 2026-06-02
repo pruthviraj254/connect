@@ -2,18 +2,18 @@ extends: electron-builder.yml
 
 detectUpdateChannel: false
 
-appId: health.onerx.rxconnect.staging
-productName: Rx-Connect Staging
-# No spaces — gh release upload and NSIS paths break on "Rx-Connect Staging-Setup-....exe"
-artifactName: Rx-Connect-Staging-Setup-${version}-${arch}.${ext}
+appId: health.onerx.rxmanager.staging
+productName: Rx-Manager Staging
+# No spaces — gh release upload and NSIS paths break on "Rx-Manager Staging-Setup-....exe"
+artifactName: Rx-Manager-Staging-Setup-${version}-${arch}.${ext}
 
 win:
-  executableName: rx-connect-staging
+  executableName: rx-manager-staging
 
 nsis:
-  shortcutName: Rx-Connect Staging
+  shortcutName: Rx-Manager Staging
   menuCategory: OneRx Staging
-  uninstallDisplayName: Rx-Connect Staging
+  uninstallDisplayName: Rx-Manager Staging
 
 publish:
   - provider: github

@@ -1,5 +1,5 @@
 import { ipcMain, Notification, app, dialog, net } from 'electron';
-import { IpcChannel } from '@rx-connect/shared';
+import { IpcChannel } from '@rx-manager/shared';
 import log from 'electron-log';
 import { getMainWindow } from '../../lifecycle.js';
 import { getMachineId } from '../../services/machineId.js';

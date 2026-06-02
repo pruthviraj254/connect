@@ -60,10 +60,10 @@ jobs:
         working-directory: apps/desktop
 
       - name: Build shared package (fresh dist for CI)
-        run: pnpm --filter @rx-connect/shared run build
+        run: pnpm --filter @rx-manager/shared run build
 
       - name: Build renderer (production)
-        run: pnpm --filter @rx-connect/desktop run build:renderer
+        run: pnpm --filter @rx-manager/desktop run build:renderer
 
       - name: Vendor Ghostscript (Windows x64, bundled in installer)
         run: node apps/desktop/scripts/vendor-ghostscript-win.cjs
@@ -90,7 +90,7 @@ jobs:
           }
 
       - name: Build production Windows installer (NSIS)
-        run: pnpm --filter @rx-connect/desktop run dist:win
+        run: pnpm --filter @rx-manager/desktop run dist:win
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
@@ -110,9 +110,9 @@ jobs:
       - name: Upload production installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rx-connect-windows-prod-${{ github.run_number }}
+          name: rx-manager-windows-prod-${{ github.run_number }}
           path: |
-            apps/desktop/dist/Rx-Connect-Setup-*.exe
+            apps/desktop/dist/Rx-Manager-Setup-*.exe
             apps/desktop/dist/*.exe.blockmap
             apps/desktop/dist/latest.yml
           if-no-files-found: error

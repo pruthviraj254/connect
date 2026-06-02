@@ -1,7 +1,7 @@
 import { app, Notification } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
-import type { UpdateGateState, UpdatePolicy } from '@rx-connect/shared';
+import type { UpdateGateState, UpdatePolicy } from '@rx-manager/shared';
 import { broadcastUpdateGate, registerUpdateGateForwarder } from './update-gate-forwarder.js';
 import {
   defaultForcedMessage,
@@ -167,7 +167,7 @@ function showOptionalUpdateNotification(version: string): void {
   try {
     if (Notification.isSupported()) {
       const n = new Notification({
-        title: 'Rx-Connect update ready',
+        title: 'Rx-Manager update ready',
         body: `Version ${version} will install when you close the app, or click Restart now in the app banner.`,
       });
       n.show();

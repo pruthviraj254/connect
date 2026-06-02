@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import log from 'electron-log';
-import type { FaxSendPayload, FaxSendResult } from '@rx-connect/shared';
+import type { FaxSendPayload, FaxSendResult } from '@rx-manager/shared';
 import { isAllowedSpoolPath } from '../virtual-printer/job-store.js';
 
 async function readPdfMeta(pdfPath: string): Promise<{ sizeBytes: number; fileName: string }> {

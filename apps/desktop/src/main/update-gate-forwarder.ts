@@ -1,5 +1,5 @@
 import { app, BrowserWindow } from 'electron';
-import type { UpdateGateState } from '@rx-connect/shared';
+import type { UpdateGateState } from '@rx-manager/shared';
 
 const GATE_EVENT = 'update:gateChanged';
 

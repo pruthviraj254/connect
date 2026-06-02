@@ -8,7 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@shared': path.resolve(__dirname, '../../packages/shared/src'),
-      '@rx-connect/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
+      '@rx-manager/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
     },
   },
 });

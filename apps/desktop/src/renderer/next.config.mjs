@@ -3,7 +3,7 @@ const nextConfig = {
   output: 'export',
   images: { unoptimized: true },
   trailingSlash: true,
-  transpilePackages: ['@rx-connect/shared'],
+  transpilePackages: ['@rx-manager/shared'],
 };
 
 export default nextConfig;

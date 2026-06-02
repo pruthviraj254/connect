@@ -1,6 +1,6 @@
 'use client';
 
-import type { PharmacyWebsiteData, TeamMember, Testimonial } from '@rx-connect/shared';
+import type { PharmacyWebsiteData, TeamMember, Testimonial } from '@rx-manager/shared';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

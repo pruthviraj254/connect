@@ -1,4 +1,4 @@
-/** @deprecated Use domain types from `@rx-connect/shared` auth exports. */
+/** @deprecated Use domain types from `@rx-manager/shared` auth exports. */
 export type {
   AuthSession,
   LoginRequest as AuthLoginPayload,

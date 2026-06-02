@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { IpcChannel } from '@rx-connect/shared';
+import { IpcChannel } from '@rx-manager/shared';
 import { getStore } from '../../store.js';
 
 export function registerStoreHandlers(): void {

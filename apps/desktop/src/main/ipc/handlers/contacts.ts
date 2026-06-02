@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { IpcChannel, type FaxContact, type FaxContactCreate, type IpcResult } from '@rx-connect/shared';
+import { IpcChannel, type FaxContact, type FaxContactCreate, type IpcResult } from '@rx-manager/shared';
 import { addContact, deleteContact, listContacts } from '../../contacts/contacts-store.js';
 
 function parseCreate(raw: unknown): FaxContactCreate | null {

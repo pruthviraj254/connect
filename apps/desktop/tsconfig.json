@@ -11,8 +11,8 @@
     "types": ["node"],
     "resolveJsonModule": true,
     "paths": {
-      "@rx-connect/shared": ["../../packages/shared/src/index.ts"],
-      "@rx-connect/shared/*": ["../../packages/shared/src/*"]
+      "@rx-manager/shared": ["../../packages/shared/src/index.ts"],
+      "@rx-manager/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": [

@@ -20,21 +20,21 @@ export type BuildMetadata = {
 const PRODUCTION_DEFAULTS: BuildMetadata = {
   channel: 'production',
   updateChannel: 'latest',
-  protocolScheme: 'rxconnect',
+  protocolScheme: 'rxmanager',
   policyFileName: 'update-policy.json',
   policyRemotePath: 'apps/desktop/update-policy.json',
   appEnv: 'production',
-  appUserModelId: 'health.onerx.rxconnect',
+  appUserModelId: 'health.onerx.rxmanager',
 };
 
 const STAGING_DEFAULTS: BuildMetadata = {
   channel: 'staging',
   updateChannel: 'staging',
-  protocolScheme: 'rxconnect-staging',
+  protocolScheme: 'rxmanager-staging',
   policyFileName: 'update-policy.staging.json',
   policyRemotePath: 'apps/desktop/update-policy.staging.json',
   appEnv: 'staging',
-  appUserModelId: 'health.onerx.rxconnect.staging',
+  appUserModelId: 'health.onerx.rxmanager.staging',
 };
 
 let cached: BuildMetadata | null = null;

@@ -16,8 +16,8 @@ import (
 
 const (
 	serviceName        = "RxConnectPrintService"
-	serviceDisplayName = "Rx-Connect Print Service"
-	serviceDescription = "Captures RxConnect virtual printer jobs and spools PDFs for Rx-Connect."
+	serviceDisplayName = "Rx-Manager Print Service"
+	serviceDescription = "Captures RxConnect virtual printer jobs and spools PDFs for Rx-Manager."
 )
 
 type printService struct {

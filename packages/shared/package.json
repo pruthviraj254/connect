@@ -1,5 +1,5 @@
 {
-  "name": "@rx-connect/shared",
+  "name": "@rx-manager/shared",
   "version": "0.0.1",
   "private": true,
   "main": "./dist/index.js",

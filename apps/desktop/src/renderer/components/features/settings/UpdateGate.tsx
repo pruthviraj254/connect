@@ -16,7 +16,7 @@ function ForcedUpdateScreen() {
     ? 'Installing update…'
     : isError
       ? 'Update required'
-      : 'Updating Rx-Connect';
+      : 'Updating Rx-Manager';
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 px-6 text-center">
@@ -25,8 +25,8 @@ function ForcedUpdateScreen() {
       <p className="mt-3 max-w-md text-sm text-muted-foreground">
         {gate.message ??
           (isReady
-            ? 'Rx-Connect will restart momentarily.'
-            : 'A required update is available. Rx-Connect will restart after the update finishes.')}
+            ? 'Rx-Manager will restart momentarily.'
+            : 'A required update is available. Rx-Manager will restart after the update finishes.')}
       </p>
       <p className="mt-2 font-mono text-xs text-muted-foreground">
         Current: v{gate.currentVersion}
@@ -63,7 +63,7 @@ function ForcedUpdateScreen() {
       ) : null}
 
       {isReady ? (
-        <p className="mt-6 text-sm text-muted-foreground">Rx-Connect will restart momentarily.</p>
+        <p className="mt-6 text-sm text-muted-foreground">Rx-Manager will restart momentarily.</p>
       ) : null}
     </div>
   );

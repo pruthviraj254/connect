@@ -1,5 +1,5 @@
-import type { AuthSession } from '@rx-connect/shared';
-import { IpcChannel } from '@rx-connect/shared';
+import type { AuthSession } from '@rx-manager/shared';
+import { IpcChannel } from '@rx-manager/shared';
 
 import * as authService from '../../services/authService.js';
 import { SessionExpiredError } from '../../services/authService.js';

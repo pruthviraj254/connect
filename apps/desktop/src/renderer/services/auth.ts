@@ -8,7 +8,7 @@ import {
   type LoginResult,
   type PortalLoginData,
   type PortalLoginResponseData,
-} from '@rx-connect/shared';
+} from '@rx-manager/shared';
 
 import { stripIpcErrorPrefix } from '@/lib/ipcError';
 
@@ -30,7 +30,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginResult>
   if (hasAuthBridge()) {
     return window.api.auth.login(credentials);
   }
-  throw new Error('Sign in is only available in the Rx-Connect desktop app.');
+  throw new Error('Sign in is only available in the Rx-Manager desktop app.');
 }
 
 export async function logout(): Promise<void> {
@@ -72,7 +72,7 @@ export function formatAuthError(
     return 'Your pharmacy has reached the maximum number of workstations. Contact your administrator.';
   }
   if (/deviceid is required/i.test(raw)) {
-    return 'Workstation ID could not be resolved. Restart Rx-Connect or contact support.';
+    return 'Workstation ID could not be resolved. Restart Rx-Manager or contact support.';
   }
   if (/failed to fetch|network error|enotfound|econnrefused/i.test(raw)) {
     return 'Could not reach the sign-in server. Check your connection and try again.';

@@ -1,5 +1,5 @@
-appId: health.onerx.rxconnect
-productName: Rx-Connect
+appId: health.onerx.rxmanager
+productName: Rx-Manager
 artifactName: ${productName}-Setup-${version}-${arch}.${ext}
 copyright: Copyright (c) OneRx Inc
 # Required with pnpm hoisted monorepos — must match resolved electron in pnpm-lock.yaml.
@@ -19,7 +19,7 @@ npmRebuild: true
 
 win:
   # Must match forge packager executableName — shortcuts/NSIS target the wrong file otherwise.
-  executableName: rx-connect
+  executableName: rx-manager
   target:
     - target: nsis
       arch:
@@ -56,8 +56,8 @@ nsis:
   perMachine: true
   allowElevation: true
   allowToChangeInstallationDirectory: true
-  shortcutName: Rx-Connect
-  uninstallDisplayName: Rx-Connect
+  shortcutName: Rx-Manager
+  uninstallDisplayName: Rx-Manager
   createDesktopShortcut: true
   createStartMenuShortcut: true
   menuCategory: OneRx

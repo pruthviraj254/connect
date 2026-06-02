@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { IpcChannel, type IpcResult } from '@rx-connect/shared';
+import { IpcChannel, type IpcResult } from '@rx-manager/shared';
 
 export function registerUserHandlers(): void {
   ipcMain.handle(IpcChannel.UserGetProfile, async (): Promise<IpcResult<{ email: string; name: string }>> => ({

@@ -1,4 +1,4 @@
-# Rx-Connect — Codebase context (handoff / AI context)
+# Rx-Manager — Codebase context (handoff / AI context)
 
 > **Purpose:** Single snapshot of how this monorepo is structured, how Next.js and Electron interact, how builds and dev work, and known behavioral notes. Update this file when architecture changes.
 
@@ -6,22 +6,22 @@
 
 ## 1. What this repo is
 
-- **Product:** Rx-Connect — OneRx desktop operator app (healthcare / pharmacy tooling).
+- **Product:** Rx-Manager — OneRx desktop operator app (healthcare / pharmacy tooling). Rx-Connect is a sub-module (fax, VoIP, print).
 - **Stack:** **pnpm workspaces** + **Turborepo** + **Electron Forge** (Vite plugin) + **Next.js 14 App Router** (static export) + **TypeScript strict**.
-- **Workspace root:** `rx-connect` (root `package.json`). Real app lives in **`apps/desktop`**. Shared types/IPC live in **`packages/shared`**.
+- **Workspace root:** `rx-manager` (root `package.json`). Real app lives in **`apps/desktop`**. Shared types/IPC live in **`packages/shared`** (`@rx-manager/shared`).
 
 ---
 
 ## 2. Monorepo layout (mental map)
 
 ```
-rx-connect/                          # workspace root — turbo, husky, eslint, prettier
+rx-manager/                          # workspace root — turbo, husky, eslint, prettier
 ├── pnpm-workspace.yaml              # packages: apps/*, packages/*
 ├── turbo.json                       # pipeline: build, dev, lint, typecheck, test
 ├── .npmrc                           # node-linker=hoisted (needed for Electron Forge + pnpm)
 ├── context.md                       # this file
 ├── apps/
-│   └── desktop/                     # @rx-connect/desktop — Electron + Next
+│   └── desktop/                     # @rx-manager/desktop — Electron + Next
 │       ├── package.json             # main: ".vite/build/main.js"
 │       ├── forge.config.ts          # Forge makers + Vite plugin + packageAfterCopy hook
 │       ├── vite.main.config.ts
@@ -51,7 +51,7 @@ rx-connect/                          # workspace root — turbo, husky, eslint, 
 │       ├── e2e/                     # Playwright (currently placeholder smoke)
 │       └── out/                     # Electron Forge output (packaged app, make artifacts)
 └── packages/
-    └── shared/                      # @rx-connect/shared — IPC enum, ElectronAPI type, utils
+    └── shared/                      # @rx-manager/shared — IPC enum, ElectronAPI type, utils
         └── src/
             ├── ipc-channels.ts      # IpcChannel const enum (single source of truth)
             ├── types/
@@ -62,10 +62,10 @@ rx-connect/                          # workspace root — turbo, husky, eslint, 
 
 ## 3. Why two “bundlers”: Vite vs Next
 
-| Tool   | What it builds |
-|--------|----------------|
+| Tool                                         | What it builds                                                                                                                        |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **Vite** (via `@electron-forge/plugin-vite`) | **Electron main** (`main.js`) and **preload** (`preload.js`). Optional tiny **renderer-shell** bundle for Forge’s `main_window` slot. |
-| **Next** (`next build`) | The **operator UI**: React App Router → static **HTML/CSS/JS** under `src/renderer/out/`. |
+| **Next** (`next build`)                      | The **operator UI**: React App Router → static **HTML/CSS/JS** under `src/renderer/out/`.                                             |
 
 Next does **not** compile `main` or `preload`. Vite does **not** compile the Next app.
 
@@ -113,15 +113,15 @@ Electron Forge’s **Vite plugin** declares a **renderer** target (`main_window`
 
 ## 7. Builds and artifacts (commands)
 
-| Command (where) | Effect |
-|-----------------|--------|
-| **Root:** `pnpm install` | Installs all workspaces; use hoisted linker (`.npmrc`). |
-| **Root:** `pnpm dev` | Turbo runs `dev` in packages that define it (e.g. desktop + shared watch). |
-| **`apps/desktop`:** `pnpm dev` | Next on **:3000** + Electron loading that URL. |
-| **`apps/desktop`:** `pnpm run build:shared` | Builds `@rx-connect/shared` → `packages/shared/dist/` (main/preload import the built package in packaged app). |
-| **`apps/desktop`:** `pnpm run build:renderer` | `next build` → **`src/renderer/out/`**. |
-| **`apps/desktop`:** `pnpm run build:electron` | `electron-forge package` (Vite build **`.vite/build/main.js`**, `preload.js` + package). |
-| **`apps/desktop`:** `pnpm make` | `build:shared` + `build:renderer` + **`electron-forge make`** → installers under **`apps/desktop/out/make/`**. |
+| Command (where)                               | Effect                                                                                                         |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Root:** `pnpm install`                      | Installs all workspaces; use hoisted linker (`.npmrc`).                                                        |
+| **Root:** `pnpm dev`                          | Turbo runs `dev` in packages that define it (e.g. desktop + shared watch).                                     |
+| **`apps/desktop`:** `pnpm dev`                | Next on **:3000** + Electron loading that URL.                                                                 |
+| **`apps/desktop`:** `pnpm run build:shared`   | Builds `@rx-manager/shared` → `packages/shared/dist/` (main/preload import the built package in packaged app). |
+| **`apps/desktop`:** `pnpm run build:renderer` | `next build` → **`src/renderer/out/`**.                                                                        |
+| **`apps/desktop`:** `pnpm run build:electron` | `electron-forge package` (Vite build **`.vite/build/main.js`**, `preload.js` + package).                       |
+| **`apps/desktop`:** `pnpm make`               | `build:shared` + `build:renderer` + **`electron-forge make`** → installers under **`apps/desktop/out/make/`**. |
 
 **Platform note:** **`pnpm make` on macOS** produces **`.dmg`** (and packaged `.app`). **Windows Squirrel `.exe`** is produced when **`pnpm make` runs on Windows** (or CI `windows-latest`), not from macOS in the default Forge setup.
 
@@ -186,4 +186,4 @@ See **`.env.example`** at repo root (`NEXT_PUBLIC_APP_ENV`, `NEXT_PUBLIC_API_BAS
 
 ---
 
-*Last updated: reflect current repo state when merging significant changes.*
+_Last updated: reflect current repo state when merging significant changes._

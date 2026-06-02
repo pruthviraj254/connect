@@ -6,7 +6,7 @@ import { promisify } from 'node:util';
 import { app } from 'electron';
 import log from 'electron-log';
 import net from 'node:net';
-import type { PharmacyWebsiteData } from '@rx-connect/shared';
+import type { PharmacyWebsiteData } from '@rx-manager/shared';
 import { canonicalLiveUrl, resolveProjectName } from './deploy-service.js';
 
 const execFileAsync = promisify(execFile);
@@ -268,7 +268,7 @@ export async function buildSite(sitePath: string): Promise<{
       success: false,
       outputPath,
       buildLog:
-        'Website preview is unavailable in this build. Reinstall Rx-Connect from the official installer, or contact support.',
+        'Website preview is unavailable in this build. Reinstall Rx-Manager from the official installer, or contact support.',
     };
   }
 
@@ -343,7 +343,7 @@ export async function startPreviewServer(
   if (!bin) {
     log.warn('[hugo-service] preview requested but Hugo binary is not bundled in this build');
     throw new Error(
-      'Website preview is unavailable in this build. Reinstall Rx-Connect from the official installer, or contact support.',
+      'Website preview is unavailable in this build. Reinstall Rx-Manager from the official installer, or contact support.',
     );
   }
 

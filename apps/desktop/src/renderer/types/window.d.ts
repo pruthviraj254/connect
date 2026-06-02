@@ -1,4 +1,4 @@
-import type { AuthSession, LoginRequest, LoginResult } from '@rx-connect/shared';
+import type { AuthSession, LoginRequest, LoginResult } from '@rx-manager/shared';
 
 export interface ConnectApi {
   app: {

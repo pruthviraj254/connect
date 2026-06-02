@@ -1,4 +1,4 @@
-import type { IpcResult } from '@rx-connect/shared';
+import type { IpcResult } from '@rx-manager/shared';
 
 export function unwrapIpc<T>(result: IpcResult<T>): T {
   if (result.ok) {
