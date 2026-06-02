@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 
 import * as authService from '@/services/auth';
+import {
+  clearSessionDisplayCache,
+  readSessionDisplayCache,
+  writeSessionDisplayCache,
+} from '@/lib/session-cache';
 import type {
   AuthSession,
   DeviceApprovalPending,
@@ -61,10 +66,23 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearDeviceApproval: () => set({ deviceApproval: null, pendingLoginRetry: null }),
 
   hydrate: async () => {
-    set({ status: 'loading', error: null });
+    const cached = readSessionDisplayCache();
+    if (cached) {
+      set({
+        status: 'authenticated',
+        session: cached,
+        error: null,
+        deviceApproval: null,
+        pendingLoginRetry: null,
+      });
+    } else {
+      set({ status: 'loading', error: null });
+    }
+
     try {
       const session = await authService.fetchSession();
       if (session) {
+        writeSessionDisplayCache(session);
         set({
           status: 'authenticated',
           session,
@@ -73,6 +91,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           pendingLoginRetry: null,
         });
       } else {
+        clearSessionDisplayCache();
         set({
           status: 'unauthenticated',
           session: null,
@@ -80,6 +99,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
       }
     } catch {
+      clearSessionDisplayCache();
       set({
         status: 'unauthenticated',
         session: null,
@@ -109,6 +129,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         deviceApproval: null,
         pendingLoginRetry: null,
       });
+      writeSessionDisplayCache(result);
       return result;
     } catch (error) {
       const message = authService.formatAuthError(error);
@@ -134,6 +155,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         deviceApproval: null,
         pendingLoginRetry: null,
       });
+      writeSessionDisplayCache(session);
       return session;
     } catch {
       set({ status: 'unauthenticated', session: null, error: null });
@@ -150,6 +172,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       deviceApproval: null,
       pendingLoginRetry: null,
     });
+    writeSessionDisplayCache(session);
     return session;
   },
 
@@ -165,6 +188,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           deviceApproval: null,
           pendingLoginRetry: null,
         });
+        writeSessionDisplayCache(session);
         return session;
       } catch {
         /* Fall through to renderer-only bypass. */
@@ -178,11 +202,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       deviceApproval: null,
       pendingLoginRetry: null,
     });
+    writeSessionDisplayCache(session);
     return session;
   },
 
   logout: async () => {
     await authService.logout();
+    clearSessionDisplayCache();
     set({
       status: 'unauthenticated',
       session: null,
@@ -198,6 +224,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       /* Main may already have cleared tokens. */
     }
+    clearSessionDisplayCache();
     set({
       status: 'unauthenticated',
       session: null,

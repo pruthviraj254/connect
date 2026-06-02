@@ -78,9 +78,18 @@ const RX_CONNECT_PATH_PREFIXES = [
   '/call-log',
 ];
 
+const FULL_BLEED_PATH_PREFIXES = ['/fax-inbox', '/website-builder'];
+
 function isRxConnectPath(pathname: string): boolean {
   return RX_CONNECT_PATH_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
+function isFullBleedPath(pathname: string): boolean {
+  const key = pathname.endsWith('/') && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
+  return FULL_BLEED_PATH_PREFIXES.some(
+    (prefix) => key === prefix || key.startsWith(`${prefix}/`),
   );
 }
 
@@ -126,6 +135,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     href === '/home/' ? pathname === '/home' || pathname === '/home/' : pathname.startsWith(href);
 
   const rxConnectActive = isRxConnectPath(pathname);
+  const fullBleed = isFullBleedPath(pathname);
   const [rxConnectOpen, setRxConnectOpen] = useState(rxConnectActive);
 
   useEffect(() => {
@@ -277,7 +287,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex-1 flex flex-col overflow-hidden min-h-0">
+        <main
+          className={cn(
+            'flex-1 flex flex-col min-h-0 transition-opacity duration-150',
+            fullBleed
+              ? 'overflow-hidden'
+              : 'overflow-auto p-6 lg:p-8 max-w-[1600px] mx-auto w-full',
+          )}
+        >
           {children}
         </main>
       </div>

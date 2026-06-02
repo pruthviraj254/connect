@@ -72,22 +72,13 @@ function ForcedUpdateScreen() {
 export function UpdateGate({ children }: { children: React.ReactNode }) {
   const { gate, isBlocked, loading } = useUpdateGate();
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/40 text-sm text-muted-foreground">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Loading…
-      </div>
-    );
-  }
-
   if (isBlocked) {
     return <ForcedUpdateScreen />;
   }
 
   return (
     <div className="flex min-h-screen flex-col">
-      {gate.status === 'ok' ? <UpdateBanner /> : null}
+      {!loading && gate.status === 'ok' ? <UpdateBanner /> : null}
       <div className={cn('flex min-h-0 flex-1 flex-col')}>{children}</div>
     </div>
   );

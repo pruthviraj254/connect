@@ -9,4 +9,5 @@ export type ElectronAPI = {
   onPrintJob: (handler: (job: PrintJobRecord) => void) => () => void;
   onFaxSendLogUpdated: (handler: () => void) => () => void;
   onUpdateGateChanged: (handler: (state: UpdateGateState) => void) => () => void;
+  onNavigate: (handler: (pathname: string) => void) => () => void;
 };

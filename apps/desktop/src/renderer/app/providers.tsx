@@ -8,6 +8,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { UpdateGate } from '@/components/features/settings/UpdateGate';
 import { UpdateProvider } from '@/hooks/use-auto-update';
+import { ElectronNavigationProvider } from '@/hooks/use-electron-navigation';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -17,10 +18,12 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" disableTransitionOnChange>
         <UpdateProvider>
           <AuthProvider>
-            <AuthGuard>
-              <UpdateGate>{children}</UpdateGate>
-              <Toaster richColors position="bottom-right" />
-            </AuthGuard>
+            <ElectronNavigationProvider>
+              <AuthGuard>
+                <UpdateGate>{children}</UpdateGate>
+                <Toaster richColors position="bottom-right" />
+              </AuthGuard>
+            </ElectronNavigationProvider>
           </AuthProvider>
         </UpdateProvider>
       </ThemeProvider>

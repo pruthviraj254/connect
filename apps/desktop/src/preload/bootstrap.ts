@@ -8,6 +8,8 @@ import {
 
 import { buildBridge } from './bridge.js';
 
+const APP_NAVIGATE_CHANNEL = 'app:navigate';
+
 const allowed = new Set<string>(Object.values(IpcChannel));
 
 function invoke<T>(channel: IpcChannel, ...args: unknown[]): Promise<T> {
@@ -60,6 +62,15 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.on('update:gateChanged', listener);
     return () => {
       ipcRenderer.removeListener('update:gateChanged', listener);
+    };
+  },
+  onNavigate: (handler: (pathname: string) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, pathname: string) => {
+      handler(pathname);
+    };
+    ipcRenderer.on(APP_NAVIGATE_CHANNEL, listener);
+    return () => {
+      ipcRenderer.removeListener(APP_NAVIGATE_CHANNEL, listener);
     };
   },
 };

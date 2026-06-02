@@ -3,7 +3,7 @@ import { app, Menu, Tray, nativeImage, shell } from 'electron';
 import log from 'electron-log';
 import { getStore } from './store.js';
 import { getMainWindow, hideMainWindow, setQuitting, showMainWindow } from './lifecycle.js';
-import { getRendererLoadUrl } from './renderer-url.js';
+import { sendAppNavigate } from './renderer-navigation.js';
 import { listPrintJobs } from './virtual-printer/job-store.js';
 
 let tray: Tray | null = null;
@@ -77,7 +77,7 @@ async function rebuildTrayMenu(): Promise<void> {
         const win = getMainWindow();
         showMainWindow();
         if (win && !win.isDestroyed()) {
-          void win.loadURL(getRendererLoadUrl('/fax-inbox/'));
+          sendAppNavigate(win.webContents, '/fax-inbox/');
         }
       },
     },

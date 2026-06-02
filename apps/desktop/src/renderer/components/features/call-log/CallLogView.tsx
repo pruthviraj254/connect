@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, useDeferredValue, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { ChevronRight, PhoneIncoming, PhoneOutgoing } from 'lucide-react';
 import { PageHeader } from '@/components/layout/Shell';
 import { Card } from '@/components/ui/card';
@@ -98,6 +98,8 @@ export function CallLogView() {
         limit: 50,
       }),
     enabled: Boolean(pharmacyId),
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 
   const calls = useMemo(() => data?.items ?? [], [data?.items]);

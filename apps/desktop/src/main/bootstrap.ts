@@ -25,6 +25,7 @@ import { getProtocolScheme } from './build-metadata.js';
 import { getBakedAppUserModelId, getBakedProductName } from './build-constants.js';
 import { config } from './config.js';
 import { getRendererLoadUrl } from './renderer-url.js';
+import { wireRendererNavigation } from './renderer-navigation.js';
 
 // Unsigned macOS builds often crash in the GPU helper without this switch.
 if (process.platform === 'darwin' && app.isPackaged) {
@@ -178,6 +179,8 @@ async function createWindow(): Promise<void> {
       mainWindow.show();
     }
   });
+
+  wireRendererNavigation(mainWindow.webContents);
 
   const loadUrl = getRendererLoadUrl('/');
   try {
