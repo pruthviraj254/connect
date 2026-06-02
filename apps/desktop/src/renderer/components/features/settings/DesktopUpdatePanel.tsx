@@ -16,6 +16,9 @@ import { isElectronApp } from '@/lib/electron';
 
 function StatusIcon({ gate }: { gate: ReturnType<typeof useUpdateGate>['gate'] }) {
   if (gate.updateReady) return <CheckCircle2 className="h-5 w-5 text-emerald-600" />;
+  if (gate.progress != null && gate.progress < 100 && gate.pendingVersion) {
+    return <ArrowDownToLine className="h-5 w-5 text-teal animate-pulse" />;
+  }
   if (gate.status === 'downloading' || gate.pendingVersion) {
     return <ArrowDownToLine className="h-5 w-5 text-teal animate-pulse" />;
   }
@@ -33,10 +36,15 @@ export function DesktopUpdatePanel() {
   if (!inElectron) return null;
 
   const nextVersion = gate.pendingVersion ?? gate.requiredVersion;
-  const showProgress = gate.status === 'downloading' && gate.progress != null;
+  const isDownloading =
+    !gate.updateReady &&
+    gate.progress != null &&
+    gate.progress < 100 &&
+    Boolean(nextVersion);
+  const showProgress = isDownloading || gate.status === 'downloading';
   const progressValue = gate.progress ?? 0;
   const statusLabel = gateStatusLabel(gate.status, gate);
-  const isBusy = gate.status === 'checking' || gate.status === 'downloading';
+  const isBusy = gate.status === 'checking' || gate.status === 'downloading' || isDownloading;
 
   return (
     <div className="space-y-4 border-t pt-4">
@@ -70,12 +78,14 @@ export function DesktopUpdatePanel() {
           <div className="min-w-0 flex-1 space-y-1">
             <p className="text-sm font-medium leading-snug">
               {gate.updateReady && nextVersion
-                ? `Version ${nextVersion} is ready`
-                : nextVersion
-                  ? `Version ${nextVersion} available`
-                  : isSupported
-                    ? 'Stay up to date'
-                    : 'Update status'}
+                ? `Version ${nextVersion} is ready to install`
+                : isDownloading && nextVersion
+                  ? `Downloading version ${nextVersion}…`
+                  : nextVersion
+                    ? `Version ${nextVersion} available`
+                    : isSupported
+                      ? 'Stay up to date'
+                      : 'Update status'}
             </p>
             <p
               className={cn(
@@ -85,16 +95,18 @@ export function DesktopUpdatePanel() {
                   : 'text-muted-foreground',
               )}
             >
-              {statusLabel ||
-                (isSupported
-                  ? 'Click below to check manually, or wait for automatic checks on launch.'
-                  : 'Install the packaged desktop app to receive automatic updates.')}
+              {isDownloading
+                ? `Download in progress — ${progressValue}% complete. You can keep working.`
+                : statusLabel ||
+                  (isSupported
+                    ? 'Updates download in the background. You will see a reminder when ready to restart.'
+                    : 'Install the packaged desktop app to receive automatic updates.')}
             </p>
 
             {showProgress ? (
               <div className="pt-2">
                 <div className="mb-1 flex justify-between text-[11px] text-muted-foreground">
-                  <span>Download progress</span>
+                  <span>{gate.updateReady ? 'Ready to install' : 'Download progress'}</span>
                   <span>{progressValue}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -131,7 +143,7 @@ export function DesktopUpdatePanel() {
                 {isBusy ? (
                   <>
                     <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Checking…
+                    {gate.status === 'checking' ? 'Checking…' : 'Downloading…'}
                   </>
                 ) : (
                   <>

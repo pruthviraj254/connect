@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { redirectInApp } from '@/lib/in-app-navigation';
 
 export default function RootPage() {
   const router = useRouter();
@@ -10,7 +11,7 @@ export default function RootPage() {
 
   useEffect(() => {
     if (isLoading) return;
-    void router.replace(isAuthenticated ? '/home/' : '/login/');
+    redirectInApp(isAuthenticated ? '/home/' : '/login/', router);
   }, [isAuthenticated, isLoading, router]);
 
   return (

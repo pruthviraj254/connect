@@ -22,6 +22,25 @@ export function normalizeAppPathname(pathname: string): string {
   return path;
 }
 
+/** Routes that must load via full document navigation (auth/public). */
+const HARD_NAV_ALLOWLIST = new Set(['/', '/login', '/login/device-pending', '/privacy']);
+
+function routeKeyFromPathname(pathname: string): string {
+  const normalized = normalizeAppPathname(pathname);
+  if (normalized === '/') {
+    return '/';
+  }
+  return normalized.endsWith('/') ? normalized.slice(0, -1) : normalized;
+}
+
+export function isHardNavigationAllowed(pathname: string): boolean {
+  const key = routeKeyFromPathname(pathname);
+  if (HARD_NAV_ALLOWLIST.has(key)) {
+    return true;
+  }
+  return false;
+}
+
 function isInAppNavigationUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
@@ -79,8 +98,13 @@ export function wireRendererNavigation(webContents: WebContents): void {
       return;
     }
 
-    event.preventDefault();
     const pathname = normalizeAppPathname(target.pathname);
+    if (isHardNavigationAllowed(pathname)) {
+      log.info('[nav] allowing hard navigation', pathname);
+      return;
+    }
+
+    event.preventDefault();
     log.info('[nav] intercepted hard navigation', { from: current.pathname, to: pathname });
     sendAppNavigate(webContents, pathname);
   });

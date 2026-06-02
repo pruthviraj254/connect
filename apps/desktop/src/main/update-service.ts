@@ -82,6 +82,8 @@ function bindUpdaterListeners(): void {
     log.info(`${TAG} checking-for-update`);
     if (forceUpdateActive) {
       publishGate({ status: 'checking', error: null, progress: null });
+    } else {
+      publishGate({ status: 'ok', progress: null, lastUpdateError: null });
     }
   });
 
@@ -98,6 +100,7 @@ function bindUpdaterListeners(): void {
       publishGate({
         status: 'ok',
         pendingVersion: info.version,
+        progress: 0,
         updateReady: false,
         lastUpdateError: null,
       });
@@ -115,6 +118,7 @@ function bindUpdaterListeners(): void {
       publishGate({
         status: 'ok',
         pendingVersion: null,
+        progress: null,
         updateReady: false,
       });
     }
@@ -125,6 +129,13 @@ function bindUpdaterListeners(): void {
     log.info(`${TAG} download-progress`, percent);
     if (forceUpdateActive) {
       publishGate({ status: 'downloading', progress: percent });
+    } else {
+      publishGate({
+        status: 'ok',
+        progress: percent,
+        pendingVersion: gateState.pendingVersion,
+        updateReady: false,
+      });
     }
   });
 
@@ -155,6 +166,7 @@ function bindUpdaterListeners(): void {
       publishGate({
         status: 'ok',
         pendingVersion: info.version,
+        progress: 100,
         updateReady: true,
         lastUpdateError: null,
       });

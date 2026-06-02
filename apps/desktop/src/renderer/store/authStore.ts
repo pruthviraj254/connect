@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import * as authService from '@/services/auth';
+import { getAppVersion } from '@/lib/app';
 import {
   clearSessionDisplayCache,
   readSessionDisplayCache,
@@ -66,7 +67,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearDeviceApproval: () => set({ deviceApproval: null, pendingLoginRetry: null }),
 
   hydrate: async () => {
-    const cached = readSessionDisplayCache();
+    let appVersion: string | null = null;
+    try {
+      appVersion = await getAppVersion();
+    } catch {
+      /* Web-only dev or IPC unavailable */
+    }
+
+    const cached = readSessionDisplayCache(appVersion);
     if (cached) {
       set({
         status: 'authenticated',
@@ -82,7 +90,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const session = await authService.fetchSession();
       if (session) {
-        writeSessionDisplayCache(session);
+        writeSessionDisplayCache(session, appVersion);
         set({
           status: 'authenticated',
           session,

@@ -13,6 +13,7 @@ import { LoginSubmitButton } from '@/components/auth/LoginSubmitButton';
 import { BrandCheckbox } from '@/components/ui/brand-checkbox';
 import { BrandInput } from '@/components/ui/brand-input';
 import { useAuth } from '@/hooks/useAuth';
+import { redirectInApp } from '@/lib/in-app-navigation';
 import { useAuthStore } from '@/store/authStore';
 import { formatAuthError, isDeviceApprovalPending, loginSuccessMessage } from '@/services/auth';
 
@@ -70,11 +71,11 @@ export function LoginForm() {
     try {
       const result = await login({ email, password, rememberSession });
       if (isDeviceApprovalPending(result)) {
-        router.replace('/login/device-pending/');
+        redirectInApp('/login/device-pending/', router);
         return;
       }
       toast.success(loginSuccessMessage(result));
-      router.replace('/home/');
+      redirectInApp('/home/', router);
     } catch (err) {
       toast.error(formatAuthError(err, 'Sign in failed. Please try again.'));
     } finally {
@@ -87,7 +88,7 @@ export function LoginForm() {
     try {
       const session = await skipLogin();
       toast.success(loginSuccessMessage(session));
-      router.replace('/home/');
+      redirectInApp('/home/', router);
     } catch (err) {
       toast.error(formatAuthError(err, 'Could not continue without sign-in.'));
     } finally {
