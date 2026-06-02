@@ -11,7 +11,7 @@ import { OneRxLogo } from "@/components/auth/OneRxLogo";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useWorkstationId } from "@/hooks/useWorkstationId";
-import { redirectInApp } from "@/lib/in-app-navigation";
+import { redirectInApp, redirectToWorkspace } from "@/lib/in-app-navigation";
 import {
   formatAuthError,
   isDeviceApprovalPending,
@@ -53,7 +53,7 @@ export function DeviceApprovalPendingView() {
         return;
       }
       toast.success(loginSuccessMessage(result));
-      redirectInApp("/home/", router);
+      redirectToWorkspace(router);
     } catch (err) {
       toast.error(formatAuthError(err, "Could not verify approval status."));
     } finally {

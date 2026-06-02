@@ -25,12 +25,23 @@ export function normalizeRouteKey(pathname: string): string {
 }
 
 /** Routes that require a full document load in packaged Electron. */
-const ELECTRON_HARD_LOAD_ROUTES = new Set(['/', '/login', '/login/device-pending', '/privacy']);
+const ELECTRON_HARD_LOAD_ROUTES = new Set([
+  '/',
+  '/login',
+  '/login/device-pending',
+  '/privacy',
+  '/home',
+]);
 
 type AppRouter = {
   replace: (href: string) => void;
   push: (href: string) => void;
 };
+
+/** Post-auth entry — hard load in Electron so static export routing is reliable. */
+export function redirectToWorkspace(router?: AppRouter): void {
+  redirectInApp('/home/', router);
+}
 
 /**
  * Auth-safe navigation for Electron static export.

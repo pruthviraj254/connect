@@ -23,7 +23,7 @@ export function normalizeAppPathname(pathname: string): string {
 }
 
 /** Routes that must load via full document navigation (auth/public). */
-const HARD_NAV_ALLOWLIST = new Set(['/', '/login', '/login/device-pending', '/privacy']);
+const HARD_NAV_ALLOWLIST = new Set(['/', '/login', '/login/device-pending', '/privacy', '/home']);
 
 function routeKeyFromPathname(pathname: string): string {
   const normalized = normalizeAppPathname(pathname);

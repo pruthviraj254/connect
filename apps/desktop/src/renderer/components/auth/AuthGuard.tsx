@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { redirectInApp, normalizeRouteKey } from "@/lib/in-app-navigation";
+import { redirectInApp, redirectToWorkspace, normalizeRouteKey } from "@/lib/in-app-navigation";
 
 const PUBLIC_ROUTES = new Set(["/login", "/login/device-pending", "/privacy"]);
 const POPUP_ROUTES = new Set(["/fax-popup"]);
@@ -42,11 +42,15 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const popupRoute = isPopupRoute(routeKey);
   const dashboardRoute = isDashboardRoute(routeKey);
   const [redirectTimedOut, setRedirectTimedOut] = useState(false);
+  const [workspaceTimedOut, setWorkspaceTimedOut] = useState(false);
 
   const needsLoginRedirect = !isAuthenticated && !PUBLIC_ROUTES.has(routeKey) && routeKey !== "/";
+  const needsWorkspaceRedirect =
+    isAuthenticated && (routeKey === "/login" || routeKey === "/login/device-pending");
 
   useEffect(() => {
     setRedirectTimedOut(false);
+    setWorkspaceTimedOut(false);
   }, [routeKey, isAuthenticated]);
 
   useEffect(() => {
@@ -63,10 +67,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
       return;
     }
 
-    if (isAuthenticated && (routeKey === "/login" || routeKey === "/login/device-pending")) {
-      redirectInApp("/home/", router);
+    if (needsWorkspaceRedirect) {
+      redirectToWorkspace(router);
     }
-  }, [popupRoute, isAuthenticated, isLoading, routeKey, router]);
+  }, [popupRoute, isAuthenticated, isLoading, routeKey, router, needsWorkspaceRedirect]);
 
   useEffect(() => {
     if (!needsLoginRedirect || isLoading) {
@@ -77,6 +81,16 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }, 1500);
     return () => window.clearTimeout(timer);
   }, [needsLoginRedirect, isLoading, routeKey]);
+
+  useEffect(() => {
+    if (!needsWorkspaceRedirect || isLoading) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setWorkspaceTimedOut(true);
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [needsWorkspaceRedirect, isLoading, routeKey]);
 
   if (popupRoute) {
     return <>{children}</>;
@@ -104,13 +118,20 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  if (
-    isAuthenticated &&
-    (routeKey === "/login" || routeKey === "/login/device-pending")
-  ) {
+  if (needsWorkspaceRedirect) {
     return (
       <AuthLoadingScreen>
         <p className="text-sm text-warm-600">Opening workspace…</p>
+        {workspaceTimedOut ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => redirectToWorkspace(router)}
+          >
+            Continue to workspace
+          </Button>
+        ) : null}
       </AuthLoadingScreen>
     );
   }

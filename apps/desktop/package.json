@@ -1,7 +1,7 @@
 {
   "name": "@rx-manager/desktop",
   "productName": "Rx-Manager",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "description": "OneRx Rx-Manager — Electron desktop application",
   "main": ".vite/build/main.js",
   "private": true,
