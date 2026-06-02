@@ -1,54 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { CheckCircle2, Download, Loader2, RefreshCw, Shield } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { RxGlyph } from '@/components/auth/OneRxLogo';
 import { useUpdateGate } from '@/hooks/use-auto-update';
 import { UpdateExperience } from '@/components/features/settings/UpdateExperience';
 
-const STEPS = [
-  { id: 'check', label: 'Check' },
-  { id: 'download', label: 'Download' },
-  { id: 'install', label: 'Install' },
-  { id: 'restart', label: 'Restart' },
-] as const;
-
-function stepIndex(status: string, updateReady: boolean): number {
-  if (updateReady || status === 'ready') return 3;
-  if (status === 'downloading') return 1;
-  if (status === 'required' || status === 'checking') return 0;
-  if (status === 'error') return 1;
-  return 0;
-}
-
 function ForcedUpdateScreen() {
   const { gate, retry } = useUpdateGate();
-  const [countdown, setCountdown] = useState<number | null>(null);
   const isReady = gate.status === 'ready';
   const isError = gate.status === 'error';
   const isDownloading = gate.status === 'downloading';
+  const isChecking = gate.status === 'checking' || gate.status === 'required';
   const progress = gate.progress ?? 0;
-  const activeStep = stepIndex(gate.status, isReady);
   const targetVersion = gate.requiredVersion ?? gate.pendingVersion;
-
-  useEffect(() => {
-    if (!isReady) {
-      setCountdown(null);
-      return;
-    }
-    setCountdown(3);
-    const interval = window.setInterval(() => {
-      setCountdown((prev) => {
-        if (prev === null || prev <= 1) {
-          window.clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => window.clearInterval(interval);
-  }, [isReady]);
 
   const title = isReady
     ? 'Restarting Rx-Manager…'
@@ -56,71 +22,25 @@ function ForcedUpdateScreen() {
       ? 'Update required'
       : isDownloading
         ? 'Downloading update…'
-        : 'Updating Rx-Manager';
+        : isChecking
+          ? 'Checking for updates…'
+          : 'Updating Rx-Manager';
+
+  const showProgressBar = isDownloading || isReady;
+  const progressWidth = isReady ? 100 : progress;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-muted/30 to-muted/60 px-6 py-12 text-center">
-      <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-navy text-lg font-bold text-navy-foreground shadow-md">
-        Rx
-      </div>
+      <span
+        className="mb-8 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-warm-900 text-terra-100 shadow-md"
+        aria-hidden
+      >
+        <RxGlyph size={22} />
+      </span>
 
-      <div className="mb-8 flex w-full max-w-lg items-center justify-center gap-2">
-        {STEPS.map((step, index) => (
-          <div key={step.id} className="flex items-center gap-2">
-            <div
-              className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-colors',
-                index <= activeStep
-                  ? 'bg-teal text-white'
-                  : 'bg-muted text-muted-foreground',
-              )}
-            >
-              {index < activeStep ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
-            </div>
-            <span
-              className={cn(
-                'hidden text-xs font-medium sm:inline',
-                index <= activeStep ? 'text-navy' : 'text-muted-foreground',
-              )}
-            >
-              {step.label}
-            </span>
-            {index < STEPS.length - 1 ? (
-              <div
-                className={cn(
-                  'hidden h-px w-8 sm:block',
-                  index < activeStep ? 'bg-teal' : 'bg-border',
-                )}
-              />
-            ) : null}
-          </div>
-        ))}
-      </div>
-
-      <div className="relative mb-6 flex h-28 w-28 items-center justify-center">
-        {isDownloading ? (
-          <>
-            <svg className="absolute inset-0 -rotate-90" viewBox="0 0 100 100" aria-hidden>
-              <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeWidth="6" className="text-muted" />
-              <circle
-                cx="50"
-                cy="50"
-                r="44"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="6"
-                strokeLinecap="round"
-                className="text-teal transition-all duration-300"
-                strokeDasharray={`${2 * Math.PI * 44}`}
-                strokeDashoffset={`${2 * Math.PI * 44 * (1 - progress / 100)}`}
-              />
-            </svg>
-            <span className="text-lg font-semibold tabular-nums text-navy">{progress}%</span>
-          </>
-        ) : (
-          <Loader2 className="h-12 w-12 animate-spin text-teal" aria-hidden />
-        )}
-      </div>
+      {isChecking && !isDownloading && !isReady && !isError ? (
+        <Loader2 className="mb-6 h-10 w-10 animate-spin text-teal" aria-hidden />
+      ) : null}
 
       <h1 className="text-2xl font-semibold text-navy">{title}</h1>
       <p className="mt-3 max-w-md text-sm text-muted-foreground">
@@ -130,24 +50,30 @@ function ForcedUpdateScreen() {
             : 'A required update keeps your pharmacy desk secure and compatible with OneRx services.')}
       </p>
 
-      <div className="mt-4 flex items-center gap-2 rounded-full border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground">
-        <Shield className="h-3.5 w-3.5 text-teal" />
-        <span className="font-mono">
-          v{gate.currentVersion}
-          {targetVersion ? ` → v${targetVersion}` : ''}
-          {gate.minimumVersion ? ` · Required ≥ v${gate.minimumVersion}` : ''}
-        </span>
+      <div className="mt-6 w-full max-w-sm">
+        {showProgressBar ? (
+          <div className="space-y-2">
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-teal transition-all duration-300 ease-out"
+                style={{ width: `${progressWidth}%` }}
+              />
+            </div>
+            {isDownloading ? (
+              <p className="text-xs tabular-nums text-muted-foreground">{progress}%</p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
-      {isReady && countdown !== null ? (
-        <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
-          <Download className="h-4 w-4" />
-          Restarting in {countdown}s…
-        </p>
-      ) : null}
+      <p className="mt-5 font-mono text-xs text-muted-foreground">
+        v{gate.currentVersion}
+        {targetVersion ? ` → v${targetVersion}` : ''}
+        {gate.minimumVersion ? ` · Required ≥ v${gate.minimumVersion}` : ''}
+      </p>
 
       {isError ? (
-        <div className="mt-6 space-y-3">
+        <div className="mt-8 space-y-3">
           <p className="text-sm text-destructive">{gate.error}</p>
           <Button
             type="button"
@@ -183,30 +109,27 @@ export function AppVersionBadge() {
 
   if (loading || !gate.supported) return null;
 
-  const isDownloading =
-    !gate.updateReady && gate.progress != null && gate.progress < 100 && Boolean(gate.pendingVersion);
+  const hasError = gate.status === 'error' || Boolean(gate.lastUpdateError);
+  const updateReady = gate.updateReady && Boolean(gate.pendingVersion);
 
-  const dotClass =
-    gate.status === 'error' || gate.lastUpdateError
-      ? 'bg-destructive'
-      : gate.updateReady
-        ? 'bg-emerald-500'
-        : isDownloading || gate.status === 'checking' || gate.status === 'downloading'
-          ? 'bg-amber-500'
-          : 'bg-teal';
+  const dotClass = hasError
+    ? 'bg-destructive'
+    : updateReady
+      ? 'bg-emerald-500'
+      : 'bg-teal';
+
+  const title = hasError
+    ? gate.error ?? gate.lastUpdateError ?? 'Update check failed — see Settings'
+    : updateReady
+      ? `Update ${gate.pendingVersion} ready — restart to install`
+      : `Rx-Manager v${gate.currentVersion} — up to date`;
 
   return (
     <div
       className="hidden items-center gap-2 rounded-full border bg-card px-2.5 py-1 text-xs text-muted-foreground md:flex"
-      title={
-        gate.updateReady
-          ? `Update ${gate.pendingVersion} ready`
-          : isDownloading
-            ? `Downloading ${gate.pendingVersion}…`
-            : `v${gate.currentVersion}`
-      }
+      title={title}
     >
-      <span className={cn('h-2 w-2 rounded-full', dotClass)} />
+      <span className={cn('h-2 w-2 rounded-full', dotClass)} aria-hidden />
       <span className="font-mono">v{gate.currentVersion}</span>
     </div>
   );
