@@ -11,7 +11,6 @@ import {
   Phone,
   Send,
   Activity,
-  Plus,
   Ban,
   Server,
   ArrowUpRight,
@@ -97,20 +96,12 @@ export function DashboardHome() {
         title="Dashboard"
         description="Real-time platform health and operations overview. (v0.0.4 auto-update test)"
         actions={
-          <>
-            <Button asChild variant="outline">
-              <Link href="/blacklist/">
-                <Ban className="h-4 w-4 mr-2" />
-                Add to Blacklist
-              </Link>
-            </Button>
-            <Button asChild className="bg-teal hover:bg-teal/90 text-teal-foreground">
-              <Link href="/patients/">
-                <Plus className="h-4 w-4 mr-2" />
-                Provision New Tenant
-              </Link>
-            </Button>
-          </>
+          <Button asChild variant="outline">
+            <Link href="/blacklist/">
+              <Ban className="h-4 w-4 mr-2" />
+              Add to Blacklist
+            </Link>
+          </Button>
         }
       />
 

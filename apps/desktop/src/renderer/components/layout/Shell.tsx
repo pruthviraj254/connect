@@ -2,20 +2,22 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
-  Users,
   Send,
   Ban,
-  FileCode2,
   Settings,
   Bell,
   Search,
   ChevronDown,
+  ChevronRight,
   Inbox,
   Globe,
   PhoneCall,
+  Cable,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import {
@@ -53,17 +55,34 @@ function getInitials(displayName: string | null, email: string | null): string {
   return '??';
 }
 
-const nav = [
+type NavItem = { href: string; label: string; icon: LucideIcon };
+
+const rxConnectNav: NavItem[] = [
   { href: '/home/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/patients/', label: 'Tenants', icon: Users },
-  { href: '/prescriptions/', label: 'Fax Center', icon: Send },
-  { href: '/fax-inbox/', label: 'Fax Inbox', icon: Inbox },
-  { href: '/call-log/', label: 'Call Log', icon: PhoneCall },
-  { href: '/website-builder/', label: 'Website', icon: Globe },
+  { href: '/prescriptions/', label: 'Fax Sent', icon: Send },
+  { href: '/fax-inbox/', label: 'Fax Receive', icon: Inbox },
   { href: '/blacklist/', label: 'Blacklist', icon: Ban },
-  { href: '/api-logs/', label: 'API Logs', icon: FileCode2 },
+  { href: '/call-log/', label: 'Call Records', icon: PhoneCall },
+];
+
+const topLevelNav: NavItem[] = [
+  { href: '/website-builder/', label: 'Website', icon: Globe },
   { href: '/settings/', label: 'Settings', icon: Settings },
 ];
+
+const RX_CONNECT_PATH_PREFIXES = [
+  '/home',
+  '/prescriptions',
+  '/fax-inbox',
+  '/blacklist',
+  '/call-log',
+];
+
+function isRxConnectPath(pathname: string): boolean {
+  return RX_CONNECT_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
 
 const alerts = [
   {
@@ -106,6 +125,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const isActive = (href: string) =>
     href === '/home/' ? pathname === '/home' || pathname === '/home/' : pathname.startsWith(href);
 
+  const rxConnectActive = isRxConnectPath(pathname);
+  const [rxConnectOpen, setRxConnectOpen] = useState(rxConnectActive);
+
+  useEffect(() => {
+    if (rxConnectActive) {
+      setRxConnectOpen(true);
+    }
+  }, [rxConnectActive]);
+
+  const navLinkClass = (active: boolean) =>
+    cn(
+      'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+      active
+        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+        : 'text-sidebar-foreground/80 hover:bg-white/5 hover:text-sidebar-foreground',
+    );
+
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
       <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
@@ -119,20 +155,46 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {nav.map((item) => {
+          <div className="space-y-0.5">
+            <button
+              type="button"
+              onClick={() => setRxConnectOpen((open) => !open)}
+              className={cn(
+                'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                rxConnectActive
+                  ? 'bg-sidebar-accent/60 text-sidebar-accent-foreground font-medium'
+                  : 'text-sidebar-foreground/80 hover:bg-white/5 hover:text-sidebar-foreground',
+              )}
+            >
+              <Cable className="h-4 w-4 shrink-0" />
+              <span className="flex-1 text-left">Rx-Connect</span>
+              <ChevronRight
+                className={cn('h-4 w-4 shrink-0 transition-transform', rxConnectOpen && 'rotate-90')}
+              />
+            </button>
+            {rxConnectOpen ? (
+              <div className="ml-3 space-y-0.5 border-l border-sidebar-border/60 pl-2">
+                {rxConnectNav.map((item) => {
+                  const active = isActive(item.href);
+                  const Icon = item.icon;
+                  return (
+                    <Link key={item.href} href={item.href} className={navLinkClass(active)}>
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="my-2 border-t border-sidebar-border/60" />
+
+          {topLevelNav.map((item) => {
             const active = isActive(item.href);
             const Icon = item.icon;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-                  active
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                    : 'text-sidebar-foreground/80 hover:bg-white/5 hover:text-sidebar-foreground',
-                )}
-              >
+              <Link key={item.href} href={item.href} className={navLinkClass(active)}>
                 <Icon className="h-4 w-4" />
                 {item.label}
               </Link>
