@@ -11,7 +11,6 @@ import { OneRxLogo } from "@/components/auth/OneRxLogo";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useWorkstationId } from "@/hooks/useWorkstationId";
-import { redirectInApp, redirectToWorkspace } from "@/lib/in-app-navigation";
 import {
   formatAuthError,
   isDeviceApprovalPending,
@@ -34,14 +33,14 @@ export function DeviceApprovalPendingView() {
 
   useEffect(() => {
     if (!deviceApproval) {
-      redirectInApp("/login/", router);
+      router.replace("/login/");
     }
   }, [deviceApproval, router]);
 
   const checkApproval = useCallback(async () => {
     if (!pendingLoginRetry) {
       toast.info("Sign in again with your email and password to check approval status.");
-      redirectInApp("/login/", router);
+      router.replace("/login/");
       return;
     }
 
@@ -53,7 +52,7 @@ export function DeviceApprovalPendingView() {
         return;
       }
       toast.success(loginSuccessMessage(result));
-      redirectToWorkspace(router);
+      router.replace("/home/");
     } catch (err) {
       toast.error(formatAuthError(err, "Could not verify approval status."));
     } finally {
@@ -176,7 +175,7 @@ export function DeviceApprovalPendingView() {
             disabled={checking}
             onClick={() => {
               clearDeviceApproval();
-              redirectInApp("/login/", router);
+              router.replace("/login/");
             }}
           >
             <ArrowLeft size={16} strokeWidth={2.2} aria-hidden />

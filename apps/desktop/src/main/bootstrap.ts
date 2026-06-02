@@ -24,8 +24,8 @@ import { registerPdfPreviewProtocol, wirePdfPreviewProtocol } from './pdf-previe
 import { getProtocolScheme } from './build-metadata.js';
 import { getBakedAppUserModelId, getBakedProductName } from './build-constants.js';
 import { config } from './config.js';
-import { getRendererLoadUrl } from './renderer-url.js';
-import { wireRendererNavigation } from './renderer-navigation.js';
+import { getRendererLoadUrl, setRendererStaticServerPort } from './renderer-url.js';
+import { startStaticServer, type StaticServerHandle } from './static-server.js';
 
 // Unsigned macOS builds often crash in the GPU helper without this switch.
 if (process.platform === 'darwin' && app.isPackaged) {
@@ -180,8 +180,6 @@ async function createWindow(): Promise<void> {
     }
   });
 
-  wireRendererNavigation(mainWindow.webContents);
-
   const loadUrl = getRendererLoadUrl('/');
   try {
     await mainWindow.loadURL(loadUrl);
@@ -228,8 +226,9 @@ function wireNetworkStatus(): void {
   app.on('browser-window-created', () => broadcast());
 }
 
-function wireCsp(): void {
+function wireCsp(rendererOrigin?: string): void {
   const isDev = !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL);
+  const loopbackOrigin = rendererOrigin ?? 'http://127.0.0.1';
 
   app.on('web-contents-created', (_event, contents) => {
     contents.session.webRequest.onHeadersReceived((details, callback) => {
@@ -246,15 +245,15 @@ function wireCsp(): void {
             "connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* https: http:",
           ].join('; ')
         : [
-            "default-src 'self' app:",
-            "script-src 'self' 'unsafe-inline' app:",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com app:",
-            "font-src 'self' https://fonts.gstatic.com data: app:",
-            "img-src 'self' data: blob: app: https: http:",
+            `default-src 'self' ${loopbackOrigin} app:`,
+            `script-src 'self' 'unsafe-inline' ${loopbackOrigin} app:`,
+            `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${loopbackOrigin} app:`,
+            `font-src 'self' https://fonts.gstatic.com data: ${loopbackOrigin} app:`,
+            `img-src 'self' data: blob: ${loopbackOrigin} app: https: http:`,
             "frame-src 'self' app: blob: data: rx-pdf: http://127.0.0.1:* http://localhost:*",
             "object-src 'self' app: blob: data: rx-pdf:",
-            "worker-src 'self' app: blob:",
-            "connect-src 'self' app: https:",
+            `worker-src 'self' ${loopbackOrigin} app: blob:`,
+            `connect-src 'self' ${loopbackOrigin} app: https:`,
           ].join('; ');
       callback({
         responseHeaders: {
@@ -269,6 +268,22 @@ function wireCsp(): void {
 if (process.platform === 'win32') {
   app.setAppUserModelId(getBakedAppUserModelId());
   app.setName(getBakedProductName());
+}
+
+let staticServer: StaticServerHandle | null = null;
+
+function usesDevRendererUrl(): boolean {
+  return !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL?.trim());
+}
+
+async function ensureRendererStaticServer(): Promise<string | undefined> {
+  if (usesDevRendererUrl()) {
+    return undefined;
+  }
+
+  staticServer = await startStaticServer(getRendererRoot());
+  setRendererStaticServerPort(staticServer.port);
+  return `http://127.0.0.1:${staticServer.port}`;
 }
 
 /** Packaged builds only — dev may relaunch while a zombie Electron is still running. */
@@ -303,7 +318,8 @@ if (!gotLock) {
     registerAppProtocol();
     wirePdfPreviewProtocol();
     registerIpcHandlers();
-    wireCsp();
+    const rendererOrigin = await ensureRendererStaticServer();
+    wireCsp(rendererOrigin);
     wireNetworkStatus();
     nativeTheme.themeSource = 'light';
 
@@ -334,6 +350,12 @@ if (!gotLock) {
     setQuitting(true);
     stopPrintPipeline();
     destroyTray();
+    if (staticServer) {
+      void staticServer.close().catch((error) => {
+        log.error('[static-server] failed to stop', error);
+      });
+      staticServer = null;
+    }
   });
 
   app.on('window-all-closed', () => {

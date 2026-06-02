@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { redirectInApp, redirectToWorkspace, normalizeRouteKey } from "@/lib/in-app-navigation";
 
 const PUBLIC_ROUTES = new Set(["/login", "/login/device-pending", "/privacy"]);
 const POPUP_ROUTES = new Set(["/fax-popup"]);
@@ -19,6 +17,25 @@ const DASHBOARD_ROUTE_PREFIXES = [
   "/website-builder",
   "/settings",
 ];
+
+/** Normalize pathnames to match Next.js `trailingSlash: true`. */
+function normalizeRouteKey(pathname: string): string {
+  if (!pathname || pathname === "/") {
+    return "/";
+  }
+
+  let normalized = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  if (normalized.endsWith("/index.html")) {
+    normalized = normalized.slice(0, -"/index.html".length) || "/";
+  }
+  if (normalized !== "/" && !normalized.endsWith("/")) {
+    normalized += "/";
+  }
+  if (normalized === "/") {
+    return "/";
+  }
+  return normalized.endsWith("/") ? normalized.slice(0, -1) : normalized;
+}
 
 function isPopupRoute(routeKey: string): boolean {
   return POPUP_ROUTES.has(routeKey) || routeKey.startsWith("/fax-popup");
@@ -41,56 +58,25 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const popupRoute = isPopupRoute(routeKey);
   const dashboardRoute = isDashboardRoute(routeKey);
-  const [redirectTimedOut, setRedirectTimedOut] = useState(false);
-  const [workspaceTimedOut, setWorkspaceTimedOut] = useState(false);
-
-  const needsLoginRedirect = !isAuthenticated && !PUBLIC_ROUTES.has(routeKey) && routeKey !== "/";
-  const needsWorkspaceRedirect =
-    isAuthenticated && (routeKey === "/login" || routeKey === "/login/device-pending");
-
-  useEffect(() => {
-    setRedirectTimedOut(false);
-    setWorkspaceTimedOut(false);
-  }, [routeKey, isAuthenticated]);
 
   useEffect(() => {
     if (popupRoute) return;
     if (isLoading) return;
 
     if (!isAuthenticated && !PUBLIC_ROUTES.has(routeKey) && routeKey !== "/") {
-      redirectInApp("/login/", router);
+      router.replace("/login/");
       return;
     }
 
     if (routeKey === "/" && !isAuthenticated) {
-      redirectInApp("/login/", router);
+      router.replace("/login/");
       return;
     }
 
-    if (needsWorkspaceRedirect) {
-      redirectToWorkspace(router);
+    if (isAuthenticated && (routeKey === "/login" || routeKey === "/login/device-pending")) {
+      router.replace("/home/");
     }
-  }, [popupRoute, isAuthenticated, isLoading, routeKey, router, needsWorkspaceRedirect]);
-
-  useEffect(() => {
-    if (!needsLoginRedirect || isLoading) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setRedirectTimedOut(true);
-    }, 1500);
-    return () => window.clearTimeout(timer);
-  }, [needsLoginRedirect, isLoading, routeKey]);
-
-  useEffect(() => {
-    if (!needsWorkspaceRedirect || isLoading) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setWorkspaceTimedOut(true);
-    }, 1500);
-    return () => window.clearTimeout(timer);
-  }, [needsWorkspaceRedirect, isLoading, routeKey]);
+  }, [popupRoute, isAuthenticated, isLoading, routeKey, router]);
 
   if (popupRoute) {
     return <>{children}</>;
@@ -108,30 +94,16 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  if (needsLoginRedirect) {
+  if (!isAuthenticated && !PUBLIC_ROUTES.has(routeKey) && routeKey !== "/") {
     return (
-      <RedirectToLoginScreen
-        dashboardRoute={dashboardRoute}
-        showFallback={redirectTimedOut}
-        onContinue={() => redirectInApp("/login/", router)}
-      />
+      <RedirectToLoginScreen dashboardRoute={dashboardRoute} />
     );
   }
 
-  if (needsWorkspaceRedirect) {
+  if (isAuthenticated && (routeKey === "/login" || routeKey === "/login/device-pending")) {
     return (
       <AuthLoadingScreen>
         <p className="text-sm text-warm-600">Opening workspace…</p>
-        {workspaceTimedOut ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => redirectToWorkspace(router)}
-          >
-            Continue to workspace
-          </Button>
-        ) : null}
       </AuthLoadingScreen>
     );
   }
@@ -147,47 +119,20 @@ function AuthLoadingScreen({ children }: { children: ReactNode }) {
   );
 }
 
-function RedirectToLoginScreen({
-  dashboardRoute,
-  showFallback,
-  onContinue,
-}: {
-  dashboardRoute: boolean;
-  showFallback: boolean;
-  onContinue: () => void;
-}) {
+function RedirectToLoginScreen({ dashboardRoute }: { dashboardRoute: boolean }) {
   if (dashboardRoute) {
-    return (
-      <DashboardChromeSkeleton
-        message="Redirecting to sign in…"
-        showFallback={showFallback}
-        onContinue={onContinue}
-      />
-    );
+    return <DashboardChromeSkeleton message="Redirecting to sign in…" />;
   }
 
   return (
     <AuthLoadingScreen>
       <p className="text-sm text-warm-600">Redirecting to sign in…</p>
-      {showFallback ? (
-        <Button type="button" variant="outline" size="sm" onClick={onContinue}>
-          Continue to sign in
-        </Button>
-      ) : null}
     </AuthLoadingScreen>
   );
 }
 
 /** Keeps app chrome visible while auth hydrates on dashboard routes. */
-function DashboardChromeSkeleton({
-  message = "Loading…",
-  showFallback = false,
-  onContinue,
-}: {
-  message?: string;
-  showFallback?: boolean;
-  onContinue?: () => void;
-}) {
+function DashboardChromeSkeleton({ message = "Loading…" }: { message?: string }) {
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
       <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-sidebar border-r border-sidebar-border" />
@@ -195,11 +140,6 @@ function DashboardChromeSkeleton({
         <header className="h-16 border-b bg-card" />
         <main className="flex flex-1 flex-col items-center justify-center gap-3">
           <p className="text-sm text-muted-foreground">{message}</p>
-          {showFallback && onContinue ? (
-            <Button type="button" variant="outline" size="sm" onClick={onContinue}>
-              Continue to sign in
-            </Button>
-          ) : null}
         </main>
       </div>
     </div>

@@ -36,7 +36,6 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { redirectInApp } from '@/lib/in-app-navigation';
 import { AppVersionBadge } from '@/components/features/settings/UpdateGate';
 import { isStagingApp } from '@/lib/app-env';
 
@@ -129,7 +128,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     } catch {
       toast.error('Signed out locally (could not notify the app process).');
     }
-    void redirectInApp('/login/', router);
+    router.replace('/login/');
   };
 
   const isActive = (href: string) =>
