@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   Send,
@@ -10,12 +9,12 @@ import {
   Settings,
   Bell,
   Search,
-  ChevronDown,
-  ChevronRight,
   Inbox,
   Globe,
   PhoneCall,
-  Cable,
+  ChevronsLeft,
+  ChevronsRight,
+  MoreHorizontal,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,11 +32,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { RxGlyph } from '@/components/auth/OneRxLogo';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { AppVersionBadge } from '@/components/features/settings/UpdateGate';
 import { isStagingApp } from '@/lib/app-env';
+import { useUiStore } from '@/store/ui.store';
 
 function getInitials(displayName: string | null, email: string | null): string {
   const name = (displayName ?? '').trim();
@@ -65,26 +72,12 @@ const rxConnectNav: NavItem[] = [
   { href: '/call-log/', label: 'Call Records', icon: PhoneCall },
 ];
 
-const topLevelNav: NavItem[] = [
+const toolsNav: NavItem[] = [
   { href: '/website-builder/', label: 'Website', icon: Globe },
   { href: '/settings/', label: 'Settings', icon: Settings },
 ];
 
-const RX_CONNECT_PATH_PREFIXES = [
-  '/home',
-  '/prescriptions',
-  '/fax-inbox',
-  '/blacklist',
-  '/call-log',
-];
-
 const FULL_BLEED_PATH_PREFIXES = ['/fax-inbox', '/website-builder'];
-
-function isRxConnectPath(pathname: string): boolean {
-  return RX_CONNECT_PATH_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
-}
 
 function isFullBleedPath(pathname: string): boolean {
   const key = pathname.endsWith('/') && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
@@ -111,10 +104,165 @@ const alerts = [
   },
 ];
 
+function SidebarSectionLabel({ label, collapsed }: { label: string; collapsed: boolean }) {
+  if (collapsed) {
+    return <div className="my-2 border-t border-sidebar-border/60" aria-hidden />;
+  }
+  return (
+    <p className="mb-1.5 mt-4 px-3 text-[10px] font-semibold uppercase tracking-widest text-sidebar-muted first:mt-0">
+      {label}
+    </p>
+  );
+}
+
+function SidebarNavLink({
+  item,
+  active,
+  collapsed,
+}: {
+  item: NavItem;
+  active: boolean;
+  collapsed: boolean;
+}) {
+  const Icon = item.icon;
+
+  const link = (
+    <Link
+      href={item.href}
+      className={cn(
+        'group relative flex items-center gap-3 rounded-md py-2 text-sm transition-colors duration-150',
+        collapsed ? 'justify-center px-2' : 'px-3',
+        active
+          ? 'bg-sidebar-accent/15 font-medium text-sidebar-foreground'
+          : 'text-sidebar-foreground/75 hover:bg-white/5 hover:text-sidebar-foreground',
+      )}
+    >
+      {active ? (
+        <span
+          className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-sidebar-accent"
+          aria-hidden
+        />
+      ) : null}
+      <Icon
+        className={cn(
+          'h-[18px] w-[18px] shrink-0 transition-opacity',
+          active ? 'opacity-100' : 'opacity-70 group-hover:opacity-100',
+        )}
+      />
+      {!collapsed ? <span className="truncate">{item.label}</span> : null}
+    </Link>
+  );
+
+  if (collapsed) {
+    return (
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>{link}</TooltipTrigger>
+        <TooltipContent side="right" className="font-medium">
+          {item.label}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return link;
+}
+
+function SidebarUserFooter({
+  collapsed,
+  displayName,
+  email,
+  onLogout,
+}: {
+  collapsed: boolean;
+  displayName: string | null;
+  email: string | null;
+  onLogout: () => void;
+}) {
+  const initials = getInitials(displayName, email);
+
+  const accountMenu = (
+    <DropdownMenuContent align={collapsed ? 'center' : 'end'} side={collapsed ? 'right' : 'top'} className="w-52">
+      <DropdownMenuLabel>Account</DropdownMenuLabel>
+      <DropdownMenuItem>Profile</DropdownMenuItem>
+      <DropdownMenuItem>API Tokens</DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem
+        onSelect={(event) => {
+          event.preventDefault();
+          onLogout();
+        }}
+      >
+        Logout
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  );
+
+  if (collapsed) {
+    return (
+      <div className="border-t border-sidebar-border p-2">
+        <DropdownMenu>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-center rounded-md p-1.5 transition-colors hover:bg-white/5"
+                  aria-label={displayName ?? 'Account menu'}
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-navy text-navy-foreground text-xs">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right">{displayName ?? 'Account'}</TooltipContent>
+          </Tooltip>
+          {accountMenu}
+        </DropdownMenu>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-t border-sidebar-border p-3">
+      <div className="flex items-center gap-2 rounded-md px-1 py-1">
+        <Avatar className="h-9 w-9 shrink-0">
+          <AvatarFallback className="bg-navy text-navy-foreground text-xs">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="truncate text-sm font-medium text-sidebar-foreground">
+            {displayName ?? 'Operator'}
+          </div>
+          <div className="truncate text-[11px] text-sidebar-muted">{email ?? ''}</div>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sidebar-muted transition-colors hover:bg-white/5 hover:text-sidebar-foreground"
+              aria-label="Account menu"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          {accountMenu}
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { session, logout } = useAuth();
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
+
   const email = session?.user.email ?? null;
   const displayName =
     session?.user.licenseeFirstName && session?.user.licenseeLastName
@@ -134,92 +282,100 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const isActive = (href: string) =>
     href === '/home/' ? pathname === '/home' || pathname === '/home/' : pathname.startsWith(href);
 
-  const rxConnectActive = isRxConnectPath(pathname);
   const fullBleed = isFullBleedPath(pathname);
-  const [rxConnectOpen, setRxConnectOpen] = useState(rxConnectActive);
-
-  useEffect(() => {
-    if (rxConnectActive) {
-      setRxConnectOpen(true);
-    }
-  }, [rxConnectActive]);
-
-  const navLinkClass = (active: boolean) =>
-    cn(
-      'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-      active
-        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-        : 'text-sidebar-foreground/80 hover:bg-white/5 hover:text-sidebar-foreground',
-    );
 
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
-      <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-        <div className="flex h-16 items-center gap-2 px-5 border-b border-sidebar-border">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-teal text-teal-foreground font-bold">
-            Rx
-          </div>
-          <div className="leading-tight">
-            <div className="text-sm font-semibold">OneRx Inc</div>
-            <div className="text-[11px] text-sidebar-foreground/60">Rx-Manager</div>
-          </div>
-        </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          <div className="space-y-0.5">
-            <button
-              type="button"
-              onClick={() => setRxConnectOpen((open) => !open)}
-              className={cn(
-                'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-                rxConnectActive
-                  ? 'bg-sidebar-accent/60 text-sidebar-accent-foreground font-medium'
-                  : 'text-sidebar-foreground/80 hover:bg-white/5 hover:text-sidebar-foreground',
-              )}
-            >
-              <Cable className="h-4 w-4 shrink-0" />
-              <span className="flex-1 text-left">Rx-Connect</span>
-              <ChevronRight
-                className={cn('h-4 w-4 shrink-0 transition-transform', rxConnectOpen && 'rotate-90')}
-              />
-            </button>
-            {rxConnectOpen ? (
-              <div className="ml-3 space-y-0.5 border-l border-sidebar-border/60 pl-2">
-                {rxConnectNav.map((item) => {
-                  const active = isActive(item.href);
-                  const Icon = item.icon;
-                  return (
-                    <Link key={item.href} href={item.href} className={navLinkClass(active)}>
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
+      <TooltipProvider delayDuration={300}>
+        <aside
+          className={cn(
+            'hidden shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-in-out lg:flex',
+            sidebarCollapsed ? 'w-[68px]' : 'w-60',
+          )}
+        >
+          <div
+            className={cn(
+              'flex h-16 items-center border-b border-sidebar-border',
+              sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4',
+            )}
+          >
+            <div className={cn('flex items-center gap-2.5', sidebarCollapsed && 'justify-center')}>
+              <span
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warm-900 text-terra-100 shadow-[0_2px_8px_-2px_rgba(26,21,18,0.4)]"
+                aria-hidden
+              >
+                <RxGlyph size={14} />
+              </span>
+              {!sidebarCollapsed ? (
+                <div className="leading-tight">
+                  <div className="font-display text-sm font-semibold tracking-tight text-sidebar-foreground">
+                    One<span className="text-sidebar-accent">Rx</span>
+                  </div>
+                  <div className="text-[10px] text-sidebar-muted">Rx-Manager</div>
+                </div>
+              ) : null}
+            </div>
+            {!sidebarCollapsed ? (
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(true)}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-sidebar-muted transition-colors hover:bg-white/5 hover:text-sidebar-foreground"
+                aria-label="Collapse sidebar"
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </button>
             ) : null}
           </div>
 
-          <div className="my-2 border-t border-sidebar-border/60" />
+          {sidebarCollapsed ? (
+            <div className="flex justify-center border-b border-sidebar-border py-2">
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(false)}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-sidebar-muted transition-colors hover:bg-white/5 hover:text-sidebar-foreground"
+                aria-label="Expand sidebar"
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </button>
+            </div>
+          ) : null}
 
-          {topLevelNav.map((item) => {
-            const active = isActive(item.href);
-            const Icon = item.icon;
-            return (
-              <Link key={item.href} href={item.href} className={navLinkClass(active)}>
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
+          <nav className="flex flex-1 flex-col overflow-y-auto px-2 py-3">
+            <SidebarSectionLabel label="Rx-Connect" collapsed={sidebarCollapsed} />
+            <ul className="space-y-0.5">
+              {rxConnectNav.map((item) => (
+                <li key={item.href}>
+                  <SidebarNavLink item={item} active={isActive(item.href)} collapsed={sidebarCollapsed} />
+                </li>
+              ))}
+            </ul>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 flex items-center gap-4 px-6 border-b bg-card">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <SidebarSectionLabel label="Tools" collapsed={sidebarCollapsed} />
+            <ul className="space-y-0.5">
+              {toolsNav.map((item) => (
+                <li key={item.href}>
+                  <SidebarNavLink item={item} active={isActive(item.href)} collapsed={sidebarCollapsed} />
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <SidebarUserFooter
+            collapsed={sidebarCollapsed}
+            displayName={displayName}
+            email={email}
+            onLogout={() => void handleLogout()}
+          />
+        </aside>
+      </TooltipProvider>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-16 items-center gap-4 border-b bg-card px-6">
+          <div className="relative max-w-md flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search tenants, DIDs, extensions…"
-              className="pl-9 bg-muted/40 border-transparent focus-visible:bg-card"
+              className="border-transparent bg-muted/40 pl-9 focus-visible:bg-card"
             />
           </div>
           <Popover>
@@ -229,11 +385,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 className="relative inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted"
               >
                 <Bell className="h-4 w-4" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-80 p-0">
-              <div className="p-3 border-b font-medium text-sm">Recent alerts</div>
+              <div className="border-b p-3 text-sm font-medium">Recent alerts</div>
               <ul className="divide-y">
                 {alerts.map((a) => (
                   <li key={`${a.kind}-${a.at}`} className="p-3 text-sm">
@@ -241,7 +397,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                       <span className="font-medium text-destructive">{a.kind}</span>
                       <span className="text-xs text-muted-foreground">{a.at}</span>
                     </div>
-                    <div className="text-muted-foreground text-xs mt-0.5">{a.text}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{a.text}</div>
                   </li>
                 ))}
               </ul>
@@ -253,46 +409,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </span>
           ) : null}
           <AppVersionBadge />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-muted"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-navy text-navy-foreground text-xs">
-                    {getInitials(displayName, email)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-left leading-tight hidden md:block">
-                  <div className="text-sm font-medium">{displayName ?? 'Operator'}</div>
-                  <div className="text-[11px] text-muted-foreground">{email ?? ''}</div>
-                </div>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Account</DropdownMenuLabel>
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>API Tokens</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
-                  void handleLogout();
-                }}
-              >
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </header>
         <main
           className={cn(
-            'flex-1 flex flex-col min-h-0 transition-opacity duration-150',
+            'flex min-h-0 flex-1 flex-col transition-opacity duration-150',
             fullBleed
               ? 'overflow-hidden'
-              : 'overflow-auto p-6 lg:p-8 max-w-[1600px] mx-auto w-full',
+              : 'mx-auto w-full max-w-[1600px] overflow-auto p-6 lg:p-8',
           )}
         >
           {children}
@@ -312,10 +435,10 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-navy">{title}</h1>
-        {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
+        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex gap-2">{actions}</div>}
     </div>

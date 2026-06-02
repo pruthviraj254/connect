@@ -38,7 +38,7 @@ export function OneRxLogo({
   );
 }
 
-function RxGlyph({ size }: { size: number }) {
+export function RxGlyph({ size }: { size: number }) {
   return (
     <svg
       width={size}

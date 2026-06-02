@@ -135,8 +135,8 @@ function RedirectToLoginScreen({ dashboardRoute }: { dashboardRoute: boolean }) 
 function DashboardChromeSkeleton({ message = "Loading…" }: { message?: string }) {
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
-      <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-sidebar border-r border-sidebar-border" />
-      <div className="flex flex-1 flex-col min-w-0">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-in-out lg:flex" />
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="h-16 border-b bg-card" />
         <main className="flex flex-1 flex-col items-center justify-center gap-3">
           <p className="text-sm text-muted-foreground">{message}</p>

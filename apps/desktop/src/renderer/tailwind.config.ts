@@ -28,6 +28,7 @@ const config: Config = {
           accent: 'hsl(var(--sidebar-accent))',
           'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
           border: 'hsl(var(--sidebar-border))',
+          muted: 'hsl(var(--sidebar-muted))',
         },
         warm: {
           50: 'var(--color-warm-50)',
